@@ -246,13 +246,42 @@
   .email-note{font-size:12px;color:#8FA0B5;margin-top:8px}
   .note{font-size:12px;color:var(--muted);margin-top:6px}
 
+  /* ---------- ID scanner ---------- */
+  .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .scan-btn{
+    display:none;appearance:none;cursor:pointer;flex:none;
+    border:1.5px solid var(--navy);border-radius:999px;background:#fff;color:var(--navy);
+    font:700 10.5px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;
+    padding:5px 11px;transition:background .12s,color .12s;
+  }
+  .scan-btn:active{background:var(--navy);color:var(--gold)}
+  @media (pointer:coarse){ body.can-scan .scan-btn{display:inline-flex;align-items:center;gap:5px} }
+  .scan-overlay{
+    position:fixed;inset:0;z-index:200;background:var(--navy-deep);color:#C7D2E0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;padding:20px;text-align:center;
+  }
+  .scan-overlay[hidden]{display:none}
+  .scan-head{font:700 16px/1.4 'Barlow Semi Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase}
+  .scan-head strong{color:var(--gold)}
+  .scan-stage{position:relative;width:min(92vw,560px)}
+  .scan-stage video{width:100%;max-height:52vh;object-fit:cover;border-radius:8px;background:#000}
+  .scan-frame{
+    position:absolute;left:6%;right:6%;top:32%;bottom:32%;
+    border:2px solid var(--gold);border-radius:6px;pointer-events:none;
+    box-shadow:0 0 0 2000px rgba(13,27,46,.25);
+  }
+  .scan-status{min-height:20px;font:600 14px/1.4 'Barlow',sans-serif}
+  .scan-note{font-size:12px;color:#8FA0B5;max-width:420px}
+
   /* ---------- PDF capture mode (Email PDF) ----------
      Keep these in sync with the @media print block below. */
   body.pdf-mode{padding:0!important}
   body.pdf-mode .sheet{box-shadow:none;border-radius:0;width:816px;max-width:816px;margin:0}
   body.pdf-mode .lookup-btn,body.pdf-mode .lookup-status,body.pdf-mode .actions,
   body.pdf-mode .email-panel,body.pdf-mode .ac-list,body.pdf-mode .spinner,
-  body.pdf-mode .note,body.pdf-mode .autofill-tag,
+  body.pdf-mode .note,body.pdf-mode .autofill-tag,body.pdf-mode .scan-btn,
+  body.pdf-mode .scan-overlay,
   body.pdf-mode .add-trade,body.pdf-mode .remove-trade{display:none!important}
   body.pdf-mode #secTrades:has(.trades:empty){display:none}
   body.pdf-mode .mast{padding:9px 20px 0;border-bottom:3px solid var(--gold)}
@@ -296,7 +325,7 @@
     @page{size:letter;margin:0.35in}
     body{background:#fff;padding:0}
     .sheet{box-shadow:none;max-width:none;border-radius:0}
-    .lookup-btn,.lookup-status,.actions,.email-panel,.ac-list,.spinner,.note,.autofill-tag{display:none!important}
+    .lookup-btn,.lookup-status,.actions,.email-panel,.ac-list,.spinner,.note,.autofill-tag,.scan-btn,.scan-overlay{display:none!important}
     .mast{padding:9px 20px 0;border-bottom:3px solid var(--gold);-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .brand img{height:30px}
     h1{font-size:28px}
@@ -374,11 +403,17 @@
     <div class="sec-h"><h2>Buyer</h2></div>
     <div class="grid g2">
       <div class="field">
-        <label for="buyer">Buyer</label>
+        <div class="label-row">
+          <label for="buyer">Buyer</label>
+          <button type="button" class="scan-btn" data-scan="buyer">&#128247; Scan ID</button>
+        </div>
         <input type="text" id="buyer" autocomplete="off">
       </div>
       <div class="field">
-        <label for="cobuyer">Co-Buyer</label>
+        <div class="label-row">
+          <label for="cobuyer">Co-Buyer</label>
+          <button type="button" class="scan-btn" data-scan="cobuyer">&#128247; Scan ID</button>
+        </div>
         <input type="text" id="cobuyer" autocomplete="off">
       </div>
       <div class="field span2">
@@ -552,6 +587,18 @@
     <p class="email-note" id="emailNote">The PDF is attached automatically. Recipients get it directly &mdash; sent from elisha@mhsrv.com.</p>
   </div>
 
+</div>
+
+<!-- ============ ID SCANNER OVERLAY ============ -->
+<div class="scan-overlay" id="scanOverlay" hidden>
+  <div class="scan-head">Scan the barcode on the <strong>back</strong> of the driver&rsquo;s license</div>
+  <div class="scan-stage">
+    <video id="scanVideo" playsinline muted></video>
+    <div class="scan-frame" aria-hidden="true"></div>
+  </div>
+  <div class="scan-status" id="scanStatus">Starting camera&hellip;</div>
+  <p class="scan-note">Everything is read on this phone &mdash; no photo is uploaded anywhere.</p>
+  <button type="button" class="email-btn" id="scanCancel">Cancel</button>
 </div>
 
 <script src="inventory.js"></script>
@@ -982,6 +1029,141 @@ async function sendDealEmail(){
   }
 }
 emailSend.addEventListener('click', sendDealEmail);
+
+/* =========================================================
+   6. LICENSE SCAN — phone-camera scan of the PDF417 barcode
+      on the BACK of a US driver's license (the machine-
+      readable AAMVA record: exact legal name + address).
+      Runs entirely on-device; nothing is uploaded. Buttons
+      show only on touch devices with a camera.
+   ========================================================= */
+const SCAN_LIB = 'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js';
+const scanOverlay = document.getElementById('scanOverlay');
+const scanVideo   = document.getElementById('scanVideo');
+const scanStatus  = document.getElementById('scanStatus');
+const scanCancel  = document.getElementById('scanCancel');
+let scanReader = null, scanTarget = null, scanDone = false;
+
+if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+  document.body.classList.add('can-scan');
+}
+
+document.querySelectorAll('.scan-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>openScanner(btn.dataset.scan));
+});
+scanCancel.addEventListener('click', closeScanner);
+
+function setScanStatus(msg){ scanStatus.textContent = msg; }
+
+function loadZXing(){
+  if(window.ZXing) return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const s = document.createElement('script');
+    s.src = SCAN_LIB;
+    s.onload = resolve;
+    s.onerror = ()=>reject(new Error('could not load the scanner library'));
+    document.head.appendChild(s);
+  });
+}
+
+async function openScanner(target){
+  scanTarget = target;
+  scanDone = false;
+  scanOverlay.hidden = false;
+  setScanStatus('Starting camera\u2026');
+  try{
+    await loadZXing();
+    let reader;
+    if(ZXing.BrowserPDF417Reader){
+      reader = new ZXing.BrowserPDF417Reader();
+    }else{
+      const hints = new Map();
+      hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.PDF_417]);
+      reader = new ZXing.BrowserMultiFormatReader(hints);
+    }
+    scanReader = reader;
+    await reader.decodeFromConstraints(
+      {audio:false, video:{facingMode:'environment'}},
+      scanVideo,
+      (result)=>{ if(result && !scanDone){ scanDone = true; handleScan(result.getText()); } }
+    );
+    setScanStatus('Hold the BACK of the license inside the frame \u2014 steady, good light, fill the width.');
+  }catch(err){
+    console.error('Scanner error:', err);
+    const denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+    setScanStatus(denied
+      ? 'Camera access was blocked \u2014 allow camera for this site in your browser settings, then try again.'
+      : 'Could not start the scanner (' + (err.message||err.name||'unknown error') + ').');
+  }
+}
+
+function closeScanner(){
+  try{ if(scanReader && scanReader.reset) scanReader.reset(); }catch(e){}
+  try{
+    const stream = scanVideo.srcObject;
+    if(stream) stream.getTracks().forEach(t=>t.stop());
+    scanVideo.srcObject = null;
+  }catch(e){}
+  scanReader = null;
+  scanOverlay.hidden = true;
+}
+
+function titleCase(s){
+  return String(s||'').toLowerCase().replace(/(^|[\s\-'])([a-z])/g, (m,p,c)=>p + c.toUpperCase());
+}
+
+function parseAAMVA(raw){
+  if(!/ANSI |AAMVA/.test(raw)) return null;
+  const get = code=>{
+    const m = raw.match(new RegExp('(?:\\r|\\n|^|DL|ID)' + code + '([^\\r\\n]*)'));
+    return m ? m[1].trim() : '';
+  };
+  const clean = v => (v === 'NONE' || v === 'NONE.') ? '' : v;
+  const last   = clean(get('DCS'));
+  let   first  = clean(get('DAC'));
+  let   middle = clean(get('DAD'));
+  if(!first){ // pre-2009 licenses pack given names into DCT
+    const given = clean(get('DCT'));
+    const parts = given.split(/[\s,]+/).filter(Boolean);
+    first = parts[0] || '';
+    middle = parts.slice(1).join(' ');
+  }
+  if(!first && !last) return null;
+  const street = [get('DAG'), get('DAH')].filter(Boolean).join(', ');
+  let zip = get('DAK').replace(/[^0-9]/g,'');
+  if(zip.length > 5) zip = /[1-9]/.test(zip.slice(5,9)) ? zip.slice(0,5) + '-' + zip.slice(5,9) : zip.slice(0,5);
+  return {
+    first: titleCase(first), middle: titleCase(middle), last: titleCase(last),
+    street: titleCase(street), city: titleCase(get('DAI')),
+    state: get('DAJ').toUpperCase(), zip
+  };
+}
+
+function handleScan(text){
+  const d = parseAAMVA(text);
+  if(!d){
+    scanDone = false;
+    setScanStatus('That barcode isn\u2019t a license record \u2014 make sure it\u2019s the wide barcode on the BACK of the license.');
+    return;
+  }
+  closeScanner();
+  const fullName = [d.first, d.middle, d.last].filter(Boolean).join(' ');
+  if(scanTarget === 'cobuyer'){
+    fillField('cobuyer', fullName);
+    // Only take the co-buyer's address if none is entered yet
+    if(!document.getElementById('street').value.trim()) fillScannedAddress(d);
+  }else{
+    fillField('buyer', fullName);
+    fillScannedAddress(d);
+  }
+}
+
+function fillScannedAddress(d){
+  if(d.street) fillField('street', d.street);
+  if(d.city)   fillField('city', d.city);
+  if(d.state)  fillField('state', d.state);
+  if(d.zip)    fillField('zip', d.zip);
+}
 </script>
 </body>
 </html>

@@ -63,5 +63,10 @@ can tell how fresh the data is.
 - The dealer **Cost** column is never read or written by the generator.
 - Nothing typed into the form is transmitted anywhere unless you use Email
   PDF; the CC# field otherwise exists only so it appears on the printed page.
+- **Scan ID buttons** (phones/tablets only): scan the PDF417 barcode on the
+  BACK of a driver's license to fill the buyer or co-buyer's full legal name
+  and address. Decoding happens entirely on the device — no photo or data is
+  uploaded. Needs HTTPS (GitHub Pages provides it) and camera permission.
+  The scanner library loads from a CDN on first use.
 - Address autocomplete uses OpenStreetMap (free, no key). Date auto-fills on
   load. Print with browser headers/footers turned off for a clean one-pager.
