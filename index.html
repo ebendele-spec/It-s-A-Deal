@@ -207,6 +207,7 @@
     padding:20px 28px;background:var(--navy);color:#B8C4D4;
   }
   .actions p{font-size:12.5px;max-width:480px}
+  .action-btns{display:flex;gap:10px;flex-wrap:wrap}
   .print-btn{
     appearance:none;cursor:pointer;border:none;border-radius:4px;
     background:var(--gold);color:var(--navy-deep);
@@ -215,7 +216,68 @@
   }
   .print-btn:hover{filter:brightness(1.06)}
   .print-btn:active{transform:translateY(1px)}
+  .print-btn:disabled{opacity:.55;cursor:wait}
+  .email-btn{
+    appearance:none;cursor:pointer;border:1.5px solid var(--gold);border-radius:4px;
+    background:transparent;color:var(--gold);
+    font:800 14px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;
+    padding:13px 24px;transition:background .15s;
+  }
+  .email-btn:hover{background:rgba(198,162,78,.14)}
+  .email-btn:focus-visible,.print-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .email-panel{
+    padding:16px 28px 22px;background:var(--navy-deep);color:#C7D2E0;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+  .email-panel>label{color:#B8C4D4}
+  .email-row{display:flex;gap:10px;margin-top:7px;flex-wrap:wrap}
+  .email-row input{
+    flex:1;min-width:210px;background:#fff;border:none;border-radius:4px;
+    padding:11px 12px;font:500 15px/1 'Barlow',sans-serif;color:var(--ink);
+  }
+  .email-row input:focus{outline:2px solid var(--gold)}
+  .email-row .print-btn{padding:12px 24px}
+  .email-row .email-btn{padding:11px 20px}
+  .email-status{min-height:18px;margin-top:10px;font:600 13px/1.4 'Barlow',sans-serif}
+  .email-status.ok{color:#7FC79A}
+  .email-status.warn{color:#E4B45E}
+  .email-status.err{color:#E88A7A}
+  .email-status.busy{color:#C7D2E0}
+  .email-note{font-size:12px;color:#8FA0B5;margin-top:8px}
   .note{font-size:12px;color:var(--muted);margin-top:6px}
+
+  /* ---------- PDF capture mode (Email PDF) ----------
+     Keep these in sync with the @media print block below. */
+  body.pdf-mode .sheet{box-shadow:none;border-radius:0;width:816px;max-width:816px}
+  body.pdf-mode .lookup-btn,body.pdf-mode .lookup-status,body.pdf-mode .actions,
+  body.pdf-mode .email-panel,body.pdf-mode .ac-list,body.pdf-mode .spinner,
+  body.pdf-mode .note,body.pdf-mode .autofill-tag,
+  body.pdf-mode .add-trade,body.pdf-mode .remove-trade{display:none!important}
+  body.pdf-mode #secTrades:has(.trades:empty){display:none}
+  body.pdf-mode .mast{padding:9px 20px 0;border-bottom:3px solid var(--gold)}
+  body.pdf-mode .brand img{height:30px}
+  body.pdf-mode h1{font-size:28px}
+  body.pdf-mode .mast small{font-size:9.5px!important}
+  body.pdf-mode .deal-type{margin-top:9px}
+  body.pdf-mode .deal-type button{padding:7px 8px;font-size:11px}
+  body.pdf-mode .meta{padding:9px 20px;gap:12px}
+  body.pdf-mode section{padding:9px 20px 11px}
+  body.pdf-mode .sec-h{margin-bottom:8px}
+  body.pdf-mode .sec-h h2{font-size:11.5px}
+  body.pdf-mode .grid{gap:9px 12px}
+  body.pdf-mode label{font-size:9px}
+  body.pdf-mode input[type=text],body.pdf-mode input[type=tel],body.pdf-mode input[type=email],
+  body.pdf-mode input[type=date],body.pdf-mode input[type=time],body.pdf-mode select{
+    font-size:12.5px;padding:3px 2px;border-bottom-width:1px}
+  body.pdf-mode .money .cur{font-size:11px}
+  body.pdf-mode textarea{min-height:56px;font-size:12.5px;padding:6px}
+  body.pdf-mode #secSpecial .field>label{display:none}
+  body.pdf-mode #secBuyer .grid,body.pdf-mode #secCoach .grid,
+  body.pdf-mode #secApprovals .grid{grid-template-columns:repeat(4,1fr)}
+  body.pdf-mode .trades{grid-template-columns:1fr 1fr;gap:12px}
+  body.pdf-mode .trade{padding:8px 10px 10px}
+  body.pdf-mode .trade h3{font-size:10px;margin-bottom:7px}
+  body.pdf-mode .yn button{padding:4px 11px;font-size:10px}
 
   @media (max-width:680px){
     .g2,.g3,.g4{grid-template-columns:1fr 1fr}
@@ -233,7 +295,7 @@
     @page{size:letter;margin:0.35in}
     body{background:#fff;padding:0}
     .sheet{box-shadow:none;max-width:none;border-radius:0}
-    .lookup-btn,.lookup-status,.actions,.ac-list,.spinner,.note,.autofill-tag{display:none!important}
+    .lookup-btn,.lookup-status,.actions,.email-panel,.ac-list,.spinner,.note,.autofill-tag{display:none!important}
     .mast{padding:9px 20px 0;border-bottom:3px solid var(--gold);-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .brand img{height:30px}
     h1{font-size:28px}
@@ -356,7 +418,7 @@
     <div class="grid g2">
       <div class="stock-row span2">
         <div class="field">
-          <label for="stock">Stock # &mdash; auto-fills from MHSRV.com</label>
+          <label for="stock">Stock # &mdash; auto-fills from MHSRV inventory</label>
           <input type="text" id="stock" autocomplete="off" placeholder="e.g. MHS44361">
         </div>
         <button type="button" class="lookup-btn" id="lookupBtn">&#9889; Pull from MHSRV</button>
@@ -472,12 +534,26 @@
 
   <!-- ============ ACTIONS ============ -->
   <div class="actions">
-    <p>Everything you type stays in this browser tab. Use <strong>Print / Save PDF</strong> to produce the signed copy for the deal jacket.</p>
-    <button type="button" class="print-btn" onclick="window.print()">Print / Save PDF</button>
+    <p>Everything you type stays in this browser tab until you print or email it. The emailed copy masks the card number to its last 4 digits.</p>
+    <div class="action-btns">
+      <button type="button" class="print-btn" onclick="window.print()">Print / Save PDF</button>
+      <button type="button" class="email-btn" id="emailBtn">Email PDF</button>
+    </div>
+  </div>
+  <div class="email-panel" id="emailPanel" hidden>
+    <label for="emailTo">Send the PDF to &mdash; one or more addresses, separated by commas</label>
+    <div class="email-row">
+      <input type="text" id="emailTo" placeholder="buyer@example.com, manager@mhsrv.com" autocomplete="off" inputmode="email">
+      <button type="button" id="emailSend" class="print-btn">Send</button>
+      <button type="button" id="emailCancel" class="email-btn">Cancel</button>
+    </div>
+    <div class="email-status" id="emailStatus" aria-live="polite"></div>
+    <p class="email-note">Every recipient gets the PDF. A copy also lands in the deal-sheet mailbox (ebendele@gmail.com) as a record.</p>
   </div>
 
 </div>
 
+<script src="inventory.js"></script>
 <script>
 /* =========================================================
    1. AUTO-FILL TODAY'S DATE
@@ -575,9 +651,9 @@ function renumberTrades(){
 addTradeBtn.addEventListener('click', addTrade);
 
 /* =========================================================
-   3. STOCK # LOOKUP  →  pulls live data from MHSRV.com
-      (uses the Anthropic API with web search; works when
-       this page is opened as a Claude artifact)
+   3. STOCK # LOOKUP  →  instant, from the baked-in MHSRV
+      inventory (inventory.js, generated from the NetSource
+      export). Entry shape: [description, price, vin8, miles]
    ========================================================= */
 const stockInput   = document.getElementById('stock');
 const lookupBtn    = document.getElementById('lookupBtn');
@@ -599,67 +675,37 @@ function fmtMoney(n){
   return Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 }
 
-async function lookupStock(){
-  const stock = stockInput.value.trim();
-  if(!stock){ setStatus('warn','Enter a stock number first.'); return; }
-
-  lookupBtn.disabled = true;
-  setStatus('searching','Searching MHSRV.com for stock #' + stock + '&hellip;');
-
-  const prompt =
-    'Search the web for the RV inventory listing on mhsrv.com (Motor Home Specialist, ' +
-    'the RV dealership in Alvarado, Texas) with stock number "' + stock + '". ' +
-    'Try queries like: site:mhsrv.com ' + stock + ' — and mhsrv stock ' + stock + '. ' +
-    'From the listing page, extract the unit description and the MHSRV sale price. ' +
-    'Respond with ONLY a raw JSON object, no markdown fences, no commentary, exactly this shape: ' +
-    '{"found": true|false, "description": "Year Make Model (e.g. 2026 Entegra Coach Accolade 37K)", ' +
-    '"salesPrice": number in USD (digits only, no commas; the MHS sale price, not MSRP), ' +
-    '"url": "full listing URL"}. ' +
-    'If you cannot find the listing, respond {"found": false}.';
-
-  try{
-    const response = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:1000,
-        messages:[{role:'user',content:prompt}],
-        tools:[{type:'web_search_20250305',name:'web_search'}]
-      })
-    });
-    if(!response.ok) throw new Error('API returned ' + response.status);
-    const data = await response.json();
-
-    const text = (data.content || [])
-      .map(b => b.type === 'text' ? b.text : '')
-      .filter(Boolean).join('\n');
-
-    // Grab the last JSON object in the reply and strip any fences
-    const clean = text.replace(/```json|```/g,'').trim();
-    const match = clean.match(/\{[\s\S]*\}/);
-    if(!match) throw new Error('No JSON in response');
-    const info = JSON.parse(match[0]);
-
-    if(!info.found){
-      setStatus('warn','Couldn&rsquo;t find stock #' + stock + ' on MHSRV.com &mdash; it may be sold or newly listed. Fill the fields in manually.');
-      return;
-    }
-
-    if(info.description) fillField('description', info.description, 'tagDesc');
-    if(info.salesPrice){
-      fillField('salesPrice', fmtMoney(info.salesPrice), 'tagPrice');
-      fillField('deposit', fmtMoney(depositFor(Number(info.salesPrice))), 'tagDep');
-    }
-
-    const link = info.url ? ' &middot; <a href="' + info.url + '" target="_blank" rel="noopener">View listing</a>' : '';
-    setStatus('ok','&#10003; Found it &mdash; description, price, and deposit filled in. Double-check against the listing before signing.' + link);
-  }catch(err){
-    console.error('Stock lookup error:', err);
-    setStatus('err','Lookup didn&rsquo;t go through (this feature needs the page to be running as a Claude artifact, plus an internet connection). Fill the fields in manually.');
-  }finally{
-    lookupBtn.disabled = false;
+function lookupStock(){
+  const raw = stockInput.value.trim().toUpperCase();
+  if(!raw){ setStatus('warn','Enter a stock number first.'); return; }
+  if(typeof MHS_INVENTORY === 'undefined'){
+    setStatus('err','The inventory file (inventory.js) is missing &mdash; it must sit in the same folder as this page. Fill the fields in manually.');
+    return;
   }
+
+  // Exact match first; if they typed just digits, try the MHS prefix too
+  let stock = raw;
+  let rec = MHS_INVENTORY[stock];
+  if(!rec && /^\d+$/.test(raw)){ stock = 'MHS' + raw; rec = MHS_INVENTORY[stock]; }
+
+  if(!rec){
+    setStatus('warn','Stock #' + raw + ' isn&rsquo;t in the inventory file (updated ' + MHS_INVENTORY_DATE + ') &mdash; it may be sold or newer than the last refresh. Fill the fields in manually.');
+    return;
+  }
+
+  const desc = rec[0], price = rec[1], vin8 = rec[2];
+  if(stock !== raw) stockInput.value = stock;
+  if(desc) fillField('description', desc, 'tagDesc');
+  if(price){
+    fillField('salesPrice', fmtMoney(price), 'tagPrice');
+    fillField('deposit', fmtMoney(depositFor(Number(price))), 'tagDep');
+  }
+  if(vin8)  fillField('vin8', vin8);
+
+  const extras = (vin8 ? ', VIN' : '');
+  const priceNote = price ? '' : ' No price is listed for this unit &mdash; enter the sales price by hand.';
+  setStatus('ok','&#10003; Found it &mdash; description' + (price ? ', price, deposit' : '') + extras +
+    ' filled in from the ' + MHS_INVENTORY_DATE + ' inventory. Verify against the live listing before signing.' + priceNote);
 }
 
 lookupBtn.addEventListener('click', lookupStock);
@@ -737,6 +783,139 @@ streetInput.addEventListener('keydown', e=>{
 });
 function highlight(items){ items.forEach((el,i)=>el.classList.toggle('active', i===acIndex)); }
 document.addEventListener('click', e=>{ if(!e.target.closest('.field')) closeAC(); });
+
+/* =========================================================
+   5. EMAIL PDF — builds a PDF of the sheet in the browser
+      and sends it via FormSubmit. The email goes to
+      DEAL_INBOX with the entered recipient CC'd. If sending
+      fails, the PDF downloads instead so it can be attached
+      by hand. The CC# is masked to its last 4 digits in the
+      PDF (never email full card numbers).
+   ========================================================= */
+const DEAL_INBOX     = 'ebendele@gmail.com';
+const EMAIL_ENDPOINT = 'https://formsubmit.co/ajax/' + DEAL_INBOX;
+
+const emailBtn    = document.getElementById('emailBtn');
+const emailPanel  = document.getElementById('emailPanel');
+const emailTo     = document.getElementById('emailTo');
+const emailSend   = document.getElementById('emailSend');
+const emailCancel = document.getElementById('emailCancel');
+const emailStatus = document.getElementById('emailStatus');
+
+emailBtn.addEventListener('click', ()=>{
+  emailPanel.hidden = !emailPanel.hidden;
+  if(!emailPanel.hidden){ emailTo.focus(); emailPanel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+});
+emailCancel.addEventListener('click', ()=>{ emailPanel.hidden = true; setEmailStatus('',''); });
+emailTo.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); sendDealEmail(); } });
+
+function setEmailStatus(kind,msg){
+  emailStatus.className = 'email-status ' + kind;
+  emailStatus.textContent = msg;
+}
+
+function loadHtml2Pdf(){
+  if(window.html2pdf) return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.onload = resolve;
+    s.onerror = ()=>reject(new Error('could not load the PDF library'));
+    document.head.appendChild(s);
+  });
+}
+
+async function makePdfBlob(){
+  const ccEl = document.getElementById('ccnum');
+  const ccOriginal = ccEl.value;
+  const ccDigits = ccOriginal.replace(/\D/g,'');
+  if(ccDigits.length > 4) ccEl.value = '\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 ' + ccDigits.slice(-4);
+  document.body.classList.add('pdf-mode');
+  try{
+    return await html2pdf().set({
+      margin: [0.35, 0.35, 0.35, 0.35],
+      image: {type:'jpeg', quality:0.95},
+      html2canvas: {scale:2, useCORS:true, windowWidth:816},
+      jsPDF: {unit:'in', format:'letter', orientation:'portrait'},
+      pagebreak: {mode:['css','legacy'], avoid:['section','.trade']}
+    }).from(document.querySelector('.sheet')).outputPdf('blob');
+  }finally{
+    document.body.classList.remove('pdf-mode');
+    ccEl.value = ccOriginal;
+  }
+}
+
+function pdfFilename(){
+  const stock = document.getElementById('stock').value.trim().toUpperCase();
+  const buyer = document.getElementById('buyer').value.trim().replace(/[^A-Za-z0-9]+/g,'-');
+  return ['Its-A-Deal', stock || null, buyer || null, document.getElementById('date').value]
+    .filter(Boolean).join('_') + '.pdf';
+}
+
+async function sendDealEmail(){
+  // Accept multiple addresses separated by commas, semicolons, or spaces
+  const recipients = emailTo.value.split(/[,;\s]+/).map(s=>s.trim()).filter(Boolean);
+  if(!recipients.length){
+    setEmailStatus('warn','Enter at least one email address first.');
+    return;
+  }
+  const bad = recipients.filter(r=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r));
+  if(bad.length){
+    setEmailStatus('warn','This doesn\u2019t look like a valid address: ' + bad.join(', '));
+    return;
+  }
+  if(recipients.length > 8){
+    setEmailStatus('warn','That\u2019s a lot of recipients \u2014 keep it to 8 or fewer per send.');
+    return;
+  }
+  emailSend.disabled = true;
+  setEmailStatus('busy','Building the PDF\u2026');
+
+  let blob;
+  try{
+    await loadHtml2Pdf();
+    blob = await makePdfBlob();
+  }catch(err){
+    console.error('PDF build error:', err);
+    setEmailStatus('err','Could not build the PDF (' + (err.message||'unknown error') + '). Use Print / Save PDF instead.');
+    emailSend.disabled = false;
+    return;
+  }
+
+  setEmailStatus('busy','Sending to ' + recipients.length + (recipients.length === 1 ? ' recipient\u2026' : ' recipients\u2026'));
+  const stock = document.getElementById('stock').value.trim().toUpperCase();
+  const buyer = document.getElementById('buyer').value.trim();
+  try{
+    const fd = new FormData();
+    fd.append('_subject', "It's a Deal \u2014 " + (buyer || 'New deal') + (stock ? ' \u2014 ' + stock : ''));
+    fd.append('_template', 'table');
+    fd.append('_captcha', 'false');
+    fd.append('_cc', recipients.join(','));
+    fd.append('Buyer', buyer || '\u2014');
+    fd.append('Stock', stock || '\u2014');
+    fd.append('Description', document.getElementById('description').value.trim() || '\u2014');
+    fd.append('Salesman', document.getElementById('salesman').value.trim() || '\u2014');
+    fd.append('attachment', new File([blob], pdfFilename(), {type:'application/pdf'}));
+
+    const res = await fetch(EMAIL_ENDPOINT, {method:'POST', body:fd, headers:{'Accept':'application/json'}});
+    const out = await res.json().catch(()=>({}));
+    if(!res.ok || out.success === false || out.success === 'false'){
+      throw new Error(out.message || ('service returned ' + res.status));
+    }
+    setEmailStatus('ok','\u2713 Sent to ' + recipients.join(', ') + ' (copy kept in ' + DEAL_INBOX + ').');
+    emailTo.value = '';
+  }catch(err){
+    console.error('Email send error:', err);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = pdfFilename();
+    a.click();
+    setEmailStatus('err','Sending failed (' + (err.message||'network error') + ') \u2014 the PDF downloaded instead so you can attach it to an email yourself.');
+  }finally{
+    emailSend.disabled = false;
+  }
+}
+emailSend.addEventListener('click', sendDealEmail);
 </script>
 </body>
 </html>
