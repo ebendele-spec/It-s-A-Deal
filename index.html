@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>It's a Deal! — Motor Home Specialist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#14273F;
+    --navy-deep:#0D1B2E;
+    --paper:#FAF7F0;
+    --gold:#C6A24E;
+    --gold-soft:#F3E8CD;
+    --ink:#1B2430;
+    --muted:#6B7480;
+    --line:#C9CDD4;
+    --green:#2E7D4F;
+    --amber:#A66A1F;
+    --red:#B3402F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Barlow',sans-serif;color:var(--ink);
+    background:var(--navy);
+    background-image:radial-gradient(1200px 500px at 50% -10%, #1E3A5C 0%, var(--navy) 55%, var(--navy-deep) 100%);
+    min-height:100vh;padding:28px 14px 64px;
+  }
+  .sheet{
+    max-width:880px;margin:0 auto;background:var(--paper);
+    border-radius:6px;box-shadow:0 24px 60px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+
+  /* ---------- Masthead ---------- */
+  .mast{
+    background:var(--navy);color:#fff;padding:22px 28px 0;
+    border-bottom:4px solid var(--gold);
+  }
+  .mast-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand img{height:44px;width:auto;display:block}
+  .brand small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#B8C4D4;margin-top:2px}
+  h1{
+    font-family:'Barlow Semi Condensed',sans-serif;font-weight:800;
+    font-size:clamp(34px,6vw,52px);letter-spacing:.02em;line-height:1;
+    color:var(--gold);text-transform:uppercase;
+  }
+  h1 span{color:#fff}
+  .deal-type{display:flex;gap:0;margin-top:18px}
+  .deal-type button{
+    flex:1;appearance:none;border:1px solid rgba(255,255,255,.25);border-bottom:none;
+    background:transparent;color:#C7D2E0;font:600 13px/1 'Barlow Semi Condensed',sans-serif;
+    letter-spacing:.12em;text-transform:uppercase;padding:12px 8px;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .deal-type button+button{border-left:none}
+  .deal-type button.on{background:var(--paper);color:var(--navy);font-weight:800}
+  .deal-type button:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}
+
+  /* ---------- Meta strip ---------- */
+  .meta{
+    display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:16px;
+    padding:16px 28px;background:var(--gold-soft);border-bottom:1px solid var(--line);
+  }
+
+  /* ---------- Sections ---------- */
+  section{padding:20px 28px 24px;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:none}
+  .sec-h{
+    display:flex;align-items:center;gap:10px;margin-bottom:14px;
+  }
+  .sec-h h2{
+    font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:15px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--navy);white-space:nowrap;
+  }
+  .sec-h::after{content:"";height:1px;background:var(--line);flex:1}
+
+  .grid{display:grid;gap:14px 16px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr 1fr}
+  .g4{grid-template-columns:1fr 1fr 1fr 1fr}
+  .span2{grid-column:span 2}
+  .span3{grid-column:span 3}
+
+  .field{display:flex;flex-direction:column;gap:4px;position:relative}
+  label{
+    font:600 11px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  input[type=text],input[type=tel],input[type=email],input[type=date],input[type=time],textarea,select{
+    font:500 15px/1.35 'Barlow',sans-serif;color:var(--ink);
+    background:transparent;border:none;border-bottom:1.5px solid var(--line);
+    padding:6px 2px;border-radius:0;width:100%;
+    transition:border-color .15s, background .3s;
+  }
+  textarea{resize:vertical;min-height:84px;border:1.5px solid var(--line);border-radius:4px;padding:10px}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);background:rgba(198,162,78,.06)}
+  input::placeholder,textarea::placeholder{color:#AEB4BD;font-weight:400}
+  .money{display:flex;align-items:center;border-bottom:1.5px solid var(--line);transition:border-color .15s, background .3s}
+  .money .cur{font-weight:600;color:var(--muted);padding-left:2px;font-size:14px;flex:none}
+  .money input{border-bottom:none;padding-left:4px;font-variant-numeric:tabular-nums}
+  .money:focus-within{border-color:var(--gold);background:rgba(198,162,78,.06)}
+  .money input:focus{background:transparent}
+
+  /* auto-filled flash */
+  .filled{animation:flash 1.4s ease-out}
+  @keyframes flash{0%{background:var(--gold-soft);border-color:var(--gold)}100%{background:transparent}}
+  .autofill-tag{
+    display:none;align-items:center;gap:5px;margin-top:3px;
+    font:600 10px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--green);
+  }
+  .autofill-tag.show{display:inline-flex}
+
+  /* ---------- Stock lookup ---------- */
+  .stock-row{display:flex;gap:10px;align-items:flex-end}
+  .stock-row .field{flex:1}
+  .lookup-btn{
+    appearance:none;border:none;cursor:pointer;border-radius:4px;
+    background:var(--navy);color:var(--gold);
+    font:700 12px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;
+    padding:11px 16px;transition:transform .1s, background .15s;white-space:nowrap;
+  }
+  .lookup-btn:hover{background:#1D3453}
+  .lookup-btn:active{transform:translateY(1px)}
+  .lookup-btn:disabled{opacity:.55;cursor:wait}
+  .lookup-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .lookup-status{
+    grid-column:1/-1;font:500 13px/1.4 'Barlow',sans-serif;min-height:18px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .lookup-status.searching{color:var(--navy)}
+  .lookup-status.ok{color:var(--green)}
+  .lookup-status.warn{color:var(--amber)}
+  .lookup-status.err{color:var(--red)}
+  .lookup-status a{color:inherit}
+  .spinner{
+    width:14px;height:14px;border:2px solid var(--gold-soft);border-top-color:var(--gold);
+    border-radius:50%;animation:spin .7s linear infinite;flex:none;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- Address autocomplete ---------- */
+  .ac-list{
+    position:absolute;top:100%;left:0;right:0;z-index:30;margin-top:4px;
+    background:#fff;border:1px solid var(--line);border-radius:6px;
+    box-shadow:0 12px 28px rgba(13,27,46,.18);overflow:hidden;display:none;
+  }
+  .ac-list.open{display:block}
+  .ac-item{
+    padding:10px 12px;font:500 13.5px/1.35 'Barlow',sans-serif;cursor:pointer;
+    border-bottom:1px solid #EFEFEA;
+  }
+  .ac-item:last-child{border-bottom:none}
+  .ac-item:hover,.ac-item.active{background:var(--gold-soft)}
+  .ac-item small{display:block;color:var(--muted);font-weight:400}
+
+  /* ---------- Toggles ---------- */
+  .yn{display:flex;gap:6px;margin-top:2px}
+  .yn button{
+    appearance:none;cursor:pointer;border:1.5px solid var(--line);background:#fff;
+    color:var(--muted);font:700 12px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.08em;
+    padding:7px 14px;border-radius:999px;transition:all .12s;
+  }
+  .yn button.on{background:var(--navy);border-color:var(--navy);color:var(--gold)}
+  .yn button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* ---------- Trades ---------- */
+  .trade{
+    border:1px solid var(--line);border-left:4px solid var(--gold);
+    border-radius:4px;padding:14px 16px 16px;background:#fff;position:relative;
+  }
+  .trade h3{
+    font:700 13px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--navy);margin-bottom:12px;
+  }
+  .trades{display:grid;gap:14px}
+  .trades:not(:empty){margin-bottom:14px}
+  .add-trade{
+    display:inline-flex;align-items:center;gap:9px;appearance:none;cursor:pointer;
+    background:#fff;border:1.5px dashed var(--green);color:var(--green);border-radius:6px;
+    font:700 13px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+    padding:10px 18px 10px 12px;transition:background .15s;
+  }
+  .add-trade:hover{background:#EDF5EF}
+  .add-trade:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .add-trade .plus{
+    display:inline-flex;align-items:center;justify-content:center;flex:none;
+    width:20px;height:20px;border-radius:50%;background:var(--green);color:#fff;
+    font:700 15px/1 'Barlow',sans-serif;
+  }
+  .remove-trade{
+    position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;
+    border:1.5px solid var(--red);background:#fff;color:var(--red);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font:800 15px/1 'Barlow',sans-serif;
+    transition:background .12s,color .12s;
+  }
+  .remove-trade:hover{background:var(--red);color:#fff}
+  .remove-trade:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+  /* ---------- Footer / actions ---------- */
+  .actions{
+    display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:20px 28px;background:var(--navy);color:#B8C4D4;
+  }
+  .actions p{font-size:12.5px;max-width:480px}
+  .print-btn{
+    appearance:none;cursor:pointer;border:none;border-radius:4px;
+    background:var(--gold);color:var(--navy-deep);
+    font:800 14px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;
+    padding:14px 26px;transition:transform .1s, filter .15s;
+  }
+  .print-btn:hover{filter:brightness(1.06)}
+  .print-btn:active{transform:translateY(1px)}
+  .note{font-size:12px;color:var(--muted);margin-top:6px}
+
+  @media (max-width:680px){
+    .g2,.g3,.g4{grid-template-columns:1fr 1fr}
+    .span2,.span3{grid-column:span 2}
+    .meta{grid-template-columns:1fr 1fr}
+    section,.mast,.actions{padding-left:18px;padding-right:18px}
+  }
+  @media (max-width:440px){
+    .g2,.g3,.g4{grid-template-columns:1fr}
+    .span2,.span3{grid-column:span 1}
+    .stock-row{flex-direction:column;align-items:stretch}
+  }
+
+  @media print{
+    @page{size:letter;margin:0.35in}
+    body{background:#fff;padding:0}
+    .sheet{box-shadow:none;max-width:none;border-radius:0}
+    .lookup-btn,.lookup-status,.actions,.ac-list,.spinner,.note,.autofill-tag{display:none!important}
+    .mast{padding:9px 20px 0;border-bottom:3px solid var(--gold);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .brand img{height:30px}
+    h1{font-size:28px}
+    .mast small{font-size:9.5px!important}
+    .deal-type{margin-top:9px}
+    .deal-type button{padding:7px 8px;font-size:11px}
+    .meta{padding:9px 20px;gap:12px}
+    section{padding:9px 20px 11px;break-inside:avoid}
+    .sec-h{margin-bottom:8px}
+    .sec-h h2{font-size:11.5px}
+    .grid{gap:9px 12px}
+    label{font-size:9px}
+    input[type=text],input[type=tel],input[type=email],input[type=date],input[type=time],select{
+      font-size:12.5px;padding:3px 2px;border-bottom-width:1px}
+    .money .cur{font-size:11px}
+    textarea{min-height:56px;font-size:12.5px;padding:6px}
+    #secSpecial .field>label{display:none} /* section header already says it */
+    .add-trade,.remove-trade{display:none!important}
+    #secTrades:has(.trades:empty){display:none} /* no trades — skip the section on paper */
+
+    /* Reflow to four columns so everything fits one page */
+    #secBuyer .grid,#secCoach .grid,#secApprovals .grid{grid-template-columns:repeat(4,1fr)}
+    .trades{grid-template-columns:1fr 1fr;gap:12px}
+    .trade{padding:8px 10px 10px}
+    .trade h3{font-size:10px;margin-bottom:7px}
+    .yn button{padding:4px 11px;font-size:10px}
+    .stock-row .field{flex:1}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .filled{animation:none}
+    .spinner{animation-duration:1.5s}
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="mast">
+    <div class="mast-top">
+      <div class="brand">
+        <img src="https://mhsrv.s3.amazonaws.com/images/homeimage/logo--mhs-bc.png" alt="Motor Home Specialist">
+      </div>
+      <div style="text-align:right">
+        <h1>It&rsquo;s a <span>Deal!</span></h1>
+        <small style="display:block;font:600 11px/1.4 'Barlow Semi Condensed',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#B8C4D4;margin-top:4px">Motor Home Specialist &middot; Alvarado, TX</small>
+      </div>
+    </div>
+    <div class="deal-type" role="radiogroup" aria-label="Deal type">
+      <button type="button" class="on" data-deal="Finance">Finance</button>
+      <button type="button" data-deal="Cash">Cash</button>
+      <button type="button" data-deal="Outside Finance">Outside Finance</button>
+    </div>
+  </header>
+
+  <!-- ============ META STRIP ============ -->
+  <div class="meta">
+    <div class="field">
+      <label for="miles">Miles</label>
+      <input type="text" id="miles" inputmode="numeric" placeholder="0">
+    </div>
+    <div class="field">
+      <label for="vin8">Last 8 of VIN</label>
+      <input type="text" id="vin8" maxlength="8" style="text-transform:uppercase;letter-spacing:.15em" placeholder="XXXXXXXX">
+    </div>
+    <div class="field">
+      <label for="date">Date</label>
+      <input type="date" id="date">
+    </div>
+  </div>
+
+  <!-- ============ BUYER ============ -->
+  <section id="secBuyer">
+    <div class="sec-h"><h2>Buyer</h2></div>
+    <div class="grid g2">
+      <div class="field">
+        <label for="buyer">Buyer</label>
+        <input type="text" id="buyer" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="cobuyer">Co-Buyer</label>
+        <input type="text" id="cobuyer" autocomplete="off">
+      </div>
+      <div class="field span2">
+        <label for="street">Street &mdash; start typing for suggestions</label>
+        <input type="text" id="street" autocomplete="off" placeholder="123 Main St, Alvarado TX">
+        <div class="ac-list" id="acList" role="listbox"></div>
+      </div>
+      <div class="field">
+        <label for="city">City</label>
+        <input type="text" id="city">
+      </div>
+      <div class="field">
+        <label for="state">State</label>
+        <input type="text" id="state">
+      </div>
+      <div class="field">
+        <label for="zip">Zip</label>
+        <input type="text" id="zip" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="county">County</label>
+        <input type="text" id="county">
+      </div>
+      <div class="field">
+        <label for="phone">Phone #</label>
+        <input type="tel" id="phone" placeholder="(___) ___-____">
+      </div>
+      <div class="field">
+        <label for="faxemail">Email</label>
+        <input type="email" id="faxemail">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE COACH ============ -->
+  <section id="secCoach">
+    <div class="sec-h"><h2>The Coach</h2></div>
+    <div class="grid g2">
+      <div class="stock-row span2">
+        <div class="field">
+          <label for="stock">Stock # &mdash; auto-fills from MHSRV.com</label>
+          <input type="text" id="stock" autocomplete="off" placeholder="e.g. MHS44361">
+        </div>
+        <button type="button" class="lookup-btn" id="lookupBtn">&#9889; Pull from MHSRV</button>
+      </div>
+      <div class="lookup-status" id="lookupStatus" aria-live="polite"></div>
+      <div class="field">
+        <label for="description">Description</label>
+        <input type="text" id="description" placeholder="Year / Make / Model">
+        <span class="autofill-tag" id="tagDesc">&#10003; Pulled from MHSRV.com</span>
+      </div>
+      <div class="field">
+        <label for="salesPrice">Sales Price</label>
+        <div class="money"><span class="cur">$</span><input type="text" id="salesPrice" inputmode="decimal"></div>
+        <span class="autofill-tag" id="tagPrice">&#10003; Pulled from MHSRV.com</span>
+      </div>
+      <div class="field span2">
+        <label for="coachLoc">Coach Location</label>
+        <input type="text" id="coachLoc" placeholder="Example: &quot;Line 1&quot;, or &quot;Horseshoe&quot;, or &quot;Behind Hotel&quot;">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRADES ============ -->
+  <section id="secTrades">
+    <div class="sec-h"><h2>Trade-Ins</h2></div>
+    <div class="trades" id="tradesList"></div>
+    <button type="button" class="add-trade" id="addTrade">
+      <span class="plus" aria-hidden="true">+</span> Add Trade-In
+    </button>
+  </section>
+
+  <!-- ============ DEPOSIT & DELIVERY ============ -->
+  <section id="secDeposit">
+    <div class="sec-h"><h2>Deposit &amp; Delivery</h2></div>
+    <div class="grid g4">
+      <div class="field">
+        <label for="deposit">Amount of Deposit</label>
+        <div class="money"><span class="cur">$</span><input type="text" id="deposit" inputmode="decimal"></div>
+        <span class="autofill-tag" id="tagDep">&#10003; Auto-calculated from sale price</span>
+      </div>
+      <div class="field">
+        <label for="downPayment">Total Down Payment</label>
+        <div class="money"><span class="cur">$</span><input type="text" id="downPayment" inputmode="decimal"></div>
+      </div>
+      <div class="field">
+        <label for="delDate">Est. Delivery Date</label>
+        <input type="date" id="delDate">
+      </div>
+      <div class="field">
+        <label for="delTime">Delivery Slot</label>
+        <select id="delTime">
+          <option value="" selected>Select&hellip;</option>
+          <option value="10am">10am</option>
+          <option value="1pm">1pm</option>
+          <option value="3pm">3pm</option>
+        </select>
+      </div>
+      <div class="field span2">
+        <label>First Time Buyer</label>
+        <div class="yn" data-group="ftb">
+          <button type="button" data-val="Y">Y</button>
+          <button type="button" data-val="N">N</button>
+        </div>
+      </div>
+      <div class="field span2">
+        <label>Pending Inspection</label>
+        <div class="yn" data-group="inspection">
+          <button type="button" data-val="Y">Y</button>
+          <button type="button" data-val="N">N</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APPROVALS & PAYMENT ============ -->
+  <section id="secApprovals">
+    <div class="sec-h"><h2>Approvals &amp; Payment</h2></div>
+    <div class="grid g2">
+      <div class="field">
+        <label for="salesman">Salesman</label>
+        <input type="text" id="salesman">
+      </div>
+      <div class="field">
+        <label for="manager">Manager X</label>
+        <input type="text" id="manager">
+      </div>
+      <div class="field">
+        <label for="finManager">Finance Manager</label>
+        <input type="text" id="finManager">
+      </div>
+      <div class="field">
+        <label for="ccexp">CC Exp Date</label>
+        <input type="text" id="ccexp" placeholder="MM/YY" maxlength="5" inputmode="numeric">
+      </div>
+      <div class="field span2">
+        <label for="ccnum">CC # (deposit card)</label>
+        <input type="text" id="ccnum" inputmode="numeric" autocomplete="off">
+        <p class="note">Card details stay on this page only &mdash; nothing on this form is transmitted anywhere. Print for the deal jacket, then close the tab.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SPECIAL INSTRUCTIONS & TITLING ============ -->
+  <section id="secSpecial">
+    <div class="sec-h"><h2>Special Instructions</h2></div>
+    <div class="grid">
+      <div class="field">
+        <label for="special">Special Instructions</label>
+        <textarea id="special"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ACTIONS ============ -->
+  <div class="actions">
+    <p>Everything you type stays in this browser tab. Use <strong>Print / Save PDF</strong> to produce the signed copy for the deal jacket.</p>
+    <button type="button" class="print-btn" onclick="window.print()">Print / Save PDF</button>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   1. AUTO-FILL TODAY'S DATE
+   ========================================================= */
+(function setToday(){
+  const d = new Date();
+  const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('date').value = iso;
+})();
+
+/* =========================================================
+   2. DEAL-TYPE TABS + Y/N TOGGLES
+   ========================================================= */
+document.querySelectorAll('.deal-type button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.deal-type button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+  });
+});
+document.querySelectorAll('.yn').forEach(group=>{
+  group.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      group.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+    });
+  });
+});
+
+/* =========================================================
+   2b. PHONE AUTO-FORMAT  →  (817) 212-0123
+   ========================================================= */
+const phoneInput = document.getElementById('phone');
+phoneInput.addEventListener('input', ()=>{
+  const d = phoneInput.value.replace(/\D/g,'').slice(0,10);
+  let out = d;
+  if(d.length > 6)      out = '(' + d.slice(0,3) + ') ' + d.slice(3,6) + '-' + d.slice(6);
+  else if(d.length > 3) out = '(' + d.slice(0,3) + ') ' + d.slice(3);
+  else if(d.length > 0) out = '(' + d;
+  phoneInput.value = out;
+});
+
+/* =========================================================
+   2c. DEPOSIT AUTO-CALC from Sales Price
+        $0–$99,999      → $2,000
+        $100k–$199,999  → $3,000
+        $200k–$399,999  → $4,000
+        $400k+          → $5,000
+   ========================================================= */
+const salesPriceInput = document.getElementById('salesPrice');
+function depositFor(price){
+  if(price >= 400000) return 5000;
+  if(price >= 200000) return 4000;
+  if(price >= 100000) return 3000;
+  return 2000;
+}
+function updateDeposit(){
+  const price = parseFloat(salesPriceInput.value.replace(/[^0-9.]/g,''));
+  if(isNaN(price) || price <= 0) return;
+  fillField('deposit', fmtMoney(depositFor(price)), 'tagDep');
+}
+salesPriceInput.addEventListener('input', updateDeposit);
+salesPriceInput.addEventListener('change', updateDeposit);
+
+/* =========================================================
+   2d. DYNAMIC TRADE-INS  (green + to add, red − to remove)
+   ========================================================= */
+const tradesList  = document.getElementById('tradesList');
+const addTradeBtn = document.getElementById('addTrade');
+
+function addTrade(){
+  const card = document.createElement('div');
+  card.className = 'trade';
+  card.innerHTML =
+    '<h3>Trade-In #<span class="tnum"></span></h3>' +
+    '<button type="button" class="remove-trade" aria-label="Remove this trade-in" title="Remove this trade-in">&minus;</button>' +
+    '<div class="grid g3">' +
+      '<div class="field span3"><label>Year / Make / Model / Model # / Length</label><input type="text"></div>' +
+      '<div class="field"><label>Allowance</label><div class="money"><span class="cur">$</span><input type="text" inputmode="decimal"></div></div>' +
+      '<div class="field"><label>Balance Owed</label><div class="money"><span class="cur">$</span><input type="text" inputmode="decimal"></div></div>' +
+      '<div class="field"><label>Bank</label><input type="text"></div>' +
+    '</div>';
+  card.querySelector('.remove-trade').addEventListener('click', ()=>{
+    card.remove();
+    renumberTrades();
+  });
+  tradesList.appendChild(card);
+  renumberTrades();
+  card.querySelector('input').focus();
+}
+function renumberTrades(){
+  tradesList.querySelectorAll('.trade').forEach((c,i)=>{
+    c.querySelector('.tnum').textContent = i + 1;
+  });
+}
+addTradeBtn.addEventListener('click', addTrade);
+
+/* =========================================================
+   3. STOCK # LOOKUP  →  pulls live data from MHSRV.com
+      (uses the Anthropic API with web search; works when
+       this page is opened as a Claude artifact)
+   ========================================================= */
+const stockInput   = document.getElementById('stock');
+const lookupBtn    = document.getElementById('lookupBtn');
+const statusEl     = document.getElementById('lookupStatus');
+
+function setStatus(kind, html){
+  statusEl.className = 'lookup-status ' + kind;
+  statusEl.innerHTML = (kind === 'searching' ? '<span class="spinner"></span>' : '') + html;
+}
+function fillField(id, value, tagId){
+  const el = document.getElementById(id);
+  el.value = value;
+  el.classList.remove('filled');
+  void el.offsetWidth;              // restart animation
+  el.classList.add('filled');
+  if(tagId) document.getElementById(tagId).classList.add('show');
+}
+function fmtMoney(n){
+  return Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+
+async function lookupStock(){
+  const stock = stockInput.value.trim();
+  if(!stock){ setStatus('warn','Enter a stock number first.'); return; }
+
+  lookupBtn.disabled = true;
+  setStatus('searching','Searching MHSRV.com for stock #' + stock + '&hellip;');
+
+  const prompt =
+    'Search the web for the RV inventory listing on mhsrv.com (Motor Home Specialist, ' +
+    'the RV dealership in Alvarado, Texas) with stock number "' + stock + '". ' +
+    'Try queries like: site:mhsrv.com ' + stock + ' — and mhsrv stock ' + stock + '. ' +
+    'From the listing page, extract the unit description and the MHSRV sale price. ' +
+    'Respond with ONLY a raw JSON object, no markdown fences, no commentary, exactly this shape: ' +
+    '{"found": true|false, "description": "Year Make Model (e.g. 2026 Entegra Coach Accolade 37K)", ' +
+    '"salesPrice": number in USD (digits only, no commas; the MHS sale price, not MSRP), ' +
+    '"url": "full listing URL"}. ' +
+    'If you cannot find the listing, respond {"found": false}.';
+
+  try{
+    const response = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}],
+        tools:[{type:'web_search_20250305',name:'web_search'}]
+      })
+    });
+    if(!response.ok) throw new Error('API returned ' + response.status);
+    const data = await response.json();
+
+    const text = (data.content || [])
+      .map(b => b.type === 'text' ? b.text : '')
+      .filter(Boolean).join('\n');
+
+    // Grab the last JSON object in the reply and strip any fences
+    const clean = text.replace(/```json|```/g,'').trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    if(!match) throw new Error('No JSON in response');
+    const info = JSON.parse(match[0]);
+
+    if(!info.found){
+      setStatus('warn','Couldn&rsquo;t find stock #' + stock + ' on MHSRV.com &mdash; it may be sold or newly listed. Fill the fields in manually.');
+      return;
+    }
+
+    if(info.description) fillField('description', info.description, 'tagDesc');
+    if(info.salesPrice){
+      fillField('salesPrice', fmtMoney(info.salesPrice), 'tagPrice');
+      fillField('deposit', fmtMoney(depositFor(Number(info.salesPrice))), 'tagDep');
+    }
+
+    const link = info.url ? ' &middot; <a href="' + info.url + '" target="_blank" rel="noopener">View listing</a>' : '';
+    setStatus('ok','&#10003; Found it &mdash; description, price, and deposit filled in. Double-check against the listing before signing.' + link);
+  }catch(err){
+    console.error('Stock lookup error:', err);
+    setStatus('err','Lookup didn&rsquo;t go through (this feature needs the page to be running as a Claude artifact, plus an internet connection). Fill the fields in manually.');
+  }finally{
+    lookupBtn.disabled = false;
+  }
+}
+
+lookupBtn.addEventListener('click', lookupStock);
+stockInput.addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){ e.preventDefault(); lookupStock(); }
+});
+
+/* =========================================================
+   4. ADDRESS AUTOCOMPLETE  (OpenStreetMap Nominatim — free,
+      no API key, US-biased)
+   ========================================================= */
+const streetInput = document.getElementById('street');
+const acList      = document.getElementById('acList');
+let acTimer = null, acAbort = null, acItems = [], acIndex = -1;
+
+streetInput.addEventListener('input', ()=>{
+  const q = streetInput.value.trim();
+  clearTimeout(acTimer);
+  if(q.length < 4){ closeAC(); return; }
+  acTimer = setTimeout(()=>searchAddress(q), 350);
+});
+
+async function searchAddress(q){
+  if(acAbort) acAbort.abort();
+  acAbort = new AbortController();
+  try{
+    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=us&limit=5&q=' + encodeURIComponent(q);
+    const res = await fetch(url,{signal:acAbort.signal, headers:{'Accept':'application/json'}});
+    if(!res.ok) return;
+    const results = await res.json();
+    renderAC(results);
+  }catch(e){ /* aborted or offline — fail quietly, field still works manually */ }
+}
+
+function renderAC(results){
+  acItems = results || [];
+  acIndex = -1;
+  if(!acItems.length){ closeAC(); return; }
+  acList.innerHTML = acItems.map((r,i)=>{
+    const a = r.address || {};
+    const line1 = [a.house_number, a.road].filter(Boolean).join(' ') || r.name || '';
+    const line2 = [a.city||a.town||a.village||a.hamlet, a.state, a.postcode].filter(Boolean).join(', ');
+    return '<div class="ac-item" role="option" data-i="'+i+'">'+ (line1||r.display_name.split(',')[0]) +'<small>'+ (line2||r.display_name) +'</small></div>';
+  }).join('');
+  acList.classList.add('open');
+  acList.querySelectorAll('.ac-item').forEach(el=>{
+    el.addEventListener('mousedown', e=>{ e.preventDefault(); pickAC(+el.dataset.i); });
+  });
+}
+
+function pickAC(i){
+  const r = acItems[i]; if(!r) return;
+  const a = r.address || {};
+  // If the result has no house number but the user typed one, keep what they typed
+  const typedNum = (streetInput.value.trim().match(/^(\d+[\w-]*)\s+/) || [])[1] || '';
+  let street = [a.house_number, a.road].filter(Boolean).join(' ');
+  if(!a.house_number && typedNum && a.road) street = typedNum + ' ' + a.road;
+  streetInput.value = street || (typedNum ? typedNum + ' ' : '') + r.display_name.split(',')[0];
+  fillField('city',   a.city || a.town || a.village || a.hamlet || '');
+  fillField('state',  a.state || '');
+  fillField('zip',    a.postcode || '');
+  fillField('county', (a.county || '').replace(/ County$/,''));
+  closeAC();
+}
+
+function closeAC(){ acList.classList.remove('open'); acList.innerHTML=''; acItems=[]; acIndex=-1; }
+
+streetInput.addEventListener('keydown', e=>{
+  if(!acList.classList.contains('open')) return;
+  const items = acList.querySelectorAll('.ac-item');
+  if(e.key === 'ArrowDown'){ e.preventDefault(); acIndex = Math.min(acIndex+1, items.length-1); highlight(items); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); acIndex = Math.max(acIndex-1, 0); highlight(items); }
+  else if(e.key === 'Enter' && acIndex >= 0){ e.preventDefault(); pickAC(acIndex); }
+  else if(e.key === 'Escape'){ closeAC(); }
+});
+function highlight(items){ items.forEach((el,i)=>el.classList.toggle('active', i===acIndex)); }
+document.addEventListener('click', e=>{ if(!e.target.closest('.field')) closeAC(); });
+</script>
+</body>
+</html>
