@@ -10,6 +10,8 @@ stock-number lookup from the NetSource inventory export.
 | `index.html` | The deal sheet itself | Yes |
 | `inventory.js` | Stock lookup data (1,224 units, generated July 11, 2026) | Yes |
 | `update-inventory.py` | Regenerates inventory.js from a new CSV | No — keep locally |
+| `email-worker.js` | Cloudflare Worker that sends the emailed PDFs | No — deploy to Cloudflare |
+| `EMAIL-SETUP.md` | One-time setup for real email sending | No — keep locally |
 | `README.md` | This file | Optional |
 
 `index.html` and `inventory.js` must sit in the same folder.
@@ -50,11 +52,14 @@ can tell how fresh the data is.
 ## Notes
 
 - **Email PDF button**: builds a PDF of the filled sheet in the browser and
-  sends it via FormSubmit to one or more addresses (comma-separated, up to 8
-  per send); a copy also lands in ebendele@gmail.com as a record. The card number is masked to its last 4 digits in the
-  emailed PDF. If sending fails (offline, service hiccup), the PDF downloads
-  instead so it can be attached to an email manually. Requires internet
-  (the PDF library loads from a CDN on first use).
+  emails it with the PDF attached to one or more addresses (comma-separated,
+  up to 8 per send), sent from elisha@mhsrv.com — once the send service is
+  connected (one-time setup: see EMAIL-SETUP.md, deploy email-worker.js).
+  Until then, or if a send fails, the button hands the PDF to the device's
+  share sheet (phones: Mail/Gmail opens with it attached) or downloads it
+  and opens a pre-addressed draft. The card number is always masked to its
+  last 4 digits in the generated PDF. Requires internet (the PDF library
+  loads from a CDN on first use).
 - The dealer **Cost** column is never read or written by the generator.
 - Nothing typed into the form is transmitted anywhere unless you use Email
   PDF; the CC# field otherwise exists only so it appears on the printed page.
