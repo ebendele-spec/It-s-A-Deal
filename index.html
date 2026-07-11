@@ -272,6 +272,7 @@
     box-shadow:0 0 0 2000px rgba(13,27,46,.25);
   }
   .scan-status{min-height:20px;font:600 14px/1.4 'Barlow',sans-serif}
+  .scan-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
   .scan-note{font-size:12px;color:#8FA0B5;max-width:420px}
 
   /* ---------- PDF capture mode (Email PDF) ----------
@@ -597,8 +598,13 @@
     <div class="scan-frame" aria-hidden="true"></div>
   </div>
   <div class="scan-status" id="scanStatus">Starting camera&hellip;</div>
+  <div class="scan-actions">
+    <button type="button" class="print-btn" id="scanPhotoBtn">&#128248; Take a photo instead</button>
+    <button type="button" class="email-btn" id="scanTorchBtn" hidden>&#128294; Light</button>
+    <button type="button" class="email-btn" id="scanCancel">Cancel</button>
+  </div>
+  <input type="file" id="scanPhotoInput" accept="image/*" capture="environment" hidden>
   <p class="scan-note">Everything is read on this phone &mdash; no photo is uploaded anywhere.</p>
-  <button type="button" class="email-btn" id="scanCancel">Cancel</button>
 </div>
 
 <script src="inventory.js"></script>
@@ -1034,15 +1040,24 @@ emailSend.addEventListener('click', sendDealEmail);
    6. LICENSE SCAN — phone-camera scan of the PDF417 barcode
       on the BACK of a US driver's license (the machine-
       readable AAMVA record: exact legal name + address).
+      Decoder: zxing-wasm (the C++ ZXing engine in
+      WebAssembly — far stronger on PDF417 than JS ports).
       Runs entirely on-device; nothing is uploaded. Buttons
       show only on touch devices with a camera.
    ========================================================= */
-const SCAN_LIB = 'https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js';
+const ZXWASM_URL  = 'https://cdn.jsdelivr.net/npm/zxing-wasm@2/dist/full/+esm';
 const scanOverlay = document.getElementById('scanOverlay');
 const scanVideo   = document.getElementById('scanVideo');
 const scanStatus  = document.getElementById('scanStatus');
 const scanCancel  = document.getElementById('scanCancel');
-let scanReader = null, scanTarget = null, scanDone = false;
+const scanPhotoBtn   = document.getElementById('scanPhotoBtn');
+const scanPhotoInput = document.getElementById('scanPhotoInput');
+const scanTorchBtn   = document.getElementById('scanTorchBtn');
+
+let scanTarget = null, scanDone = false, scanStream = null, scanTimer = null;
+let scanBusy = false, torchOn = false, zxingMod = null;
+const scanCanvas = document.createElement('canvas');
+const scanCtx = scanCanvas.getContext('2d', {willReadFrequently:true});
 
 if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
   document.body.classList.add('can-scan');
@@ -1052,59 +1067,111 @@ document.querySelectorAll('.scan-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>openScanner(btn.dataset.scan));
 });
 scanCancel.addEventListener('click', closeScanner);
+scanPhotoBtn.addEventListener('click', ()=>scanPhotoInput.click());
+scanPhotoInput.addEventListener('change', decodePhoto);
+scanTorchBtn.addEventListener('click', toggleTorch);
 
 function setScanStatus(msg){ scanStatus.textContent = msg; }
 
-function loadZXing(){
-  if(window.ZXing) return Promise.resolve();
-  return new Promise((resolve,reject)=>{
-    const s = document.createElement('script');
-    s.src = SCAN_LIB;
-    s.onload = resolve;
-    s.onerror = ()=>reject(new Error('could not load the scanner library'));
-    document.head.appendChild(s);
-  });
+async function loadZXingWasm(){
+  if(!zxingMod) zxingMod = await import(ZXWASM_URL);
+  return zxingMod;
 }
 
 async function openScanner(target){
   scanTarget = target;
   scanDone = false;
+  torchOn = false;
   scanOverlay.hidden = false;
   setScanStatus('Starting camera\u2026');
   try{
-    await loadZXing();
-    let reader;
-    if(ZXing.BrowserPDF417Reader){
-      reader = new ZXing.BrowserPDF417Reader();
-    }else{
-      const hints = new Map();
-      hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.PDF_417]);
-      reader = new ZXing.BrowserMultiFormatReader(hints);
-    }
-    scanReader = reader;
-    await reader.decodeFromConstraints(
-      {audio:false, video:{facingMode:'environment'}},
-      scanVideo,
-      (result)=>{ if(result && !scanDone){ scanDone = true; handleScan(result.getText()); } }
-    );
-    setScanStatus('Hold the BACK of the license inside the frame \u2014 steady, good light, fill the width.');
+    loadZXingWasm().catch(()=>{}); // warm the decoder while the camera starts
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1920}, height:{ideal:1080}
+      }
+    });
+    scanVideo.srcObject = scanStream;
+    await scanVideo.play();
+
+    // Ask for continuous autofocus + reveal the torch button when supported
+    const track = scanStream.getVideoTracks()[0];
+    try{
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if(caps.focusMode && caps.focusMode.includes('continuous')){
+        await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
+      }
+      scanTorchBtn.hidden = !caps.torch;
+    }catch(e){ /* capabilities are best-effort */ }
+
+    setScanStatus('Hold the BACK of the license flat in the frame \u2014 6\u20138 inches away, good light.');
+    scanTimer = setInterval(decodeVideoFrame, 350);
   }catch(err){
     console.error('Scanner error:', err);
     const denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
     setScanStatus(denied
-      ? 'Camera access was blocked \u2014 allow camera for this site in your browser settings, then try again.'
-      : 'Could not start the scanner (' + (err.message||err.name||'unknown error') + ').');
+      ? 'Camera access was blocked \u2014 allow camera for this site in your browser settings, then try again. Or use "Take a photo instead".'
+      : 'Could not start the live camera (' + (err.message||err.name||'unknown') + ') \u2014 use "Take a photo instead".');
   }
 }
 
-function closeScanner(){
-  try{ if(scanReader && scanReader.reset) scanReader.reset(); }catch(e){}
+async function decodeVideoFrame(){
+  if(scanBusy || scanDone || !scanVideo.videoWidth) return;
+  scanBusy = true;
   try{
-    const stream = scanVideo.srcObject;
-    if(stream) stream.getTracks().forEach(t=>t.stop());
+    scanCanvas.width  = scanVideo.videoWidth;
+    scanCanvas.height = scanVideo.videoHeight;
+    scanCtx.drawImage(scanVideo, 0, 0);
+    const imgData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+    const {readBarcodes} = await loadZXingWasm();
+    const results = await readBarcodes(imgData, {formats:['PDF417'], tryHarder:true, maxNumberOfSymbols:1});
+    if(!scanDone && results && results[0] && results[0].text){
+      scanDone = true;
+      handleScan(results[0].text);
+    }
+  }catch(e){ /* keep trying on the next frame */ }
+  scanBusy = false;
+}
+
+async function decodePhoto(){
+  const file = scanPhotoInput.files && scanPhotoInput.files[0];
+  scanPhotoInput.value = '';
+  if(!file) return;
+  setScanStatus('Reading the photo\u2026');
+  try{
+    const {readBarcodes} = await loadZXingWasm();
+    const results = await readBarcodes(file, {formats:['PDF417'], tryHarder:true, maxNumberOfSymbols:1});
+    if(results && results[0] && results[0].text){
+      scanDone = true;
+      handleScan(results[0].text);
+    }else{
+      setScanStatus('No barcode found in that photo \u2014 get closer so the barcode fills most of the shot, avoid glare, and try again.');
+    }
+  }catch(err){
+    console.error('Photo decode error:', err);
+    setScanStatus('Could not read that photo (' + (err.message||'unknown error') + ') \u2014 try again with the barcode filling the shot.');
+  }
+}
+
+async function toggleTorch(){
+  try{
+    const track = scanStream && scanStream.getVideoTracks()[0];
+    if(!track) return;
+    torchOn = !torchOn;
+    await track.applyConstraints({advanced:[{torch:torchOn}]});
+    scanTorchBtn.textContent = torchOn ? '\uD83D\uDD26 Light off' : '\uD83D\uDD26 Light';
+  }catch(e){ scanTorchBtn.hidden = true; }
+}
+
+function closeScanner(){
+  if(scanTimer){ clearInterval(scanTimer); scanTimer = null; }
+  try{
+    if(scanStream) scanStream.getTracks().forEach(t=>t.stop());
     scanVideo.srcObject = null;
   }catch(e){}
-  scanReader = null;
+  scanStream = null;
   scanOverlay.hidden = true;
 }
 
