@@ -1145,7 +1145,7 @@ async function decodeImageData(imgData){
     const codes = await eng.detector.detect(imgData);
     return (codes && codes[0]) ? codes[0].rawValue : null;
   }
-  const results = await eng.read(imgData, {formats:['PDF417'], tryHarder:true, maxNumberOfSymbols:1});
+  const results = await eng.read(imgData, {formats:['PDF417'], tryHarder:true, maxNumberOfSymbols:1, textMode:'Plain'});
   return (results && results[0] && results[0].text) ? results[0].text : null;
 }
 
@@ -1288,6 +1288,9 @@ function titleCase(s){
 
 function parseAAMVA(raw){
   raw = String(raw || '');
+  // Some decoders emit control characters as literal tokens ("<LF>", "<CR>",
+  // "<RS>", "<GS>") — turn those back into the real separators first.
+  raw = raw.replace(/<LF>/gi,'\n').replace(/<CR>/gi,'\r').replace(/<RS>/gi,'\x1e').replace(/<GS>/gi,'\x1d');
   // Real-world license headers vary ("ANSI ", "ANSI636...", "AAMVA", oddball
   // separators) — accept if the header OR the standard data element codes show up.
   const headerOK = /ANSI|AAMVA/i.test(raw);
