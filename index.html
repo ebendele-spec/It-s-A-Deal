@@ -1045,7 +1045,7 @@ emailSend.addEventListener('click', sendDealEmail);
       Runs entirely on-device; nothing is uploaded. Buttons
       show only on touch devices with a camera.
    ========================================================= */
-const ZXWASM_URL  = 'https://cdn.jsdelivr.net/npm/zxing-wasm@2/dist/full/+esm';
+const ZXWASM_BASE = 'https://cdn.jsdelivr.net/npm/zxing-wasm@2/dist/full/';
 const scanOverlay = document.getElementById('scanOverlay');
 const scanVideo   = document.getElementById('scanVideo');
 const scanStatus  = document.getElementById('scanStatus');
@@ -1055,7 +1055,8 @@ const scanPhotoInput = document.getElementById('scanPhotoInput');
 const scanTorchBtn   = document.getElementById('scanTorchBtn');
 
 let scanTarget = null, scanDone = false, scanStream = null, scanTimer = null;
-let scanBusy = false, torchOn = false, zxingMod = null;
+let scanBusy = false, torchOn = false, scanAttempts = 0;
+let barcodeEngine = null, enginePromise = null;
 const scanCanvas = document.createElement('canvas');
 const scanCtx = scanCanvas.getContext('2d', {willReadFrequently:true});
 
@@ -1073,19 +1074,63 @@ scanTorchBtn.addEventListener('click', toggleTorch);
 
 function setScanStatus(msg){ scanStatus.textContent = msg; }
 
-async function loadZXingWasm(){
-  if(!zxingMod) zxingMod = await import(ZXWASM_URL);
-  return zxingMod;
+/* Decoder: native BarcodeDetector when it supports PDF417
+   (Chrome on Android), else zxing-wasm (real C++ engine). */
+function getEngine(){
+  if(barcodeEngine) return Promise.resolve(barcodeEngine);
+  if(enginePromise) return enginePromise;
+  enginePromise = (async ()=>{
+    try{
+      if('BarcodeDetector' in window){
+        const fmts = await window.BarcodeDetector.getSupportedFormats();
+        if(fmts && fmts.includes('pdf417')){
+          barcodeEngine = {kind:'native', detector:new window.BarcodeDetector({formats:['pdf417']})};
+          return barcodeEngine;
+        }
+      }
+    }catch(e){ /* fall through to wasm */ }
+    const mod = await import(ZXWASM_BASE + 'index.js');
+    try{
+      const locate = (path,prefix)=> String(path).endsWith('.wasm') ? ZXWASM_BASE + path : prefix + path;
+      if(mod.prepareZXingModule)            mod.prepareZXingModule({overrides:{locateFile:locate}});
+      else if(mod.setZXingModuleOverrides)  mod.setZXingModuleOverrides({locateFile:locate});
+    }catch(e){ /* default resolution may still work */ }
+    barcodeEngine = {kind:'wasm', readBarcodes: mod.readBarcodes};
+    return barcodeEngine;
+  })();
+  enginePromise.catch(()=>{ enginePromise = null; });
+  return enginePromise;
+}
+
+async function decodeImageData(imgData){
+  const eng = await getEngine();
+  if(eng.kind === 'native'){
+    const codes = await eng.detector.detect(imgData);
+    return (codes && codes[0]) ? codes[0].rawValue : null;
+  }
+  const results = await eng.readBarcodes(imgData, {formats:['PDF417'], tryHarder:true, maxNumberOfSymbols:1});
+  return (results && results[0] && results[0].text) ? results[0].text : null;
 }
 
 async function openScanner(target){
   scanTarget = target;
   scanDone = false;
   torchOn = false;
+  scanAttempts = 0;
   scanOverlay.hidden = false;
+  setScanStatus('Loading the scanner\u2026');
+
+  // Load the decoder first — if this fails, nothing else can work.
+  try{
+    await getEngine();
+  }catch(err){
+    console.error('Decoder load error:', err);
+    setScanStatus('The barcode decoder couldn\u2019t load \u2014 check the internet connection, then close and reopen the scanner.');
+    return;
+  }
+
   setScanStatus('Starting camera\u2026');
   try{
-    loadZXingWasm().catch(()=>{}); // warm the decoder while the camera starts
     scanStream = await navigator.mediaDevices.getUserMedia({
       audio:false,
       video:{
@@ -1096,7 +1141,6 @@ async function openScanner(target){
     scanVideo.srcObject = scanStream;
     await scanVideo.play();
 
-    // Ask for continuous autofocus + reveal the torch button when supported
     const track = scanStream.getVideoTracks()[0];
     try{
       const caps = track.getCapabilities ? track.getCapabilities() : {};
@@ -1109,10 +1153,10 @@ async function openScanner(target){
     setScanStatus('Hold the BACK of the license flat in the frame \u2014 6\u20138 inches away, good light.');
     scanTimer = setInterval(decodeVideoFrame, 350);
   }catch(err){
-    console.error('Scanner error:', err);
+    console.error('Camera error:', err);
     const denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
     setScanStatus(denied
-      ? 'Camera access was blocked \u2014 allow camera for this site in your browser settings, then try again. Or use "Take a photo instead".'
+      ? 'Camera access was blocked \u2014 allow camera for this site in your browser settings, or use "Take a photo instead".'
       : 'Could not start the live camera (' + (err.message||err.name||'unknown') + ') \u2014 use "Take a photo instead".');
   }
 }
@@ -1125,14 +1169,40 @@ async function decodeVideoFrame(){
     scanCanvas.height = scanVideo.videoHeight;
     scanCtx.drawImage(scanVideo, 0, 0);
     const imgData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-    const {readBarcodes} = await loadZXingWasm();
-    const results = await readBarcodes(imgData, {formats:['PDF417'], tryHarder:true, maxNumberOfSymbols:1});
-    if(!scanDone && results && results[0] && results[0].text){
+    const text = await decodeImageData(imgData);
+    if(text && !scanDone){
       scanDone = true;
-      handleScan(results[0].text);
+      handleScan(text);
+    }else{
+      scanAttempts++;
+      if(scanAttempts === 20){
+        setScanStatus('Still looking\u2026 tilt slightly to kill the glare \u2014 or use "Take a photo instead", it\u2019s the most reliable.');
+      }
     }
-  }catch(e){ /* keep trying on the next frame */ }
+  }catch(e){ console.warn('frame decode:', e); }
   scanBusy = false;
+}
+
+async function fileToImageData(file){
+  let src, w, h;
+  const bmp = await (window.createImageBitmap ? createImageBitmap(file).catch(()=>null) : Promise.resolve(null));
+  if(bmp){
+    src = bmp; w = bmp.width; h = bmp.height;
+  }else{
+    src = await new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error('that image format couldn\u2019t be read'));
+      img.src = URL.createObjectURL(file);
+    });
+    w = src.naturalWidth; h = src.naturalHeight;
+  }
+  const MAX = 3000;
+  const k = Math.min(1, MAX / Math.max(w, h));
+  scanCanvas.width  = Math.round(w * k);
+  scanCanvas.height = Math.round(h * k);
+  scanCtx.drawImage(src, 0, 0, scanCanvas.width, scanCanvas.height);
+  return scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
 }
 
 async function decodePhoto(){
@@ -1141,11 +1211,11 @@ async function decodePhoto(){
   if(!file) return;
   setScanStatus('Reading the photo\u2026');
   try{
-    const {readBarcodes} = await loadZXingWasm();
-    const results = await readBarcodes(file, {formats:['PDF417'], tryHarder:true, maxNumberOfSymbols:1});
-    if(results && results[0] && results[0].text){
+    const imgData = await fileToImageData(file);
+    const text = await decodeImageData(imgData);
+    if(text){
       scanDone = true;
-      handleScan(results[0].text);
+      handleScan(text);
     }else{
       setScanStatus('No barcode found in that photo \u2014 get closer so the barcode fills most of the shot, avoid glare, and try again.');
     }
