@@ -1287,7 +1287,12 @@ function titleCase(s){
 }
 
 function parseAAMVA(raw){
-  if(!/ANSI |AAMVA/.test(raw)) return null;
+  raw = String(raw || '');
+  // Real-world license headers vary ("ANSI ", "ANSI636...", "AAMVA", oddball
+  // separators) — accept if the header OR the standard data element codes show up.
+  const headerOK = /ANSI|AAMVA/i.test(raw);
+  const codeHits = (raw.match(/D(?:AQ|CS|AC|AD|AG|AH|AI|AJ|AK|BB|CT)/g) || []).length;
+  if(!headerOK && codeHits < 2) return null;
   const get = code=>{
     const m = raw.match(new RegExp('(?:\\r|\\n|^|DL|ID)' + code + '([^\\r\\n]*)'));
     return m ? m[1].trim() : '';
@@ -1302,7 +1307,7 @@ function parseAAMVA(raw){
     first = parts[0] || '';
     middle = parts.slice(1).join(' ');
   }
-  if(!first && !last) return null;
+  if(!first && !last) return {partial:true};
   const street = [get('DAG'), get('DAH')].filter(Boolean).join(', ');
   let zip = get('DAK').replace(/[^0-9]/g,'');
   if(zip.length > 5) zip = /[1-9]/.test(zip.slice(5,9)) ? zip.slice(0,5) + '-' + zip.slice(5,9) : zip.slice(0,5);
@@ -1315,9 +1320,16 @@ function parseAAMVA(raw){
 
 function handleScan(text){
   const d = parseAAMVA(text);
-  if(!d){
+  if(!d || d.partial){
     scanDone = false;
-    setScanStatus('That barcode isn\u2019t a license record \u2014 make sure it\u2019s the wide barcode on the BACK of the license.');
+    console.log('License scan raw payload (stays on this device):', text);
+    // Show the first few header characters (no personal data lives there) so
+    // an unrecognized format can be diagnosed from a screenshot.
+    const head = String(text||'').slice(0, 18).replace(/[^\x20-\x7E]/g, '\u00B7');
+    setScanStatus((d && d.partial
+      ? 'Read the barcode but couldn\u2019t find the name fields in it \u2014 try once more.'
+      : 'That barcode isn\u2019t a license record \u2014 make sure it\u2019s the wide barcode on the BACK of the license.')
+      + ' [data starts: "' + head + '"]');
     return;
   }
   closeScanner();
