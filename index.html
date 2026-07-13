@@ -278,6 +278,17 @@
   .scan-status{min-height:20px;font:600 14px/1.4 'Barlow',sans-serif}
   .scan-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
   .scan-note{font-size:12px;color:#8FA0B5;max-width:420px}
+  .idcap-frame{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:86%;aspect-ratio:1.586;border:2.5px solid var(--gold);border-radius:10px;
+    pointer-events:none;box-shadow:0 0 0 2000px rgba(13,27,46,.45);
+  }
+  .idcap-shutter{
+    width:64px;height:64px;border-radius:50%;cursor:pointer;
+    background:var(--gold);border:4px solid #fff;
+    transition:transform .1s;
+  }
+  .idcap-shutter:active{transform:scale(.92)}
 
 
   @media screen and (max-width:680px){
@@ -587,6 +598,24 @@
   </div>
   <input type="file" id="scanPhotoInput" accept="image/*" capture="environment" hidden>
   <p class="scan-note">Everything is read on this phone &mdash; no photo is uploaded anywhere.</p>
+</div>
+
+<!-- ============ GUIDED ID PHOTO OVERLAY ============ -->
+<div class="scan-overlay" id="idCapOverlay" hidden>
+  <div class="scan-head" id="idCapTitle">Photograph the license</div>
+  <div class="scan-stage" id="idCapStage">
+    <video id="idCapVideo" playsinline muted></video>
+    <div class="idcap-frame" id="idCapFrame" aria-hidden="true"></div>
+  </div>
+  <div class="scan-status">Fit the license inside the frame, then tap the shutter. The photo is cropped exactly to the frame.</div>
+  <div class="scan-actions">
+    <button type="button" class="idcap-shutter" id="idCapShutter" aria-label="Take photo"></button>
+  </div>
+  <div class="scan-actions">
+    <button type="button" class="email-btn" id="idCapTorch" hidden>&#128294; Light</button>
+    <button type="button" class="email-btn" id="idCapCancel">Cancel</button>
+  </div>
+  <p class="scan-note">The photo stays on this device until you print or email the deal sheet.</p>
 </div>
 
 <input type="file" id="idPhotoInput" accept="image/*" capture="environment" hidden>
@@ -1471,8 +1500,112 @@ const idPhotoInput = document.getElementById('idPhotoInput');
 document.querySelectorAll('.idphoto-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     idPhotoSlot = btn.dataset.photo;
-    idPhotoInput.click();
+    openIdCapture(idPhotoSlot);
   });
+});
+
+/* ---- Guided capture: crop is exactly the gold frame, every time ---- */
+const idCapOverlay = document.getElementById('idCapOverlay');
+const idCapVideo   = document.getElementById('idCapVideo');
+const idCapFrame   = document.getElementById('idCapFrame');
+const idCapTitle   = document.getElementById('idCapTitle');
+const idCapShutter = document.getElementById('idCapShutter');
+const idCapTorch   = document.getElementById('idCapTorch');
+const idCapCancel  = document.getElementById('idCapCancel');
+let idCapStream = null, idCapTorchOn = false;
+
+const SLOT_TITLES = {
+  buyerFront:   "FRONT of the Buyer\u2019s license",
+  buyerBack:    "BACK of the Buyer\u2019s license",
+  cobuyerFront: "FRONT of the Co-Buyer\u2019s license",
+  cobuyerBack:  "BACK of the Co-Buyer\u2019s license"
+};
+
+async function openIdCapture(slot){
+  idCapTitle.textContent = SLOT_TITLES[slot] || 'Photograph the license';
+  idCapOverlay.hidden = false;
+  idCapTorchOn = false;
+  try{
+    idCapStream = await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}}
+    });
+    idCapVideo.srcObject = idCapStream;
+    await idCapVideo.play();
+    const track = idCapStream.getVideoTracks()[0];
+    try{
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if(caps.focusMode && caps.focusMode.includes('continuous')){
+        await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
+      }
+      idCapTorch.hidden = !caps.torch;
+    }catch(e){}
+  }catch(err){
+    console.error('ID capture camera error:', err);
+    closeIdCapture();
+    idPhotoInput.click();   // fall back to the native camera flow
+  }
+}
+
+function closeIdCapture(){
+  try{
+    if(idCapStream) idCapStream.getTracks().forEach(t=>t.stop());
+    idCapVideo.srcObject = null;
+  }catch(e){}
+  idCapStream = null;
+  idCapOverlay.hidden = true;
+}
+
+idCapCancel.addEventListener('click', closeIdCapture);
+idCapTorch.addEventListener('click', async ()=>{
+  try{
+    const track = idCapStream && idCapStream.getVideoTracks()[0];
+    if(!track) return;
+    idCapTorchOn = !idCapTorchOn;
+    await track.applyConstraints({advanced:[{torch:idCapTorchOn}]});
+    idCapTorch.textContent = idCapTorchOn ? '\ud83d\udd26 Light off' : '\ud83d\udd26 Light';
+  }catch(e){ idCapTorch.hidden = true; }
+});
+
+/* Maps the on-screen guide frame to source-video pixels for an
+   object-fit:cover video. Pure math — unit-tested. */
+function mapGuideToSource(videoRect, guideRect, vw, vh){
+  const scale = Math.max(videoRect.width/vw, videoRect.height/vh);
+  const srcX0 = (vw - videoRect.width/scale) / 2;
+  const srcY0 = (vh - videoRect.height/scale) / 2;
+  let sx = srcX0 + (guideRect.left - videoRect.left)/scale;
+  let sy = srcY0 + (guideRect.top  - videoRect.top)/scale;
+  let sw = guideRect.width/scale;
+  let sh = guideRect.height/scale;
+  // 2% breathing room so edges of the card are never shaved
+  const mx = sw*0.02, my = sh*0.02;
+  sx -= mx; sy -= my; sw += 2*mx; sh += 2*my;
+  // clamp to the frame
+  sx = Math.max(0, sx); sy = Math.max(0, sy);
+  sw = Math.min(sw, vw - sx); sh = Math.min(sh, vh - sy);
+  return {sx:sx, sy:sy, sw:sw, sh:sh};
+}
+
+idCapShutter.addEventListener('click', ()=>{
+  if(!idCapVideo.videoWidth || !idPhotoSlot){ return; }
+  const slot = idPhotoSlot;
+  const m = mapGuideToSource(
+    idCapVideo.getBoundingClientRect(),
+    idCapFrame.getBoundingClientRect(),
+    idCapVideo.videoWidth, idCapVideo.videoHeight
+  );
+  const MAX = 1600;
+  const k = Math.min(1, MAX/Math.max(m.sw, m.sh));
+  const c = document.createElement('canvas');
+  c.width = Math.round(m.sw*k); c.height = Math.round(m.sh*k);
+  c.getContext('2d').drawImage(idCapVideo, m.sx, m.sy, m.sw, m.sh, 0, 0, c.width, c.height);
+  idPhotos[slot] = {data:c.toDataURL('image/jpeg',0.85), w:c.width, h:c.height, cropped:true};
+  closeIdCapture();
+  const btn = document.querySelector('.idphoto-btn[data-photo="'+slot+'"]');
+  if(!btn.dataset.label) btn.dataset.label = btn.textContent.replace(/^\u2713 /,'');
+  btn.textContent = '\u2713 ' + btn.dataset.label;
+  btn.classList.add('has-photo');
+  idHint(btn, '\u2713 Saved \u2014 cropped to the frame.');
 });
 
 idPhotoInput.addEventListener('change', async ()=>{
@@ -1490,7 +1623,7 @@ idPhotoInput.addEventListener('change', async ()=>{
     btn.classList.add('has-photo');
     idHint(btn, shot.cropped
       ? '\u2713 Saved \u2014 auto-cropped to the license.'
-      : '\u2713 Saved (full photo). For auto-crop, lay the license flat on a plain surface that contrasts with it.');
+      : '\u2713 Saved (full photo).');
   }catch(err){
     console.error('ID photo error:', err);
     delete idPhotos[idPhotoSlot];

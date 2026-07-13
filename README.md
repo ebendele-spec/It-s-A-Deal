@@ -67,11 +67,12 @@ can tell how fresh the data is.
   Print opens the PDF in a new tab with the print dialog; if the browser
   blocks the popup, the PDF downloads instead.
 - **Front/Back of ID Photo buttons** (phones/tablets only, next to Scan ID for
-  Buyer and Co-Buyer): take photos of licenses with the native camera. Photos
-  are compressed (~1600px JPEG) and conservatively auto-cropped to the card —
-  only when the detected region is clearly license-shaped; otherwise the full
-  photo is kept, so a bad crop can never cut off part of an ID. Captured
-  photos are appended as labeled extra pages to both printed and emailed PDFs.
+  Buyer and Co-Buyer): opens a guided in-page camera with a license-shaped
+  gold frame — fit the card in the frame, tap the shutter, and the photo is
+  cropped exactly to the frame, deterministically, on every device. Compressed
+  to ~1600px JPEG. If the camera is blocked, it falls back to the native
+  camera with a conservative auto-crop. Captured photos are appended as
+  labeled extra pages to both printed and emailed PDFs.
 - **Scan ID buttons** (phones/tablets only): scan the PDF417 barcode on the
   BACK of a driver's license to fill the buyer or co-buyer's full legal name
   and address. Decoding happens entirely on the device — no photo or data is
