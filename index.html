@@ -310,13 +310,13 @@
   body.pdf-mode .trade h3{font-size:10px;margin-bottom:7px}
   body.pdf-mode .yn button{padding:4px 11px;font-size:10px}
 
-  @media (max-width:680px){
+  @media screen and (max-width:680px){
     .g2,.g3,.g4{grid-template-columns:1fr 1fr}
     .span2,.span3{grid-column:span 2}
     .meta{grid-template-columns:1fr 1fr}
     section,.mast,.actions{padding-left:18px;padding-right:18px}
   }
-  @media (max-width:440px){
+  @media screen and (max-width:440px){
     .g2,.g3,.g4{grid-template-columns:1fr}
     .span2,.span3{grid-column:span 1}
     .stock-row{flex-direction:column;align-items:stretch}
@@ -327,32 +327,36 @@
     body{background:#fff;padding:0}
     .sheet{box-shadow:none;max-width:none;border-radius:0}
     .lookup-btn,.lookup-status,.actions,.email-panel,.ac-list,.spinner,.note,.autofill-tag,.scan-btn,.scan-overlay{display:none!important}
-    .mast{padding:9px 20px 0;border-bottom:3px solid var(--gold);-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .brand img{height:30px}
-    h1{font-size:28px}
-    .mast small{font-size:9.5px!important}
-    .deal-type{margin-top:9px}
-    .deal-type button{padding:7px 8px;font-size:11px}
-    .meta{padding:9px 20px;gap:12px}
-    section{padding:9px 20px 11px;break-inside:avoid}
-    .sec-h{margin-bottom:8px}
-    .sec-h h2{font-size:11.5px}
-    .grid{gap:9px 12px}
-    label{font-size:9px}
-    input[type=text],input[type=tel],input[type=email],input[type=date],input[type=time],select{
-      font-size:12.5px;padding:3px 2px;border-bottom-width:1px}
-    .money .cur{font-size:11px}
-    textarea{min-height:56px;font-size:12.5px;padding:6px}
-    #secSpecial .field>label{display:none} /* section header already says it */
     .add-trade,.remove-trade{display:none!important}
     #secTrades:has(.trades:empty){display:none} /* no trades — skip the section on paper */
+    .mast{padding:7pt 15pt 0;border-bottom:2pt solid var(--gold);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .brand img{height:22pt}
+    h1{font-size:21pt}
+    .mast small{font-size:7pt!important}
+    .deal-type{margin-top:7pt}
+    .deal-type button{padding:5pt 6pt;font-size:8pt}
+    .meta{padding:7pt 15pt;gap:9pt;grid-template-columns:1fr 1.4fr 1fr}
+    section{padding:7pt 15pt 8pt;break-inside:avoid}
+    .sec-h{margin-bottom:6pt}
+    .sec-h h2{font-size:8.5pt}
+    .grid{gap:7pt 9pt}
+    label{font-size:7pt}
+    input[type=text],input[type=tel],input[type=email],input[type=date],input[type=time],select{
+      font-size:9.5pt;padding:2pt;border-bottom-width:1pt}
+    .money .cur{font-size:8pt}
+    textarea{min-height:42pt;font-size:9.5pt;padding:5pt}
+    #secSpecial .field>label{display:none} /* section header already says it */
 
     /* Reflow to four columns so everything fits one page */
     #secBuyer .grid,#secCoach .grid,#secApprovals .grid{grid-template-columns:repeat(4,1fr)}
-    .trades{grid-template-columns:1fr 1fr;gap:12px}
-    .trade{padding:8px 10px 10px}
-    .trade h3{font-size:10px;margin-bottom:7px}
-    .yn button{padding:4px 11px;font-size:10px}
+    #secDeposit .grid{grid-template-columns:repeat(4,1fr)}
+    .span2{grid-column:span 2}
+    .span3{grid-column:span 3}
+    .trades{grid-template-columns:1fr 1fr;gap:9pt}
+    .trade{padding:6pt 8pt 8pt}
+    .trade h3{font-size:7.5pt;margin-bottom:5pt}
+    .yn button{padding:3pt 8pt;font-size:7.5pt}
+    .stock-row{flex-direction:row;align-items:flex-end}
     .stock-row .field{flex:1}
   }
   @media (prefers-reduced-motion:reduce){
