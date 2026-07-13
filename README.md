@@ -61,6 +61,17 @@ can tell how fresh the data is.
 - The dealer **Cost** column is never read or written by the generator.
 - Nothing typed into the form is transmitted anywhere unless you use Email
   PDF; the CC# field otherwise exists only so it appears on the printed page.
+- **Print / Save PDF and Email PDF produce the same vector PDF** (drawn from
+  the form data, identical on every device). The printed office copy shows the
+  full card number for the deal jacket; the emailed copy masks it to last 4.
+  Print opens the PDF in a new tab with the print dialog; if the browser
+  blocks the popup, the PDF downloads instead.
+- **Front/Back of ID Photo buttons** (phones/tablets only, next to Scan ID for
+  Buyer and Co-Buyer): take photos of licenses with the native camera. Photos
+  are compressed (~1600px JPEG) and conservatively auto-cropped to the card —
+  only when the detected region is clearly license-shaped; otherwise the full
+  photo is kept, so a bad crop can never cut off part of an ID. Captured
+  photos are appended as labeled extra pages to both printed and emailed PDFs.
 - **Scan ID buttons** (phones/tablets only): scan the PDF417 barcode on the
   BACK of a driver's license to fill the buyer or co-buyer's full legal name
   and address. Decoding happens entirely on the device — no photo or data is

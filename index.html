@@ -247,7 +247,10 @@
   .note{font-size:12px;color:var(--muted);margin-top:6px}
 
   /* ---------- ID scanner ---------- */
-  .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .id-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .idphoto-btn{border-color:var(--gold);color:#8A6D2A}
+  .idphoto-btn.has-photo{border-color:var(--green);color:var(--green);background:#EDF5EF}
   .scan-btn{
     display:none;appearance:none;cursor:pointer;flex:none;
     border:1.5px solid var(--navy);border-radius:999px;background:#fff;color:var(--navy);
@@ -376,14 +379,22 @@
       <div class="field">
         <div class="label-row">
           <label for="buyer">Buyer</label>
-          <button type="button" class="scan-btn" data-scan="buyer">&#128247; Scan ID</button>
+          <div class="id-btns">
+            <button type="button" class="scan-btn" data-scan="buyer">&#128247; Scan ID</button>
+            <button type="button" class="scan-btn idphoto-btn" data-photo="buyerFront">Front of ID Photo</button>
+            <button type="button" class="scan-btn idphoto-btn" data-photo="buyerBack">Back of ID Photo</button>
+          </div>
         </div>
         <input type="text" id="buyer" autocomplete="off">
       </div>
       <div class="field">
         <div class="label-row">
           <label for="cobuyer">Co-Buyer</label>
-          <button type="button" class="scan-btn" data-scan="cobuyer">&#128247; Scan ID</button>
+          <div class="id-btns">
+            <button type="button" class="scan-btn" data-scan="cobuyer">&#128247; Scan ID</button>
+            <button type="button" class="scan-btn idphoto-btn" data-photo="cobuyerFront">Front of ID Photo</button>
+            <button type="button" class="scan-btn idphoto-btn" data-photo="cobuyerBack">Back of ID Photo</button>
+          </div>
         </div>
         <input type="text" id="cobuyer" autocomplete="off">
       </div>
@@ -541,9 +552,9 @@
 
   <!-- ============ ACTIONS ============ -->
   <div class="actions">
-    <p>Everything you type stays in this browser tab until you print or email it. The emailed copy masks the card number to its last 4 digits.</p>
+    <p>Print / Save and Email produce the same deal sheet PDF &mdash; ID photos attach as extra pages, and the emailed copy masks the card number to its last 4 digits.</p>
     <div class="action-btns">
-      <button type="button" class="print-btn" onclick="window.print()">Print / Save PDF</button>
+      <button type="button" class="print-btn" id="printBtn">Print / Save PDF</button>
       <button type="button" class="email-btn" id="emailBtn">Email PDF</button>
     </div>
   </div>
@@ -577,6 +588,9 @@
   <p class="scan-note">Everything is read on this phone &mdash; no photo is uploaded anywhere.</p>
 </div>
 
+<input type="file" id="idPhotoInput" accept="image/*" capture="environment" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="inventory.js"></script>
 <script>
 /* =========================================================
@@ -851,7 +865,7 @@ function loadJsPDF(){
 
 /* Draws the deal sheet as a real vector PDF from the form's data.
    Deterministic on every device — no screenshots, no viewport math. */
-function drawDealSheet(doc){
+function drawDealSheet(doc, maskCC){
   const NAVY=[20,39,63], GOLD=[198,162,78], GOLDSOFT=[243,232,205], INK=[27,36,48],
         MUTED=[107,116,128], LINE=[195,199,206], PALE=[150,160,175];
   const PW=8.5, PH=11, M=0.45, W=PW-2*M, ROW=0.40, G=0.18;
@@ -1005,7 +1019,7 @@ function drawDealSheet(doc){
   y += ROW;
   const ccRaw = v('ccnum');
   const ccDigits = ccRaw.replace(/\D/g,'');
-  const ccShown = ccDigits.length > 4 ? '**** **** **** ' + ccDigits.slice(-4) : ccRaw;
+  const ccShown = (maskCC && ccDigits.length > 4) ? '**** **** **** ' + ccDigits.slice(-4) : ccRaw;
   field('CC # (Deposit Card)', ccShown, X(0), SPAN(2), y);
   y += ROW + 0.10;
 
@@ -1028,10 +1042,12 @@ function drawDealSheet(doc){
   }
 }
 
-async function makePdfBlob(){
+async function makePdfBlob(maskCC){
+  if(maskCC === undefined) maskCC = true;
   await loadJsPDF();
   const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
-  drawDealSheet(doc);
+  drawDealSheet(doc, maskCC);
+  addIdPages(doc);
   return doc.output('blob');
 }
 
@@ -1434,6 +1450,217 @@ function fillScannedAddress(d){
   if(d.city)   fillField('city', d.city);
   if(d.state)  fillField('state', d.state);
   if(d.zip)    fillField('zip', d.zip);
+}
+
+/* =========================================================
+   7. ID PHOTOS — mobile-only "Front/Back of ID Photo"
+      buttons for Buyer & Co-Buyer. Uses the device's native
+      camera (works on every iOS/Android), compresses each
+      shot to ~1600px JPEG, and conservatively auto-crops to
+      the license ONLY when the detected region is clearly
+      card-shaped — otherwise the full photo is kept, so a
+      bad crop can never eat part of an ID. Captured photos
+      are appended as extra pages to BOTH the printed and
+      emailed PDF.
+   ========================================================= */
+const idPhotos = {};
+let idPhotoSlot = null;
+const idPhotoInput = document.getElementById('idPhotoInput');
+
+document.querySelectorAll('.idphoto-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    idPhotoSlot = btn.dataset.photo;
+    idPhotoInput.click();
+  });
+});
+
+idPhotoInput.addEventListener('change', async ()=>{
+  const file = idPhotoInput.files && idPhotoInput.files[0];
+  idPhotoInput.value = '';
+  if(!file || !idPhotoSlot) return;
+  const btn = document.querySelector('.idphoto-btn[data-photo="'+idPhotoSlot+'"]');
+  if(!btn.dataset.label) btn.dataset.label = btn.textContent.replace(/^\u2713 /,'');
+  btn.disabled = true;
+  btn.textContent = 'Processing\u2026';
+  try{
+    idPhotos[idPhotoSlot] = await processIdPhoto(file);
+    btn.textContent = '\u2713 ' + btn.dataset.label;
+    btn.classList.add('has-photo');
+  }catch(err){
+    console.error('ID photo error:', err);
+    delete idPhotos[idPhotoSlot];
+    btn.textContent = btn.dataset.label;
+    btn.classList.remove('has-photo');
+    alert('Could not read that photo \u2014 please try again.');
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+async function processIdPhoto(file){
+  let src = null, w = 0, h = 0;
+  if(window.createImageBitmap){
+    try{ src = await createImageBitmap(file, {imageOrientation:'from-image'}); }
+    catch(e){ try{ src = await createImageBitmap(file); }catch(e2){} }
+  }
+  if(src){ w = src.width; h = src.height; }
+  else{
+    src = await new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error('unreadable image'));
+      img.src = URL.createObjectURL(file);
+    });
+    w = src.naturalWidth; h = src.naturalHeight;
+  }
+  const MAX = 1600;
+  const k = Math.min(1, MAX / Math.max(w, h));
+  const c = document.createElement('canvas');
+  c.width = Math.round(w*k); c.height = Math.round(h*k);
+  const cx = c.getContext('2d');
+  cx.drawImage(src, 0, 0, c.width, c.height);
+
+  let out = c;
+  try{
+    const crop = autoTrimIdPhoto(c, cx);
+    if(crop){
+      const c2 = document.createElement('canvas');
+      c2.width = crop.w; c2.height = crop.h;
+      c2.getContext('2d').drawImage(c, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
+      out = c2;
+    }
+  }catch(e){ /* keep the full photo */ }
+
+  return {data: out.toDataURL('image/jpeg', 0.82), w: out.width, h: out.height};
+}
+
+/* Conservative card finder: Otsu-threshold the luminance, take the dense
+   bright span in each axis, and accept the crop ONLY if it's card-shaped
+   and a sensible fraction of the frame. Anything else returns null. */
+function autoTrimIdPhoto(canvas, ctx){
+  const w = canvas.width, h = canvas.height;
+  const step = Math.max(1, Math.floor(Math.max(w,h)/400));
+  const data = ctx.getImageData(0, 0, w, h).data;
+  const gw = Math.floor(w/step), gh = Math.floor(h/step);
+  if(gw < 20 || gh < 20) return null;
+  const lum = new Float32Array(gw*gh);
+  const hist = new Array(64).fill(0);
+  for(let gy=0; gy<gh; gy++){
+    for(let gx=0; gx<gw; gx++){
+      const p = ((gy*step)*w + (gx*step)) * 4;
+      const l = 0.299*data[p] + 0.587*data[p+1] + 0.114*data[p+2];
+      lum[gy*gw+gx] = l;
+      hist[Math.min(63, l >> 2)]++;
+    }
+  }
+  const total = gw*gh;
+  let sumAll = 0;
+  for(let i=0;i<64;i++) sumAll += i*hist[i];
+  let sumB=0, wB=0, best=0, ti=32;
+  for(let i=0;i<64;i++){
+    wB += hist[i];
+    if(!wB) continue;
+    const wF = total - wB;
+    if(!wF) break;
+    sumB += i*hist[i];
+    const mB = sumB/wB, mF = (sumAll-sumB)/wF;
+    const v = wB*wF*(mB-mF)*(mB-mF);
+    if(v > best){ best = v; ti = i; }
+  }
+  const T = (ti+1)*4;
+  const colD = new Float32Array(gw), rowD = new Float32Array(gh);
+  for(let gy=0; gy<gh; gy++){
+    for(let gx=0; gx<gw; gx++){
+      if(lum[gy*gw+gx] > T){ colD[gx]++; rowD[gy]++; }
+    }
+  }
+  function span(d, len, other){
+    const cut = 0.35*other;
+    let a=-1, b=-1;
+    for(let i=0;i<len;i++){ if(d[i] > cut){ a=i; break; } }
+    for(let i=len-1;i>=0;i--){ if(d[i] > cut){ b=i; break; } }
+    return (a>=0 && b>a+3) ? [a,b] : null;
+  }
+  const cs = span(colD, gw, gh), rs = span(rowD, gh, gw);
+  if(!cs || !rs) return null;
+  let x0=cs[0]*step, x1=(cs[1]+1)*step, y0=rs[0]*step, y1=(rs[1]+1)*step;
+  const pw=x1-x0, ph=y1-y0;
+  const fw=pw/w, fh=ph/h, ar=pw/ph;
+  if(fw < 0.25 || fh < 0.2) return null;              // too small — probably noise
+  if(fw > 0.97 && fh > 0.97) return null;              // whole frame — nothing to crop
+  const landscapeCard = ar > 1.25 && ar < 2.1;         // ID cards are ~1.59
+  const portraitCard  = ar > 0.45 && ar < 0.85;        // card held sideways
+  if(!landscapeCard && !portraitCard) return null;
+  const padX = Math.round(pw*0.03), padY = Math.round(ph*0.03);
+  x0 = Math.max(0, x0-padX); y0 = Math.max(0, y0-padY);
+  x1 = Math.min(w, x1+padX); y1 = Math.min(h, y1+padY);
+  return {x:x0, y:y0, w:x1-x0, h:y1-y0};
+}
+
+/* Appends one page per person with their ID photos (front above back). */
+function addIdPages(doc){
+  const nameOf = id => (document.getElementById(id).value||'').trim();
+  const sets = [
+    {label:'BUYER',    name:nameOf('buyer'),   front:idPhotos.buyerFront,   back:idPhotos.buyerBack},
+    {label:'CO-BUYER', name:nameOf('cobuyer'), front:idPhotos.cobuyerFront, back:idPhotos.cobuyerBack}
+  ];
+  sets.forEach(s=>{
+    if(!s.front && !s.back) return;
+    doc.addPage();
+    doc.setFillColor(20,39,63); doc.rect(0,0,8.5,0.6,'F');
+    doc.setFillColor(198,162,78); doc.rect(0,0.6,8.5,0.035,'F');
+    doc.setTextColor(198,162,78); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.text("DRIVER'S LICENSE \u2014 " + s.label + (s.name ? ': ' + s.name.toUpperCase() : ''), 0.45, 0.38);
+    let y = 0.95;
+    [['FRONT', s.front], ['BACK', s.back]].forEach(pair=>{
+      const tag = pair[0], ph = pair[1];
+      if(!ph) return;
+      doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      doc.setTextColor(107,116,128);
+      doc.text(tag, 0.45, y);
+      y += 0.12;
+      const maxW = 7.6, maxH = 4.2;
+      const r = Math.min(maxW/ph.w, maxH/ph.h);
+      const iw = ph.w*r, ih = ph.h*r;
+      const ix = (8.5-iw)/2;
+      doc.addImage(ph.data, 'JPEG', ix, y, iw, ih);
+      doc.setDrawColor(195,199,206); doc.setLineWidth(0.01);
+      doc.rect(ix, y, iw, ih, 'S');
+      y += ih + 0.3;
+    });
+  });
+}
+
+/* =========================================================
+   8. PRINT / SAVE PDF — same vector PDF as email (with ID
+      pages), full card number on the office copy. Opens the
+      PDF for printing/saving; if the popup is blocked, it
+      downloads instead.
+   ========================================================= */
+document.getElementById('printBtn').addEventListener('click', printDealPdf);
+async function printDealPdf(){
+  const btn = document.getElementById('printBtn');
+  btn.disabled = true;
+  try{
+    await loadJsPDF();
+    const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
+    drawDealSheet(doc, false);   // printed office copy keeps the full card number
+    addIdPages(doc);
+    doc.autoPrint();
+    const url = doc.output('bloburl');
+    const w = window.open(url, '_blank');
+    if(!w){
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = pdfFilename();
+      a.click();
+    }
+  }catch(err){
+    console.error('Print PDF error:', err);
+    window.print();   // last resort: browser print of the page itself
+  }finally{
+    btn.disabled = false;
+  }
 }
 </script>
 </body>
