@@ -275,40 +275,6 @@
   .scan-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
   .scan-note{font-size:12px;color:#8FA0B5;max-width:420px}
 
-  /* ---------- PDF capture mode (Email PDF) ----------
-     Keep these in sync with the @media print block below. */
-  body.pdf-mode{padding:0!important}
-  body.pdf-mode .sheet{box-shadow:none;border-radius:0;width:816px;max-width:816px;margin:0}
-  body.pdf-mode .lookup-btn,body.pdf-mode .lookup-status,body.pdf-mode .actions,
-  body.pdf-mode .email-panel,body.pdf-mode .ac-list,body.pdf-mode .spinner,
-  body.pdf-mode .note,body.pdf-mode .autofill-tag,body.pdf-mode .scan-btn,
-  body.pdf-mode .scan-overlay,
-  body.pdf-mode .add-trade,body.pdf-mode .remove-trade{display:none!important}
-  body.pdf-mode #secTrades:has(.trades:empty){display:none}
-  body.pdf-mode .mast{padding:9px 20px 0;border-bottom:3px solid var(--gold)}
-  body.pdf-mode .brand img{height:30px}
-  body.pdf-mode h1{font-size:28px}
-  body.pdf-mode .mast small{font-size:9.5px!important}
-  body.pdf-mode .deal-type{margin-top:9px}
-  body.pdf-mode .deal-type button{padding:7px 8px;font-size:11px}
-  body.pdf-mode .meta{padding:9px 20px;gap:12px}
-  body.pdf-mode section{padding:9px 20px 11px}
-  body.pdf-mode .sec-h{margin-bottom:8px}
-  body.pdf-mode .sec-h h2{font-size:11.5px}
-  body.pdf-mode .grid{gap:9px 12px}
-  body.pdf-mode label{font-size:9px}
-  body.pdf-mode input[type=text],body.pdf-mode input[type=tel],body.pdf-mode input[type=email],
-  body.pdf-mode input[type=date],body.pdf-mode input[type=time],body.pdf-mode select{
-    font-size:12.5px;padding:3px 2px;border-bottom-width:1px}
-  body.pdf-mode .money .cur{font-size:11px}
-  body.pdf-mode textarea{min-height:56px;font-size:12.5px;padding:6px}
-  body.pdf-mode #secSpecial .field>label{display:none}
-  body.pdf-mode #secBuyer .grid,body.pdf-mode #secCoach .grid,
-  body.pdf-mode #secApprovals .grid{grid-template-columns:repeat(4,1fr)}
-  body.pdf-mode .trades{grid-template-columns:1fr 1fr;gap:12px}
-  body.pdf-mode .trade{padding:8px 10px 10px}
-  body.pdf-mode .trade h3{font-size:10px;margin-bottom:7px}
-  body.pdf-mode .yn button{padding:4px 11px;font-size:10px}
 
   @media screen and (max-width:680px){
     .g2,.g3,.g4{grid-template-columns:1fr 1fr}
@@ -872,44 +838,201 @@ function setEmailStatus(kind,msg){
   emailStatus.textContent = msg;
 }
 
-function loadHtml2Pdf(){
-  if(window.html2pdf) return Promise.resolve();
+function loadJsPDF(){
+  if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
   return new Promise((resolve,reject)=>{
     const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
     s.onload = resolve;
     s.onerror = ()=>reject(new Error('could not load the PDF library'));
     document.head.appendChild(s);
   });
 }
 
-async function makePdfBlob(){
-  const ccEl = document.getElementById('ccnum');
-  const ccOriginal = ccEl.value;
-  const ccDigits = ccOriginal.replace(/\D/g,'');
-  if(ccDigits.length > 4) ccEl.value = '\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 ' + ccDigits.slice(-4);
+/* Draws the deal sheet as a real vector PDF from the form's data.
+   Deterministic on every device — no screenshots, no viewport math. */
+function drawDealSheet(doc){
+  const NAVY=[20,39,63], GOLD=[198,162,78], GOLDSOFT=[243,232,205], INK=[27,36,48],
+        MUTED=[107,116,128], LINE=[195,199,206], PALE=[150,160,175];
+  const PW=8.5, PH=11, M=0.45, W=PW-2*M, ROW=0.40, G=0.18;
+  const colW=(W-3*G)/4;
+  const X=i=>M+i*(colW+G);
+  const SPAN=n=>n*colW+(n-1)*G;
+  let y;
 
-  // On phones the capture is relative to scroll position and viewport —
-  // pin everything to a known state first, restore afterwards.
-  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
-  const sx = window.scrollX || 0, sy = window.scrollY || 0;
-  document.body.classList.add('pdf-mode');
-  window.scrollTo(0,0);
-  await new Promise(r=>setTimeout(r,200)); // let the reflow settle
+  const v = id => (document.getElementById(id).value||'').trim();
+  const yn = g => { const b=document.querySelector('.yn[data-group="'+g+'"] button.on'); return b?b.textContent.trim():''; };
 
-  try{
-    return await html2pdf().set({
-      margin: [0.35, 0.35, 0.35, 0.35],
-      image: {type:'jpeg', quality:0.95},
-      html2canvas: {scale:2, useCORS:true, width:816, windowWidth:816, scrollX:0, scrollY:0},
-      jsPDF: {unit:'in', format:'letter', orientation:'portrait'},
-      pagebreak: {mode:['css','legacy'], avoid:['section','.trade']}
-    }).from(document.querySelector('.sheet')).outputPdf('blob');
-  }finally{
-    document.body.classList.remove('pdf-mode');
-    ccEl.value = ccOriginal;
-    window.scrollTo(sx, sy);
+  function fit(text,w){
+    let t=String(text||'');
+    if(doc.getTextWidth(t)<=w-0.04) return t;
+    while(t.length>1 && doc.getTextWidth(t+'...')>w-0.04) t=t.slice(0,-1);
+    return t+'...';
   }
+  function field(label,value,x,w,by){
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.3);
+    doc.setTextColor(MUTED[0],MUTED[1],MUTED[2]);
+    doc.text(String(label).toUpperCase(), x, by);
+    if(value){
+      doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+      doc.setTextColor(INK[0],INK[1],INK[2]);
+      doc.text(fit(value,w), x+0.02, by+0.215);
+    }
+    doc.setDrawColor(LINE[0],LINE[1],LINE[2]); doc.setLineWidth(0.008);
+    doc.line(x, by+0.27, x+w, by+0.27);
+  }
+  function section(title){
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
+    doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+    const t=String(title).toUpperCase();
+    doc.text(t, M, y);
+    doc.setDrawColor(LINE[0],LINE[1],LINE[2]); doc.setLineWidth(0.008);
+    doc.line(M+doc.getTextWidth(t)+0.12, y-0.032, PW-M, y-0.032);
+    y += 0.28;
+  }
+  function ensure(h){
+    if(y + h > PH - 0.45){ doc.addPage(); y = M + 0.15; }
+  }
+
+  /* ---- Masthead ---- */
+  doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]); doc.rect(0,0,PW,1.02,'F');
+  doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]); doc.rect(0,1.02,PW,0.035,'F');
+  doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]); doc.setFont('helvetica','bold'); doc.setFontSize(21);
+  doc.text("IT'S A DEAL!", PW-M, 0.5, {align:'right'});
+  doc.setTextColor(200,210,224); doc.setFont('helvetica','normal'); doc.setFontSize(6.8);
+  doc.text('MOTOR HOME SPECIALIST  \u00B7  ALVARADO, TX', PW-M, 0.66, {align:'right'});
+  const dealType = ((document.querySelector('.deal-type button.on')||{}).textContent||'').trim();
+  doc.setFontSize(9);
+  let dx=M;
+  ['Finance','Cash','Outside Finance'].forEach(t=>{
+    const sel = t===dealType;
+    doc.setFont('helvetica', sel?'bold':'normal');
+    const c = sel?GOLD:PALE;
+    doc.setTextColor(c[0],c[1],c[2]);
+    const u=t.toUpperCase();
+    doc.text(u, dx, 0.6);
+    if(sel){
+      doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]); doc.setLineWidth(0.018);
+      doc.line(dx, 0.665, dx+doc.getTextWidth(u), 0.665);
+    }
+    dx += doc.getTextWidth(u) + 0.35;
+  });
+
+  /* ---- Meta strip ---- */
+  doc.setFillColor(GOLDSOFT[0],GOLDSOFT[1],GOLDSOFT[2]);
+  doc.rect(0,1.055,PW,0.6,'F');
+  const w3=(W-2*G)/3;
+  let date = v('date');
+  if(/^\d{4}-\d{2}-\d{2}$/.test(date)){
+    const p=date.split('-'); date = p[1]+'/'+p[2]+'/'+p[0];
+  }
+  field('Miles', v('miles'), M, w3, 1.28);
+  field('Last 8 of VIN', v('vin8'), M+w3+G, w3, 1.28);
+  field('Date', date, M+2*(w3+G), w3, 1.28);
+  y = 1.92;
+
+  /* ---- Buyer ---- */
+  section('Buyer');
+  field('Buyer', v('buyer'), X(0), colW, y);
+  field('Co-Buyer', v('cobuyer'), X(1), colW, y);
+  field('Street', v('street'), X(2), SPAN(2), y);
+  y += ROW;
+  field('City', v('city'), X(0), colW, y);
+  field('State', v('state'), X(1), colW, y);
+  field('Zip', v('zip'), X(2), colW, y);
+  field('County', v('county'), X(3), colW, y);
+  y += ROW;
+  field('Phone #', v('phone'), X(0), colW, y);
+  field('Email', v('faxemail'), X(1), SPAN(3), y);
+  y += ROW + 0.10;
+
+  /* ---- The Coach ---- */
+  section('The Coach');
+  field('Stock #', v('stock').toUpperCase(), X(0), colW, y);
+  field('Description', v('description'), X(1), SPAN(2), y);
+  field('Sales Price', v('salesPrice') ? '$ '+v('salesPrice') : '', X(3), colW, y);
+  y += ROW;
+  field('Coach Location', v('coachLoc'), X(0), SPAN(2), y);
+  y += ROW + 0.10;
+
+  /* ---- Trade-Ins (only if any) ---- */
+  const trades = Array.prototype.slice.call(document.querySelectorAll('#tradesList .trade')).map(t=>{
+    const ins = t.querySelectorAll('input');
+    return {desc:ins[0].value.trim(), allow:ins[1].value.trim(), owed:ins[2].value.trim(), bank:ins[3].value.trim()};
+  }).filter(t=>t.desc||t.allow||t.owed||t.bank);
+  if(trades.length){
+    ensure(0.4 + 1.2);
+    section('Trade-Ins');
+    trades.forEach((t,i)=>{
+      ensure(1.2);
+      doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);
+      doc.rect(M, y-0.13, 0.028, 1.02, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+      doc.text('TRADE-IN #'+(i+1), M+0.13, y);
+      y += 0.16;
+      field('Year / Make / Model / Model # / Length', t.desc, M+0.13, W-0.13, y);
+      y += ROW;
+      field('Allowance', t.allow ? '$ '+t.allow : '', M+0.13, colW-0.13, y);
+      field('Balance Owed', t.owed ? '$ '+t.owed : '', X(1), colW, y);
+      field('Bank', t.bank, X(2), SPAN(2), y);
+      y += ROW + 0.10;
+    });
+  }
+
+  /* ---- Deposit & Delivery ---- */
+  ensure(0.4 + 2*ROW);
+  section('Deposit & Delivery');
+  field('Amount of Deposit', v('deposit') ? '$ '+v('deposit') : '', X(0), colW, y);
+  field('Total Down Payment', v('downPayment') ? '$ '+v('downPayment') : '', X(1), colW, y);
+  let del = v('delDate');
+  if(/^\d{4}-\d{2}-\d{2}$/.test(del)){ const p=del.split('-'); del = p[1]+'/'+p[2]+'/'+p[0]; }
+  field('Est. Delivery Date', del, X(2), colW, y);
+  const slot = document.getElementById('delTime');
+  field('Delivery Slot', slot.value || '', X(3), colW, y);
+  y += ROW;
+  field('First Time Buyer', yn('ftb'), X(0), colW, y);
+  field('Pending Inspection', yn('inspection'), X(1), colW, y);
+  y += ROW + 0.10;
+
+  /* ---- Approvals & Payment ---- */
+  ensure(0.4 + 2*ROW);
+  section('Approvals & Payment');
+  field('Salesman', v('salesman'), X(0), colW, y);
+  field('Manager X', v('manager'), X(1), colW, y);
+  field('Finance Manager', v('finManager'), X(2), colW, y);
+  field('CC Exp Date', v('ccexp'), X(3), colW, y);
+  y += ROW;
+  const ccRaw = v('ccnum');
+  const ccDigits = ccRaw.replace(/\D/g,'');
+  const ccShown = ccDigits.length > 4 ? '**** **** **** ' + ccDigits.slice(-4) : ccRaw;
+  field('CC # (Deposit Card)', ccShown, X(0), SPAN(2), y);
+  y += ROW + 0.10;
+
+  /* ---- Special Instructions (flexes to fill the page) ---- */
+  ensure(1.0);
+  section('Special Instructions');
+  const maxBox = PH - 0.45 - y + 0.05;
+  const boxH = Math.max(0.7, maxBox);
+  doc.setDrawColor(LINE[0],LINE[1],LINE[2]); doc.setLineWidth(0.01);
+  doc.rect(M, y-0.06, W, boxH, 'S');
+  const txt = v('special');
+  if(txt){
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.setTextColor(INK[0],INK[1],INK[2]);
+    const lines = doc.splitTextToSize(txt, W-0.26);
+    const maxLines = Math.max(1, Math.floor((boxH-0.2)/0.16));
+    lines.slice(0, maxLines).forEach((ln,i)=>{
+      doc.text(ln, M+0.13, y+0.14+i*0.16);
+    });
+  }
+}
+
+async function makePdfBlob(){
+  await loadJsPDF();
+  const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
+  drawDealSheet(doc);
+  return doc.output('blob');
 }
 
 function pdfFilename(){
