@@ -646,7 +646,7 @@
   <div class="scan-head">Scan the barcode on the <strong>back</strong> of the driver&rsquo;s license</div>
   <div class="scan-stage">
     <video id="scanVideo" playsinline muted></video>
-    <div class="scan-frame" aria-hidden="true"></div>
+    <div class="scan-frame" id="scanFrame" aria-hidden="true"></div>
   </div>
   <div class="scan-status" id="scanStatus">Starting camera&hellip;</div>
   <div class="scan-actions">
@@ -1375,7 +1375,7 @@ async function openScanner(target){
       audio:false,
       video:{
         facingMode:{ideal:'environment'},
-        width:{ideal:1920}, height:{ideal:1080}
+        width:{ideal:3840}, height:{ideal:2160}
       }
     });
     scanVideo.srcObject = scanStream;
@@ -1391,7 +1391,7 @@ async function openScanner(target){
     }catch(e){ /* capabilities are best-effort */ }
 
     setScanStatus('Hold the BACK of the license flat in the frame \u2014 6\u20138 inches away, good light.');
-    scanTimer = setInterval(decodeVideoFrame, 350);
+    scanTimer = setInterval(decodeVideoFrame, 450);
   }catch(err){
     console.error('Camera error:', err);
     const denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
@@ -1401,13 +1401,29 @@ async function openScanner(target){
   }
 }
 
+let scanZoomPass = false;
 async function decodeVideoFrame(){
   if(scanBusy || scanDone || !scanVideo.videoWidth) return;
   scanBusy = true;
   try{
-    scanCanvas.width  = scanVideo.videoWidth;
-    scanCanvas.height = scanVideo.videoHeight;
-    scanCtx.drawImage(scanVideo, 0, 0);
+    const vw = scanVideo.videoWidth, vh = scanVideo.videoHeight;
+    let sx = 0, sy = 0, sw = vw, sh = vh;
+    scanZoomPass = !scanZoomPass;
+    if(scanZoomPass){
+      // Zoomed pass: decode just the guide-box region (dense TX barcodes
+      // need every pixel concentrated where the card actually is).
+      try{
+        const frameEl = document.getElementById('scanFrame');
+        const m = mapGuideToSource(scanVideo.getBoundingClientRect(), frameEl.getBoundingClientRect(), vw, vh);
+        const ex = m.sw*0.08, ey = m.sh*0.30;   // quiet-zone margin around the guide
+        const cx0 = Math.max(0, m.sx-ex), cy0 = Math.max(0, m.sy-ey);
+        const cw = Math.min(vw-cx0, m.sw+2*ex), ch = Math.min(vh-cy0, m.sh+2*ey);
+        if(cw > 200 && ch > 100){ sx=cx0; sy=cy0; sw=cw; sh=ch; }
+      }catch(e){ /* fall back to full frame */ }
+    }
+    scanCanvas.width  = Math.round(sw);
+    scanCanvas.height = Math.round(sh);
+    scanCtx.drawImage(scanVideo, sx, sy, sw, sh, 0, 0, scanCanvas.width, scanCanvas.height);
     const imgData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
     const text = await decodeImageData(imgData);
     if(text && !scanDone){
@@ -1437,7 +1453,7 @@ async function fileToImageData(file){
     });
     w = src.naturalWidth; h = src.naturalHeight;
   }
-  const MAX = 3000;
+  const MAX = 3600;
   const k = Math.min(1, MAX / Math.max(w, h));
   scanCanvas.width  = Math.round(w * k);
   scanCanvas.height = Math.round(h * k);
