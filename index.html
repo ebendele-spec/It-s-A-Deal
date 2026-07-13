@@ -322,6 +322,7 @@
   .vin-btn{display:inline-flex;align-items:center;gap:5px}
 
   /* ---------- Install banner ---------- */
+  .install-bar[hidden]{display:none!important}
   .install-bar{
     position:fixed;left:12px;right:12px;bottom:12px;z-index:150;
     display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
@@ -2001,8 +2002,12 @@ if('serviceWorker' in navigator){
     btn.hidden = false;
     bar.hidden = false;
   });
+  window.addEventListener('appinstalled', ()=>{
+    try{ localStorage.setItem('iad-install-dismissed','1'); }catch(e){}
+    bar.hidden = true;
+  });
   if(isiOS){
-    msg.innerHTML = 'Use this every day? Add <strong>It\u2019s a Deal</strong> to your home screen: tap the <strong>Share</strong> button, then <strong>\u201CAdd to Home Screen\u201D</strong>.';
+    msg.innerHTML = 'Use this every day? Add <strong>It\u2019s a Deal</strong> to your home screen: tap the <strong>\u22EF three dots</strong> in the bottom-right corner, tap <strong>Share</strong>, then <strong>\u201CAdd to Home Screen\u201D</strong> \u2014 and keep <strong>\u201COpen as Web App\u201D</strong> toggled on.';
     bar.hidden = false;
   }
   btn.addEventListener('click', async ()=>{
