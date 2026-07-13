@@ -251,6 +251,7 @@
   .id-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
   .idphoto-btn{border-color:var(--gold);color:#8A6D2A}
   .idphoto-btn.has-photo{border-color:var(--green);color:var(--green);background:#EDF5EF}
+  .id-hint{display:block;font:500 11px/1.4 'Barlow',sans-serif;color:var(--green);min-height:0;margin-top:2px}
   .scan-btn{
     display:none;appearance:none;cursor:pointer;flex:none;
     border:1.5px solid var(--navy);border-radius:999px;background:#fff;color:var(--navy);
@@ -1162,7 +1163,7 @@ if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
   document.body.classList.add('can-scan');
 }
 
-document.querySelectorAll('.scan-btn').forEach(btn=>{
+document.querySelectorAll('.scan-btn[data-scan]').forEach(btn=>{
   btn.addEventListener('click', ()=>openScanner(btn.dataset.scan));
 });
 scanCancel.addEventListener('click', closeScanner);
@@ -1483,9 +1484,13 @@ idPhotoInput.addEventListener('change', async ()=>{
   btn.disabled = true;
   btn.textContent = 'Processing\u2026';
   try{
-    idPhotos[idPhotoSlot] = await processIdPhoto(file);
+    const shot = await processIdPhoto(file);
+    idPhotos[idPhotoSlot] = shot;
     btn.textContent = '\u2713 ' + btn.dataset.label;
     btn.classList.add('has-photo');
+    idHint(btn, shot.cropped
+      ? '\u2713 Saved \u2014 auto-cropped to the license.'
+      : '\u2713 Saved (full photo). For auto-crop, lay the license flat on a plain surface that contrasts with it.');
   }catch(err){
     console.error('ID photo error:', err);
     delete idPhotos[idPhotoSlot];
@@ -1496,6 +1501,19 @@ idPhotoInput.addEventListener('change', async ()=>{
     btn.disabled = false;
   }
 });
+
+function idHint(btn, msg){
+  const row = btn.closest('.label-row');
+  let el = row.parentElement.querySelector('.id-hint');
+  if(!el){
+    el = document.createElement('small');
+    el.className = 'id-hint';
+    row.insertAdjacentElement('afterend', el);
+  }
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.textContent=''; }, 8000);
+}
 
 async function processIdPhoto(file){
   let src = null, w = 0, h = 0;
@@ -1520,7 +1538,7 @@ async function processIdPhoto(file){
   const cx = c.getContext('2d');
   cx.drawImage(src, 0, 0, c.width, c.height);
 
-  let out = c;
+  let out = c, cropped = false;
   try{
     const crop = autoTrimIdPhoto(c, cx);
     if(crop){
@@ -1528,10 +1546,11 @@ async function processIdPhoto(file){
       c2.width = crop.w; c2.height = crop.h;
       c2.getContext('2d').drawImage(c, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
       out = c2;
+      cropped = true;
     }
   }catch(e){ /* keep the full photo */ }
 
-  return {data: out.toDataURL('image/jpeg', 0.82), w: out.width, h: out.height};
+  return {data: out.toDataURL('image/jpeg', 0.82), w: out.width, h: out.height, cropped: cropped};
 }
 
 /* Conservative card finder: Otsu-threshold the luminance, take the dense
@@ -1568,33 +1587,38 @@ function autoTrimIdPhoto(canvas, ctx){
     if(v > best){ best = v; ti = i; }
   }
   const T = (ti+1)*4;
-  const colD = new Float32Array(gw), rowD = new Float32Array(gh);
-  for(let gy=0; gy<gh; gy++){
-    for(let gx=0; gx<gw; gx++){
-      if(lum[gy*gw+gx] > T){ colD[gx]++; rowD[gy]++; }
+
+  function tryBox(isCard){
+    const colD = new Float32Array(gw), rowD = new Float32Array(gh);
+    for(let gy=0; gy<gh; gy++){
+      for(let gx=0; gx<gw; gx++){
+        if(isCard(lum[gy*gw+gx])){ colD[gx]++; rowD[gy]++; }
+      }
     }
+    function span(d, len, other){
+      const cut = 0.35*other;
+      let a=-1, b=-1;
+      for(let i=0;i<len;i++){ if(d[i] > cut){ a=i; break; } }
+      for(let i=len-1;i>=0;i--){ if(d[i] > cut){ b=i; break; } }
+      return (a>=0 && b>a+3) ? [a,b] : null;
+    }
+    const cs = span(colD, gw, gh), rs = span(rowD, gh, gw);
+    if(!cs || !rs) return null;
+    let x0=cs[0]*step, x1=(cs[1]+1)*step, y0=rs[0]*step, y1=(rs[1]+1)*step;
+    const pw=x1-x0, ph=y1-y0;
+    const fw=pw/w, fh=ph/h, ar=pw/ph;
+    if(fw < 0.25 || fh < 0.2) return null;              // too small — probably noise
+    if(fw > 0.97 && fh > 0.97) return null;              // whole frame — nothing to crop
+    const landscapeCard = ar > 1.25 && ar < 2.1;         // ID cards are ~1.59
+    const portraitCard  = ar > 0.45 && ar < 0.85;        // card held sideways
+    if(!landscapeCard && !portraitCard) return null;
+    const padX = Math.round(pw*0.03), padY = Math.round(ph*0.03);
+    x0 = Math.max(0, x0-padX); y0 = Math.max(0, y0-padY);
+    x1 = Math.min(w, x1+padX); y1 = Math.min(h, y1+padY);
+    return {x:x0, y:y0, w:x1-x0, h:y1-y0};
   }
-  function span(d, len, other){
-    const cut = 0.35*other;
-    let a=-1, b=-1;
-    for(let i=0;i<len;i++){ if(d[i] > cut){ a=i; break; } }
-    for(let i=len-1;i>=0;i--){ if(d[i] > cut){ b=i; break; } }
-    return (a>=0 && b>a+3) ? [a,b] : null;
-  }
-  const cs = span(colD, gw, gh), rs = span(rowD, gh, gw);
-  if(!cs || !rs) return null;
-  let x0=cs[0]*step, x1=(cs[1]+1)*step, y0=rs[0]*step, y1=(rs[1]+1)*step;
-  const pw=x1-x0, ph=y1-y0;
-  const fw=pw/w, fh=ph/h, ar=pw/ph;
-  if(fw < 0.25 || fh < 0.2) return null;              // too small — probably noise
-  if(fw > 0.97 && fh > 0.97) return null;              // whole frame — nothing to crop
-  const landscapeCard = ar > 1.25 && ar < 2.1;         // ID cards are ~1.59
-  const portraitCard  = ar > 0.45 && ar < 0.85;        // card held sideways
-  if(!landscapeCard && !portraitCard) return null;
-  const padX = Math.round(pw*0.03), padY = Math.round(ph*0.03);
-  x0 = Math.max(0, x0-padX); y0 = Math.max(0, y0-padY);
-  x1 = Math.min(w, x1+padX); y1 = Math.min(h, y1+padY);
-  return {x:x0, y:y0, w:x1-x0, h:y1-y0};
+  // Pass 1: light card on a darker surface. Pass 2: dark card on a lighter surface.
+  return tryBox(l => l > T) || tryBox(l => l <= T);
 }
 
 /* Appends one page per person with their ID photos (front above back). */
