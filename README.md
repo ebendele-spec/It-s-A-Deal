@@ -55,11 +55,9 @@ can tell how fresh the data is.
   emails it with the PDF attached to one or more addresses (comma-separated,
   up to 8 per send), sent from elisha@mhsrv.com — once the send service is
   connected (one-time setup: see EMAIL-SETUP.md, deploy email-worker.js).
-  Until then, or if a send fails, the button hands the PDF to the device's
-  share sheet (phones: Mail/Gmail opens with it attached) or downloads it
-  and opens a pre-addressed draft. The card number is always masked to its
-  last 4 digits in the generated PDF. Requires internet (the PDF library
-  loads from a CDN on first use).
+  If a send fails, an error message says why and nothing is sent. The card
+  number is always masked to its last 4 digits in the generated PDF.
+  Requires internet (the PDF library loads from a CDN on first use).
 - The dealer **Cost** column is never read or written by the generator.
 - Nothing typed into the form is transmitted anywhere unless you use Email
   PDF; the CC# field otherwise exists only so it appears on the printed page.

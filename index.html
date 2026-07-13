@@ -844,20 +844,14 @@ document.addEventListener('click', e=>{ if(!e.target.closest('.field')) closeAC(
 
 /* =========================================================
    5. EMAIL PDF — builds a PDF of the filled sheet and emails
-      it WITH the PDF attached.
-
-      Primary path: POST to your Cloudflare Worker (email-worker.js),
-      which sends from elisha@mhsrv.com via SendGrid straight to the
-      typed recipients. See EMAIL-SETUP.md.
-
-      Fallback (Worker not set up yet, or the call fails): hand the
-      PDF to the device's share sheet (phones: Mail/Gmail opens with
-      it attached), or download it + open a pre-addressed draft.
-
-      The CC# is masked to its last 4 digits in every generated PDF.
+      it WITH the PDF attached, via the Cloudflare Worker
+      (email-worker.js) + SendGrid, from elisha@mhsrv.com
+      straight to the typed recipients. If a send fails, an
+      error is shown and nothing is sent — no fallbacks.
+      The CC# is masked to its last 4 digits in every
+      generated PDF.
    ========================================================= */
 const SEND_ENDPOINT = 'https://mhs-deal-mailer.ebendele.workers.dev';
-const WORKER_READY  = /^https:\/\//.test(SEND_ENDPOINT);
 
 const emailBtn    = document.getElementById('emailBtn');
 const emailPanel  = document.getElementById('emailPanel');
@@ -865,11 +859,6 @@ const emailTo     = document.getElementById('emailTo');
 const emailSend   = document.getElementById('emailSend');
 const emailCancel = document.getElementById('emailCancel');
 const emailStatus = document.getElementById('emailStatus');
-
-if(!WORKER_READY){
-  document.getElementById('emailNote').textContent =
-    'The send service isn\u2019t connected yet (see EMAIL-SETUP.md) \u2014 for now this hands the PDF to your device\u2019s email app with the file attached.';
-}
 
 emailBtn.addEventListener('click', ()=>{
   emailPanel.hidden = !emailPanel.hidden;
@@ -945,34 +934,6 @@ function blobToBase64(blob){
   });
 }
 
-function downloadBlob(blob, name){
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.click();
-}
-
-async function shareOrDownload(blob, recipients){
-  const file = new File([blob], pdfFilename(), {type:'application/pdf'});
-  if(navigator.canShare && navigator.canShare({files:[file]})){
-    try{
-      await navigator.share({files:[file], title: dealSubject()});
-      setEmailStatus('ok','\u2713 Handed to your device \u2014 pick your email app; the PDF is already attached.' +
-        (recipients.length ? ' Address it to: ' + recipients.join(', ') : ''));
-      return;
-    }catch(err){
-      if(err && err.name === 'AbortError'){ setEmailStatus('warn','Share canceled \u2014 nothing was sent.'); return; }
-      /* fall through to download */
-    }
-  }
-  downloadBlob(blob, pdfFilename());
-  const mailto = 'mailto:' + encodeURIComponent(recipients.join(',')) +
-    '?subject=' + encodeURIComponent(dealSubject()) +
-    '&body=' + encodeURIComponent('The deal sheet PDF just downloaded to this device \u2014 attach it to this email before sending.');
-  window.location.href = mailto;
-  setEmailStatus('warn','The PDF downloaded and an email draft opened \u2014 attach the downloaded file and send.');
-}
-
 async function sendDealEmail(){
   // Accept multiple addresses separated by commas, semicolons, or spaces
   const recipients = emailTo.value.split(/[,;\s]+/).map(s=>s.trim()).filter(Boolean);
@@ -981,7 +942,7 @@ async function sendDealEmail(){
     setEmailStatus('warn','This doesn\u2019t look like a valid address: ' + bad.join(', '));
     return;
   }
-  if(WORKER_READY && !recipients.length){
+  if(!recipients.length){
     setEmailStatus('warn','Enter at least one email address first.');
     return;
   }
@@ -1005,35 +966,30 @@ async function sendDealEmail(){
   }
 
   try{
-    if(WORKER_READY){
-      setEmailStatus('busy','Sending to ' + recipients.length + (recipients.length === 1 ? ' recipient\u2026' : ' recipients\u2026'));
-      const res = await fetch(SEND_ENDPOINT, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          to: recipients,
-          subject: dealSubject(),
-          filename: pdfFilename(),
-          pdf: await blobToBase64(blob),
-          summary: {
-            Buyer:       document.getElementById('buyer').value.trim() || '\u2014',
-            Stock:       document.getElementById('stock').value.trim().toUpperCase() || '\u2014',
-            Description: document.getElementById('description').value.trim() || '\u2014',
-            Salesman:    document.getElementById('salesman').value.trim() || '\u2014'
-          }
-        })
-      });
-      const out = await res.json().catch(()=>({}));
-      if(!res.ok || !out.sent) throw new Error(out.error || ('send service returned ' + res.status));
-      setEmailStatus('ok','\u2713 Sent to ' + recipients.join(', ') + ' with the PDF attached.');
-      emailTo.value = '';
-    }else{
-      await shareOrDownload(blob, recipients);
-    }
+    setEmailStatus('busy','Sending to ' + recipients.length + (recipients.length === 1 ? ' recipient\u2026' : ' recipients\u2026'));
+    const res = await fetch(SEND_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: recipients,
+        subject: dealSubject(),
+        filename: pdfFilename(),
+        pdf: await blobToBase64(blob),
+        summary: {
+          Buyer:       document.getElementById('buyer').value.trim() || '\u2014',
+          Stock:       document.getElementById('stock').value.trim().toUpperCase() || '\u2014',
+          Description: document.getElementById('description').value.trim() || '\u2014',
+          Salesman:    document.getElementById('salesman').value.trim() || '\u2014'
+        }
+      })
+    });
+    const out = await res.json().catch(()=>({}));
+    if(!res.ok || !out.sent) throw new Error(out.error || ('send service returned ' + res.status));
+    setEmailStatus('ok','\u2713 Sent to ' + recipients.join(', ') + ' with the PDF attached.');
+    emailTo.value = '';
   }catch(err){
     console.error('Email send error:', err);
-    setEmailStatus('warn','Direct send failed (' + (err.message||'network error') + ') \u2014 switching to your device\u2019s email app\u2026');
-    await shareOrDownload(blob, recipients);
+    setEmailStatus('err','Sending failed (' + (err.message||'network error') + ') \u2014 nothing was sent. Try again, or use Print / Save PDF.');
   }finally{
     emailSend.disabled = false;
   }
