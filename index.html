@@ -417,7 +417,10 @@
   <!-- ============ META STRIP ============ -->
   <div class="meta">
     <div class="field">
-      <label for="miles">Miles</label>
+      <div class="label-row">
+        <label for="miles">Miles</label>
+        <button type="button" class="scan-btn vin-btn" id="milesPhotoBtn">&#128247; Miles Photo</button>
+      </div>
       <input type="text" id="miles" inputmode="numeric" placeholder="0">
     </div>
     <div class="field">
@@ -678,6 +681,7 @@
 
 <input type="file" id="idPhotoInput" accept="image/*" capture="environment" hidden>
 <input type="file" id="vinPhotoInput" accept="image/*" capture="environment" hidden>
+<input type="file" id="milesPhotoInput" accept="image/*" capture="environment" hidden>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="inventory.js"></script>
@@ -1151,7 +1155,7 @@ async function makePdfBlob(maskCC){
   const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
   drawDealSheet(doc, maskCC);
   addIdPages(doc);
-  addVinPage(doc);
+  addCoachPhotoPages(doc);
   addFooters(doc);
   return doc.output('blob');
 }
@@ -1898,7 +1902,7 @@ async function printDealPdf(){
     const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
     drawDealSheet(doc, false);   // printed office copy keeps the full card number
     addIdPages(doc);
-    addVinPage(doc);
+    addCoachPhotoPages(doc);
     addFooters(doc);
     doc.autoPrint();
     const url = doc.output('bloburl');
@@ -1952,27 +1956,70 @@ vinPhotoInput.addEventListener('change', async ()=>{
   }
 });
 
-/* Appends the VIN photo as its own labeled page. */
-function addVinPage(doc){
-  if(!vinPhoto) return;
+let milesPhoto = null;
+const milesPhotoBtn   = document.getElementById('milesPhotoBtn');
+const milesPhotoInput = document.getElementById('milesPhotoInput');
+
+milesPhotoBtn.addEventListener('click', ()=>milesPhotoInput.click());
+milesPhotoInput.addEventListener('change', async ()=>{
+  const file = milesPhotoInput.files && milesPhotoInput.files[0];
+  milesPhotoInput.value = '';
+  if(!file) return;
+  if(!milesPhotoBtn.dataset.label) milesPhotoBtn.dataset.label = milesPhotoBtn.textContent.replace(/^\u2713 /,'');
+  milesPhotoBtn.disabled = true;
+  milesPhotoBtn.textContent = 'Processing\u2026';
+  try{
+    const c = await decodePhotoToCanvas(file, 1600);
+    milesPhoto = {data: c.toDataURL('image/jpeg', 0.82), w: c.width, h: c.height};
+    milesPhotoBtn.textContent = '\u2713 ' + milesPhotoBtn.dataset.label;
+    milesPhotoBtn.classList.add('has-photo');
+    idHint(milesPhotoBtn, '\u2713 Miles photo saved \u2014 it will attach to the PDF.');
+  }catch(err){
+    console.error('Miles photo error:', err);
+    milesPhoto = null;
+    milesPhotoBtn.textContent = milesPhotoBtn.dataset.label;
+    milesPhotoBtn.classList.remove('has-photo');
+    alert('Could not read that photo \u2014 please try again.');
+  }finally{
+    milesPhotoBtn.disabled = false;
+  }
+});
+
+/* Appends VIN and Miles photos on one labeled "Coach Photos" page. */
+function addCoachPhotoPages(doc){
+  const shots = [];
+  if(vinPhoto)   shots.push(['VIN',              vinPhoto]);
+  if(milesPhoto) shots.push(['MILES / ODOMETER', milesPhoto]);
+  if(!shots.length) return;
   const stock = (document.getElementById('stock').value||'').trim().toUpperCase();
   const desc  = (document.getElementById('description').value||'').trim();
   doc.addPage();
   doc.setFillColor(20,39,63); doc.rect(0,0,8.5,0.6,'F');
   doc.setFillColor(198,162,78); doc.rect(0,0.6,8.5,0.035,'F');
   doc.setTextColor(198,162,78); doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('VIN PHOTO' + (stock ? ' \u2014 ' + stock : ''), 0.45, 0.38);
+  doc.text('COACH PHOTOS' + (stock ? ' \u2014 ' + stock : ''), 0.45, 0.38);
+  let y = 0.95;
   if(desc){
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(107,116,128);
     doc.text(desc, 0.45, 0.85);
+    y = 1.05;
   }
-  const maxW = 7.6, maxH = 8.9;
-  const r = Math.min(maxW/vinPhoto.w, maxH/vinPhoto.h);
-  const iw = vinPhoto.w*r, ih = vinPhoto.h*r;
-  const ix = (8.5-iw)/2;
-  doc.addImage(vinPhoto.data, 'JPEG', ix, 1.1, iw, ih);
-  doc.setDrawColor(195,199,206); doc.setLineWidth(0.01);
-  doc.rect(ix, 1.1, iw, ih, 'S');
+  const maxH = shots.length === 2 ? 4.15 : 8.6;
+  shots.forEach(pair=>{
+    const tag = pair[0], ph = pair[1];
+    doc.setFont('helvetica','bold'); doc.setFontSize(7);
+    doc.setTextColor(107,116,128);
+    doc.text(tag, 0.45, y);
+    y += 0.12;
+    const maxW = 7.6;
+    const r = Math.min(maxW/ph.w, maxH/ph.h);
+    const iw = ph.w*r, ih = ph.h*r;
+    const ix = (8.5-iw)/2;
+    doc.addImage(ph.data, 'JPEG', ix, y, iw, ih);
+    doc.setDrawColor(195,199,206); doc.setLineWidth(0.01);
+    doc.rect(ix, y, iw, ih, 'S');
+    y += ih + 0.28;
+  });
 }
 
 /* Small branded footer + page numbers on every page. */
