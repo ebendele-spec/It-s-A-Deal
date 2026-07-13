@@ -15,12 +15,15 @@
 // Only these websites may use this Worker:
 const ALLOWED_ORIGINS = [
   "https://ebendele-spec.github.io",
-  // "https://deal.mhsrv.com",          // uncomment / edit when the custom domain is live
+  "https://mhsrv.app",
+  "https://www.mhsrv.app",
 ];
 
-// Must be a verified sender in SendGrid (Single Sender Verification):
-const FROM_EMAIL = "elisha@mhsrv.com";
+// Sends from the SendGrid-authenticated domain (mhsrv.app) so corporate
+// filters accept it; replies go to REPLY_TO.
+const FROM_EMAIL = "deal@mhsrv.app";
 const FROM_NAME  = "MHS Deal Sheet";
+const REPLY_TO   = "elisha@mhsrv.com";
 
 const MAX_RECIPIENTS = 8;
 const MAX_PDF_BYTES  = 8 * 1024 * 1024; // 8 MB cap (deal sheets are ~0.2–0.5 MB)
@@ -73,6 +76,7 @@ export default {
       body: JSON.stringify({
         personalizations: [{ to: to.map(email => ({ email })) }],
         from: { email: FROM_EMAIL, name: FROM_NAME },
+        reply_to: { email: REPLY_TO },
         subject,
         content: [{ type: "text/plain", value: text }],
         attachments: [{
