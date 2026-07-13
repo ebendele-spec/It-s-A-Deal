@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>It's a Deal! — Motor Home Specialist</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#14273F">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="It's a Deal">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#14273F;
+    --navy-deep:#0D1B2E;
+    --paper:#FAF7F0;
+    --gold:#C6A24E;
+    --gold-soft:#F3E8CD;
+    --ink:#1B2430;
+    --muted:#6B7480;
+    --line:#C9CDD4;
+    --green:#2E7D4F;
+    --amber:#A66A1F;
+    --red:#B3402F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Barlow',sans-serif;color:var(--ink);
+    background:var(--navy);
+    background-image:radial-gradient(1200px 500px at 50% -10%, #1E3A5C 0%, var(--navy) 55%, var(--navy-deep) 100%);
+    min-height:100vh;padding:28px 14px 64px;
+  }
+  .sheet{
+    max-width:880px;margin:0 auto;background:var(--paper);
+    border-radius:6px;box-shadow:0 24px 60px rgba(0,0,0,.45);
+    overflow:hidden;
+  }
+
+  /* ---------- Masthead ---------- */
+  .mast{
+    background:var(--navy);color:#fff;padding:22px 28px 0;
+    border-bottom:4px solid var(--gold);
+  }
+  .mast-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand img{height:44px;width:auto;display:block}
+  .brand small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#B8C4D4;margin-top:2px}
+  h1{
+    font-family:'Barlow Semi Condensed',sans-serif;font-weight:800;
+    font-size:clamp(34px,6vw,52px);letter-spacing:.02em;line-height:1;
+    color:var(--gold);text-transform:uppercase;
+  }
+  h1 span{color:#fff}
+  .deal-type{display:flex;gap:0;margin-top:18px}
+  .deal-type button{
+    flex:1;appearance:none;border:1px solid rgba(255,255,255,.25);border-bottom:none;
+    background:transparent;color:#C7D2E0;font:600 13px/1 'Barlow Semi Condensed',sans-serif;
+    letter-spacing:.12em;text-transform:uppercase;padding:12px 8px;cursor:pointer;
+    transition:background .15s,color .15s;
+  }
+  .deal-type button+button{border-left:none}
+  .deal-type button.on{background:var(--paper);color:var(--navy);font-weight:800}
+  .deal-type button:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}
+
+  /* ---------- Meta strip ---------- */
+  .meta{
+    display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:16px;
+    padding:16px 28px;background:var(--gold-soft);border-bottom:1px solid var(--line);
+  }
+
+  /* ---------- Sections ---------- */
+  section{padding:20px 28px 24px;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:none}
+  .sec-h{
+    display:flex;align-items:center;gap:10px;margin-bottom:14px;
+  }
+  .sec-h h2{
+    font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:15px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--navy);white-space:nowrap;
+  }
+  .sec-h::after{content:"";height:1px;background:var(--line);flex:1}
+
+  .grid{display:grid;gap:14px 16px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr 1fr}
+  .g4{grid-template-columns:1fr 1fr 1fr 1fr}
+  .span2{grid-column:span 2}
+  .span3{grid-column:span 3}
+
+  .field{display:flex;flex-direction:column;gap:4px;position:relative}
+  label{
+    font:600 11px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  input[type=text],input[type=tel],input[type=email],input[type=date],input[type=time],textarea,select{
+    font:500 15px/1.35 'Barlow',sans-serif;color:var(--ink);
+    background:transparent;border:none;border-bottom:1.5px solid var(--line);
+    padding:6px 2px;border-radius:0;width:100%;
+    transition:border-color .15s, background .3s;
+  }
+  textarea{resize:vertical;min-height:84px;border:1.5px solid var(--line);border-radius:4px;padding:10px}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);background:rgba(198,162,78,.06)}
+  input::placeholder,textarea::placeholder{color:#AEB4BD;font-weight:400}
+  .money{display:flex;align-items:center;border-bottom:1.5px solid var(--line);transition:border-color .15s, background .3s}
+  .money .cur{font-weight:600;color:var(--muted);padding-left:2px;font-size:14px;flex:none}
+  .money input{border-bottom:none;padding-left:4px;font-variant-numeric:tabular-nums}
+  .money:focus-within{border-color:var(--gold);background:rgba(198,162,78,.06)}
+  .money input:focus{background:transparent}
+
+  /* auto-filled flash */
+  .filled{animation:flash 1.4s ease-out}
+  @keyframes flash{0%{background:var(--gold-soft);border-color:var(--gold)}100%{background:transparent}}
+  .autofill-tag{
+    display:none;align-items:center;gap:5px;margin-top:3px;
+    font:600 10px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--green);
+  }
+  .autofill-tag.show{display:inline-flex}
+
+  /* ---------- Stock lookup ---------- */
+  .stock-row{display:flex;gap:10px;align-items:flex-end}
+  .stock-row .field{flex:1}
+  .lookup-btn{
+    appearance:none;border:none;cursor:pointer;border-radius:4px;
+    background:var(--navy);color:var(--gold);
+    font:700 12px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;
+    padding:11px 16px;transition:transform .1s, background .15s;white-space:nowrap;
+  }
+  .lookup-btn:hover{background:#1D3453}
+  .lookup-btn:active{transform:translateY(1px)}
+  .lookup-btn:disabled{opacity:.55;cursor:wait}
+  .lookup-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .lookup-status{
+    grid-column:1/-1;font:500 13px/1.4 'Barlow',sans-serif;min-height:18px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .lookup-status.searching{color:var(--navy)}
+  .lookup-status.ok{color:var(--green)}
+  .lookup-status.warn{color:var(--amber)}
+  .lookup-status.err{color:var(--red)}
+  .lookup-status a{color:inherit}
+  .spinner{
+    width:14px;height:14px;border:2px solid var(--gold-soft);border-top-color:var(--gold);
+    border-radius:50%;animation:spin .7s linear infinite;flex:none;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- Address autocomplete ---------- */
+  .ac-list{
+    position:absolute;top:100%;left:0;right:0;z-index:30;margin-top:4px;
+    background:#fff;border:1px solid var(--line);border-radius:6px;
+    box-shadow:0 12px 28px rgba(13,27,46,.18);overflow:hidden;display:none;
+  }
+  .ac-list.open{display:block}
+  .ac-item{
+    padding:10px 12px;font:500 13.5px/1.35 'Barlow',sans-serif;cursor:pointer;
+    border-bottom:1px solid #EFEFEA;
+  }
+  .ac-item:last-child{border-bottom:none}
+  .ac-item:hover,.ac-item.active{background:var(--gold-soft)}
+  .ac-item small{display:block;color:var(--muted);font-weight:400}
+
+  /* ---------- Toggles ---------- */
+  .yn{display:flex;gap:6px;margin-top:2px}
+  .yn button{
+    appearance:none;cursor:pointer;border:1.5px solid var(--line);background:#fff;
+    color:var(--muted);font:700 12px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.08em;
+    padding:7px 14px;border-radius:999px;transition:all .12s;
+  }
+  .yn button.on{background:var(--navy);border-color:var(--navy);color:var(--gold)}
+  .yn button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* ---------- Trades ---------- */
+  .trade{
+    border:1px solid var(--line);border-left:4px solid var(--gold);
+    border-radius:4px;padding:14px 16px 16px;background:#fff;position:relative;
+  }
+  .trade h3{
+    font:700 13px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--navy);margin-bottom:12px;
+  }
+  .trades{display:grid;gap:14px}
+  .trades:not(:empty){margin-bottom:14px}
+  .add-trade{
+    display:inline-flex;align-items:center;gap:9px;appearance:none;cursor:pointer;
+    background:#fff;border:1.5px dashed var(--green);color:var(--green);border-radius:6px;
+    font:700 13px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+    padding:10px 18px 10px 12px;transition:background .15s;
+  }
+  .add-trade:hover{background:#EDF5EF}
+  .add-trade:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  .add-trade .plus{
+    display:inline-flex;align-items:center;justify-content:center;flex:none;
+    width:20px;height:20px;border-radius:50%;background:var(--green);color:#fff;
+    font:700 15px/1 'Barlow',sans-serif;
+  }
+  .remove-trade{
+    position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;
+    border:1.5px solid var(--red);background:#fff;color:var(--red);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font:800 15px/1 'Barlow',sans-serif;
+    transition:background .12s,color .12s;
+  }
+  .remove-trade:hover{background:var(--red);color:#fff}
+  .remove-trade:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+  /* ---------- Footer / actions ---------- */
+  .actions{
+    display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:20px 28px;background:var(--navy);color:#B8C4D4;
+  }
+  .actions p{font-size:12.5px;max-width:480px}
+  .action-btns{display:flex;gap:10px;flex-wrap:wrap}
+  .print-btn{
+    appearance:none;cursor:pointer;border:none;border-radius:4px;
+    background:var(--gold);color:var(--navy-deep);
+    font:800 14px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;
+    padding:14px 26px;transition:transform .1s, filter .15s;
+  }
+  .print-btn:hover{filter:brightness(1.06)}
+  .print-btn:active{transform:translateY(1px)}
+  .print-btn:disabled{opacity:.55;cursor:wait}
+  .email-btn{
+    appearance:none;cursor:pointer;border:1.5px solid var(--gold);border-radius:4px;
+    background:transparent;color:var(--gold);
+    font:800 14px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;
+    padding:13px 24px;transition:background .15s;
+  }
+  .email-btn:hover{background:rgba(198,162,78,.14)}
+  .email-btn:focus-visible,.print-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  .email-panel{
+    padding:16px 28px 22px;background:var(--navy-deep);color:#C7D2E0;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+  .email-panel>label{color:#B8C4D4}
+  .email-row{display:flex;gap:10px;margin-top:7px;flex-wrap:wrap}
+  .email-row input{
+    flex:1;min-width:210px;background:#fff;border:none;border-radius:4px;
+    padding:11px 12px;font:500 15px/1 'Barlow',sans-serif;color:var(--ink);
+  }
+  .email-row input:focus{outline:2px solid var(--gold)}
+  .email-row .print-btn{padding:12px 24px}
+  .email-row .email-btn{padding:11px 20px}
+  .email-status{min-height:18px;margin-top:10px;font:600 13px/1.4 'Barlow',sans-serif}
+  .email-status.ok{color:#7FC79A}
+  .email-status.warn{color:#E4B45E}
+  .email-status.err{color:#E88A7A}
+  .email-status.busy{color:#C7D2E0}
+  .email-note{font-size:12px;color:#8FA0B5;margin-top:8px}
+  .note{font-size:12px;color:var(--muted);margin-top:6px}
+
+  /* ---------- ID scanner ---------- */
+  .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  .id-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .idphoto-btn{border-color:var(--gold);color:#8A6D2A}
+  .idphoto-btn.has-photo{border-color:var(--green);color:var(--green);background:#EDF5EF}
+  .id-hint{display:block;font:500 11px/1.4 'Barlow',sans-serif;color:var(--green);min-height:0;margin-top:2px}
+  .scan-btn{
+    display:none;appearance:none;cursor:pointer;flex:none;
+    border:1.5px solid var(--navy);border-radius:999px;background:#fff;color:var(--navy);
+    font:700 10.5px/1 'Barlow Semi Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;
+    padding:5px 11px;transition:background .12s,color .12s;
+  }
+  .scan-btn:active{background:var(--navy);color:var(--gold)}
+  @media (pointer:coarse){ body.can-scan .scan-btn{display:inline-flex;align-items:center;gap:5px} }
+  .scan-overlay{
+    position:fixed;inset:0;z-index:200;background:var(--navy-deep);color:#C7D2E0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;padding:20px;text-align:center;
+  }
+  .scan-overlay[hidden]{display:none}
+  .scan-head{font:700 16px/1.4 'Barlow Semi Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase}
+  .scan-head strong{color:var(--gold)}
+  .scan-stage{position:relative;width:min(92vw,560px)}
+  .scan-stage video{width:100%;max-height:52vh;object-fit:cover;border-radius:8px;background:#000}
+  .scan-frame{
+    position:absolute;left:6%;right:6%;top:32%;bottom:32%;
+    border:2px solid var(--gold);border-radius:6px;pointer-events:none;
+    box-shadow:0 0 0 2000px rgba(13,27,46,.25);
+  }
+  .scan-status{min-height:20px;font:600 14px/1.4 'Barlow',sans-serif}
+  .scan-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .scan-note{font-size:12px;color:#8FA0B5;max-width:420px}
+  .idcap-frame{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:86%;aspect-ratio:1.586;border:2.5px solid var(--gold);border-radius:10px;
+    pointer-events:none;box-shadow:0 0 0 2000px rgba(13,27,46,.45);
+  }
+  .idcap-shutter{
+    width:64px;height:64px;border-radius:50%;cursor:pointer;
+    background:var(--gold);border:4px solid #fff;
+    transition:transform .1s;
+  }
+  .idcap-shutter:active{transform:scale(.92)}
+
+
+  /* ---------- Polish pass ---------- */
+  .sheet{border-radius:10px;box-shadow:0 30px 80px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.28)}
+  .mast{position:relative}
+  .mast::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;
+    background:linear-gradient(90deg,transparent 5%,rgba(198,162,78,.7) 50%,transparent 95%)}
+  .brand img{filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+  h1{text-shadow:0 2px 14px rgba(0,0,0,.35)}
+  .deal-type button{transition:background .15s,color .15s,box-shadow .15s}
+  .deal-type button.on{box-shadow:inset 0 -3px 0 var(--gold)}
+  .meta{background:linear-gradient(180deg,#F7EDD4,var(--gold-soft))}
+  .sec-h h2::before{content:"";display:inline-block;width:8px;height:8px;background:var(--gold);
+    margin-right:9px;border-radius:2px;vertical-align:1px}
+  input[type=text]:focus,input[type=tel]:focus,input[type=email]:focus,
+  input[type=date]:focus,input[type=time]:focus,select:focus,textarea:focus{
+    border-color:var(--gold);box-shadow:0 1px 0 0 var(--gold)}
+  .trade{border-radius:8px;box-shadow:0 2px 12px rgba(20,39,63,.07)}
+  .lookup-btn{background:linear-gradient(180deg,#1F3757,var(--navy))}
+  .print-btn{box-shadow:0 3px 12px rgba(198,162,78,.35)}
+  .yn button.on{border-color:var(--gold)}
+  .email-row input{border-radius:6px}
+  .vin-btn{display:inline-flex;align-items:center;gap:5px}
+
+  /* ---------- Install banner ---------- */
+  .install-bar{
+    position:fixed;left:12px;right:12px;bottom:12px;z-index:150;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    background:var(--navy-deep);color:#C7D2E0;border:1px solid rgba(198,162,78,.4);
+    border-radius:10px;padding:12px 16px;box-shadow:0 12px 32px rgba(0,0,0,.45);
+    padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  }
+  .install-bar strong{color:var(--gold)}
+  .install-msg{font:500 13.5px/1.45 'Barlow',sans-serif}
+  .install-actions{display:flex;gap:8px;margin-left:auto}
+  .install-bar .print-btn{padding:10px 18px;font-size:12px}
+  .install-bar .email-btn{padding:9px 14px;font-size:12px}
+
+  @media screen and (max-width:680px){
+    .g2,.g3,.g4{grid-template-columns:1fr 1fr}
+    .span2,.span3{grid-column:span 2}
+    .meta{grid-template-columns:1fr 1fr}
+    section,.mast,.actions{padding-left:18px;padding-right:18px}
+  }
+  @media screen and (max-width:440px){
+    .g2,.g3,.g4{grid-template-columns:1fr}
+    .span2,.span3{grid-column:span 1}
+    .stock-row{flex-direction:column;align-items:stretch}
+  }
+
+  @media print{
+    @page{size:letter;margin:0.35in}
+    body{background:#fff;padding:0}
+    .sheet{box-shadow:none;max-width:none;border-radius:0}
+    .lookup-btn,.lookup-status,.actions,.email-panel,.ac-list,.spinner,.note,.autofill-tag,.scan-btn,.scan-overlay,.install-bar,.id-hint{display:none!important}
+    .sec-h h2::before{display:none}
+    .add-trade,.remove-trade{display:none!important}
+    #secTrades:has(.trades:empty){display:none} /* no trades — skip the section on paper */
+    .mast{padding:7pt 15pt 0;border-bottom:2pt solid var(--gold);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .brand img{height:22pt}
+    h1{font-size:21pt}
+    .mast small{font-size:7pt!important}
+    .deal-type{margin-top:7pt}
+    .deal-type button{padding:5pt 6pt;font-size:8pt}
+    .meta{padding:7pt 15pt;gap:9pt;grid-template-columns:1fr 1.4fr 1fr}
+    section{padding:7pt 15pt 8pt;break-inside:avoid}
+    .sec-h{margin-bottom:6pt}
+    .sec-h h2{font-size:8.5pt}
+    .grid{gap:7pt 9pt}
+    label{font-size:7pt}
+    input[type=text],input[type=tel],input[type=email],input[type=date],input[type=time],select{
+      font-size:9.5pt;padding:2pt;border-bottom-width:1pt}
+    .money .cur{font-size:8pt}
+    textarea{min-height:42pt;font-size:9.5pt;padding:5pt}
+    #secSpecial .field>label{display:none} /* section header already says it */
+
+    /* Reflow to four columns so everything fits one page */
+    #secBuyer .grid,#secCoach .grid,#secApprovals .grid{grid-template-columns:repeat(4,1fr)}
+    #secDeposit .grid{grid-template-columns:repeat(4,1fr)}
+    .span2{grid-column:span 2}
+    .span3{grid-column:span 3}
+    .trades{grid-template-columns:1fr 1fr;gap:9pt}
+    .trade{padding:6pt 8pt 8pt}
+    .trade h3{font-size:7.5pt;margin-bottom:5pt}
+    .yn button{padding:3pt 8pt;font-size:7.5pt}
+    .stock-row{flex-direction:row;align-items:flex-end}
+    .stock-row .field{flex:1}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .filled{animation:none}
+    .spinner{animation-duration:1.5s}
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="mast">
+    <div class="mast-top">
+      <div class="brand">
+        <img src="https://mhsrv.s3.amazonaws.com/images/homeimage/logo--mhs-bc.png" alt="Motor Home Specialist">
+      </div>
+      <div style="text-align:right">
+        <h1>It&rsquo;s a <span>Deal!</span></h1>
+        <small style="display:block;font:600 11px/1.4 'Barlow Semi Condensed',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#B8C4D4;margin-top:4px">Motor Home Specialist &middot; Alvarado, TX</small>
+      </div>
+    </div>
+    <div class="deal-type" role="radiogroup" aria-label="Deal type">
+      <button type="button" class="on" data-deal="Finance">Finance</button>
+      <button type="button" data-deal="Cash">Cash</button>
+      <button type="button" data-deal="Outside Finance">Outside Finance</button>
+    </div>
+  </header>
+
+  <!-- ============ META STRIP ============ -->
+  <div class="meta">
+    <div class="field">
+      <label for="miles">Miles</label>
+      <input type="text" id="miles" inputmode="numeric" placeholder="0">
+    </div>
+    <div class="field">
+      <div class="label-row">
+        <label for="vin8">Last 8 of VIN</label>
+        <button type="button" class="scan-btn vin-btn" id="vinPhotoBtn">&#128247; VIN Photo</button>
+      </div>
+      <input type="text" id="vin8" maxlength="8" style="text-transform:uppercase;letter-spacing:.15em" placeholder="XXXXXXXX">
+    </div>
+    <div class="field">
+      <label for="date">Date</label>
+      <input type="date" id="date">
+    </div>
+  </div>
+
+  <!-- ============ BUYER ============ -->
+  <section id="secBuyer">
+    <div class="sec-h"><h2>Buyer</h2></div>
+    <div class="grid g2">
+      <div class="field">
+        <div class="label-row">
+          <label for="buyer">Buyer</label>
+          <div class="id-btns">
+            <button type="button" class="scan-btn" data-scan="buyer">&#128247; Scan ID</button>
+            <button type="button" class="scan-btn idphoto-btn" data-photo="buyerFront">Front of ID Photo</button>
+            <button type="button" class="scan-btn idphoto-btn" data-photo="buyerBack">Back of ID Photo</button>
+          </div>
+        </div>
+        <input type="text" id="buyer" autocomplete="off">
+      </div>
+      <div class="field">
+        <div class="label-row">
+          <label for="cobuyer">Co-Buyer</label>
+          <div class="id-btns">
+            <button type="button" class="scan-btn" data-scan="cobuyer">&#128247; Scan ID</button>
+            <button type="button" class="scan-btn idphoto-btn" data-photo="cobuyerFront">Front of ID Photo</button>
+            <button type="button" class="scan-btn idphoto-btn" data-photo="cobuyerBack">Back of ID Photo</button>
+          </div>
+        </div>
+        <input type="text" id="cobuyer" autocomplete="off">
+      </div>
+      <div class="field span2">
+        <label for="street">Street &mdash; start typing for suggestions</label>
+        <input type="text" id="street" autocomplete="off" placeholder="123 Main St, Alvarado TX">
+        <div class="ac-list" id="acList" role="listbox"></div>
+      </div>
+      <div class="field">
+        <label for="city">City</label>
+        <input type="text" id="city">
+      </div>
+      <div class="field">
+        <label for="state">State</label>
+        <input type="text" id="state">
+      </div>
+      <div class="field">
+        <label for="zip">Zip</label>
+        <input type="text" id="zip" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label for="county">County</label>
+        <input type="text" id="county">
+      </div>
+      <div class="field">
+        <label for="phone">Phone #</label>
+        <input type="tel" id="phone" placeholder="(___) ___-____">
+      </div>
+      <div class="field">
+        <label for="faxemail">Email</label>
+        <input type="email" id="faxemail">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE COACH ============ -->
+  <section id="secCoach">
+    <div class="sec-h"><h2>The Coach</h2></div>
+    <div class="grid g2">
+      <div class="stock-row span2">
+        <div class="field">
+          <label for="stock">Stock # &mdash; auto-fills from MHSRV inventory</label>
+          <input type="text" id="stock" autocomplete="off" placeholder="e.g. MHS44361">
+        </div>
+        <button type="button" class="lookup-btn" id="lookupBtn">&#9889; Pull from MHSRV</button>
+      </div>
+      <div class="lookup-status" id="lookupStatus" aria-live="polite"></div>
+      <div class="field">
+        <label for="description">Description</label>
+        <input type="text" id="description" placeholder="Year / Make / Model">
+        <span class="autofill-tag" id="tagDesc">&#10003; Pulled from MHSRV.com</span>
+      </div>
+      <div class="field">
+        <label for="salesPrice">Sales Price</label>
+        <div class="money"><span class="cur">$</span><input type="text" id="salesPrice" inputmode="decimal"></div>
+        <span class="autofill-tag" id="tagPrice">&#10003; Pulled from MHSRV.com</span>
+      </div>
+      <div class="field span2">
+        <label for="coachLoc">Coach Location</label>
+        <input type="text" id="coachLoc" placeholder="Example: &quot;Line 1&quot;, or &quot;Horseshoe&quot;, or &quot;Behind Hotel&quot;">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRADES ============ -->
+  <section id="secTrades">
+    <div class="sec-h"><h2>Trade-Ins</h2></div>
+    <div class="trades" id="tradesList"></div>
+    <button type="button" class="add-trade" id="addTrade">
+      <span class="plus" aria-hidden="true">+</span> Add Trade-In
+    </button>
+  </section>
+
+  <!-- ============ DEPOSIT & DELIVERY ============ -->
+  <section id="secDeposit">
+    <div class="sec-h"><h2>Deposit &amp; Delivery</h2></div>
+    <div class="grid g4">
+      <div class="field">
+        <label for="deposit">Amount of Deposit</label>
+        <div class="money"><span class="cur">$</span><input type="text" id="deposit" inputmode="decimal"></div>
+        <span class="autofill-tag" id="tagDep">&#10003; Auto-calculated from sale price</span>
+      </div>
+      <div class="field">
+        <label for="downPayment">Total Down Payment</label>
+        <div class="money"><span class="cur">$</span><input type="text" id="downPayment" inputmode="decimal"></div>
+      </div>
+      <div class="field">
+        <label for="delDate">Est. Delivery Date</label>
+        <input type="date" id="delDate">
+      </div>
+      <div class="field">
+        <label for="delTime">Delivery Slot</label>
+        <select id="delTime">
+          <option value="" selected>Select&hellip;</option>
+          <option value="10am">10am</option>
+          <option value="1pm">1pm</option>
+          <option value="3pm">3pm</option>
+        </select>
+      </div>
+      <div class="field span2">
+        <label>First Time Buyer</label>
+        <div class="yn" data-group="ftb">
+          <button type="button" data-val="Y">Y</button>
+          <button type="button" data-val="N">N</button>
+        </div>
+      </div>
+      <div class="field span2">
+        <label>Pending Inspection</label>
+        <div class="yn" data-group="inspection">
+          <button type="button" data-val="Y">Y</button>
+          <button type="button" data-val="N">N</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APPROVALS & PAYMENT ============ -->
+  <section id="secApprovals">
+    <div class="sec-h"><h2>Approvals &amp; Payment</h2></div>
+    <div class="grid g2">
+      <div class="field">
+        <label for="salesman">Salesman</label>
+        <input type="text" id="salesman">
+      </div>
+      <div class="field">
+        <label for="manager">Manager X</label>
+        <input type="text" id="manager">
+      </div>
+      <div class="field">
+        <label for="finManager">Finance Manager</label>
+        <input type="text" id="finManager">
+      </div>
+      <div class="field">
+        <label for="ccexp">CC Exp Date</label>
+        <input type="text" id="ccexp" placeholder="MM/YY" maxlength="5" inputmode="numeric">
+      </div>
+      <div class="field span2">
+        <label for="ccnum">CC # (deposit card)</label>
+        <input type="text" id="ccnum" inputmode="numeric" autocomplete="off">
+        <p class="note">Card details stay on this page only &mdash; nothing on this form is transmitted anywhere. Print for the deal jacket, then close the tab.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SPECIAL INSTRUCTIONS & TITLING ============ -->
+  <section id="secSpecial">
+    <div class="sec-h"><h2>Special Instructions</h2></div>
+    <div class="grid">
+      <div class="field">
+        <label for="special">Special Instructions</label>
+        <textarea id="special"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ACTIONS ============ -->
+  <div class="actions">
+    <p>Print / Save and Email produce the same deal sheet PDF &mdash; ID photos attach as extra pages, and the emailed copy masks the card number to its last 4 digits.</p>
+    <div class="action-btns">
+      <button type="button" class="print-btn" id="printBtn">Print / Save PDF</button>
+      <button type="button" class="email-btn" id="emailBtn">Email PDF</button>
+    </div>
+  </div>
+  <div class="email-panel" id="emailPanel" hidden>
+    <label for="emailTo">Send the PDF to &mdash; one or more addresses, separated by commas</label>
+    <div class="email-row">
+      <input type="text" id="emailTo" placeholder="me@mhsrv.com, manager@mhsrv.com" autocomplete="off" inputmode="email">
+      <button type="button" id="emailSend" class="print-btn">Send</button>
+      <button type="button" id="emailCancel" class="email-btn">Cancel</button>
+    </div>
+    <div class="email-status" id="emailStatus" aria-live="polite"></div>
+    <p class="email-note" id="emailNote">The PDF is attached automatically. Recipients get it directly &mdash; sent from elisha@mhsrv.com.</p>
+  </div>
+
+</div>
+
+<!-- ============ INSTALL BANNER ============ -->
+<div class="install-bar" id="installBar" hidden>
+  <span class="install-msg" id="installMsg">Install <strong>It&rsquo;s a Deal</strong> on your home screen for one-tap access.</span>
+  <div class="install-actions">
+    <button type="button" class="print-btn install-go" id="installBtn" hidden>Install</button>
+    <button type="button" class="email-btn install-no" id="installDismiss">Not now</button>
+  </div>
+</div>
+
+<!-- ============ ID SCANNER OVERLAY ============ -->
+<div class="scan-overlay" id="scanOverlay" hidden>
+  <div class="scan-head">Scan the barcode on the <strong>back</strong> of the driver&rsquo;s license</div>
+  <div class="scan-stage">
+    <video id="scanVideo" playsinline muted></video>
+    <div class="scan-frame" aria-hidden="true"></div>
+  </div>
+  <div class="scan-status" id="scanStatus">Starting camera&hellip;</div>
+  <div class="scan-actions">
+    <button type="button" class="print-btn" id="scanPhotoBtn">&#128248; Take a photo instead</button>
+    <button type="button" class="email-btn" id="scanTorchBtn" hidden>&#128294; Light</button>
+    <button type="button" class="email-btn" id="scanCancel">Cancel</button>
+  </div>
+  <input type="file" id="scanPhotoInput" accept="image/*" capture="environment" hidden>
+  <p class="scan-note">Everything is read on this phone &mdash; no photo is uploaded anywhere.</p>
+</div>
+
+<!-- ============ GUIDED ID PHOTO OVERLAY ============ -->
+<div class="scan-overlay" id="idCapOverlay" hidden>
+  <div class="scan-head" id="idCapTitle">Photograph the license</div>
+  <div class="scan-stage" id="idCapStage">
+    <video id="idCapVideo" playsinline muted></video>
+    <div class="idcap-frame" id="idCapFrame" aria-hidden="true"></div>
+  </div>
+  <div class="scan-status">Fit the license inside the frame, then tap the shutter. The photo is cropped exactly to the frame.</div>
+  <div class="scan-actions">
+    <button type="button" class="idcap-shutter" id="idCapShutter" aria-label="Take photo"></button>
+  </div>
+  <div class="scan-actions">
+    <button type="button" class="email-btn" id="idCapTorch" hidden>&#128294; Light</button>
+    <button type="button" class="email-btn" id="idCapCancel">Cancel</button>
+  </div>
+  <p class="scan-note">The photo stays on this device until you print or email the deal sheet.</p>
+</div>
+
+<input type="file" id="idPhotoInput" accept="image/*" capture="environment" hidden>
+<input type="file" id="vinPhotoInput" accept="image/*" capture="environment" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="inventory.js"></script>
+<script>
+/* =========================================================
+   1. AUTO-FILL TODAY'S DATE
+   ========================================================= */
+(function setToday(){
+  const d = new Date();
+  const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('date').value = iso;
+})();
+
+/* =========================================================
+   2. DEAL-TYPE TABS + Y/N TOGGLES
+   ========================================================= */
+document.querySelectorAll('.deal-type button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.deal-type button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+  });
+});
+document.querySelectorAll('.yn').forEach(group=>{
+  group.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      group.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+    });
+  });
+});
+
+/* =========================================================
+   2b. PHONE AUTO-FORMAT  →  (817) 212-0123
+   ========================================================= */
+const phoneInput = document.getElementById('phone');
+phoneInput.addEventListener('input', ()=>{
+  const d = phoneInput.value.replace(/\D/g,'').slice(0,10);
+  let out = d;
+  if(d.length > 6)      out = '(' + d.slice(0,3) + ') ' + d.slice(3,6) + '-' + d.slice(6);
+  else if(d.length > 3) out = '(' + d.slice(0,3) + ') ' + d.slice(3);
+  else if(d.length > 0) out = '(' + d;
+  phoneInput.value = out;
+});
+
+/* =========================================================
+   2c. DEPOSIT AUTO-CALC from Sales Price
+        $0–$99,999      → $2,000
+        $100k–$199,999  → $3,000
+        $200k–$399,999  → $4,000
+        $400k+          → $5,000
+   ========================================================= */
+const salesPriceInput = document.getElementById('salesPrice');
+function depositFor(price){
+  if(price >= 400000) return 5000;
+  if(price >= 200000) return 4000;
+  if(price >= 100000) return 3000;
+  return 2000;
+}
+function updateDeposit(){
+  const price = parseFloat(salesPriceInput.value.replace(/[^0-9.]/g,''));
+  if(isNaN(price) || price <= 0) return;
+  fillField('deposit', fmtMoney(depositFor(price)), 'tagDep');
+}
+salesPriceInput.addEventListener('input', updateDeposit);
+salesPriceInput.addEventListener('change', updateDeposit);
+
+/* =========================================================
+   2d. DYNAMIC TRADE-INS  (green + to add, red − to remove)
+   ========================================================= */
+const tradesList  = document.getElementById('tradesList');
+const addTradeBtn = document.getElementById('addTrade');
+
+function addTrade(){
+  const card = document.createElement('div');
+  card.className = 'trade';
+  card.innerHTML =
+    '<h3>Trade-In #<span class="tnum"></span></h3>' +
+    '<button type="button" class="remove-trade" aria-label="Remove this trade-in" title="Remove this trade-in">&minus;</button>' +
+    '<div class="grid g3">' +
+      '<div class="field span3"><label>Year / Make / Model / Model # / Length</label><input type="text"></div>' +
+      '<div class="field"><label>Allowance</label><div class="money"><span class="cur">$</span><input type="text" inputmode="decimal"></div></div>' +
+      '<div class="field"><label>Balance Owed</label><div class="money"><span class="cur">$</span><input type="text" inputmode="decimal"></div></div>' +
+      '<div class="field"><label>Bank</label><input type="text"></div>' +
+    '</div>';
+  card.querySelector('.remove-trade').addEventListener('click', ()=>{
+    card.remove();
+    renumberTrades();
+  });
+  tradesList.appendChild(card);
+  renumberTrades();
+  card.querySelector('input').focus();
+}
+function renumberTrades(){
+  tradesList.querySelectorAll('.trade').forEach((c,i)=>{
+    c.querySelector('.tnum').textContent = i + 1;
+  });
+}
+addTradeBtn.addEventListener('click', addTrade);
+
+/* =========================================================
+   3. STOCK # LOOKUP  →  instant, from the baked-in MHSRV
+      inventory (inventory.js, generated from the NetSource
+      export). Entry shape: [description, price, vin8, miles]
+   ========================================================= */
+const stockInput   = document.getElementById('stock');
+const lookupBtn    = document.getElementById('lookupBtn');
+const statusEl     = document.getElementById('lookupStatus');
+
+function setStatus(kind, html){
+  statusEl.className = 'lookup-status ' + kind;
+  statusEl.innerHTML = (kind === 'searching' ? '<span class="spinner"></span>' : '') + html;
+}
+function fillField(id, value, tagId){
+  const el = document.getElementById(id);
+  el.value = value;
+  el.classList.remove('filled');
+  void el.offsetWidth;              // restart animation
+  el.classList.add('filled');
+  if(tagId) document.getElementById(tagId).classList.add('show');
+}
+function fmtMoney(n){
+  return Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+
+function lookupStock(){
+  const raw = stockInput.value.trim().toUpperCase();
+  if(!raw){ setStatus('warn','Enter a stock number first.'); return; }
+  if(typeof MHS_INVENTORY === 'undefined'){
+    setStatus('err','The inventory file (inventory.js) is missing &mdash; it must sit in the same folder as this page. Fill the fields in manually.');
+    return;
+  }
+
+  // Exact match first; if they typed just digits, try the MHS prefix too
+  let stock = raw;
+  let rec = MHS_INVENTORY[stock];
+  if(!rec && /^\d+$/.test(raw)){ stock = 'MHS' + raw; rec = MHS_INVENTORY[stock]; }
+
+  if(!rec){
+    setStatus('warn','Stock #' + raw + ' isn&rsquo;t in the inventory file (updated ' + MHS_INVENTORY_DATE + ') &mdash; it may be sold or newer than the last refresh. Fill the fields in manually.');
+    return;
+  }
+
+  const desc = rec[0], price = rec[1], vin8 = rec[2];
+  if(stock !== raw) stockInput.value = stock;
+  if(desc) fillField('description', desc, 'tagDesc');
+  if(price){
+    fillField('salesPrice', fmtMoney(price), 'tagPrice');
+    fillField('deposit', fmtMoney(depositFor(Number(price))), 'tagDep');
+  }
+  if(vin8)  fillField('vin8', vin8);
+
+  const extras = (vin8 ? ', VIN' : '');
+  const priceNote = price ? '' : ' No price is listed for this unit &mdash; enter the sales price by hand.';
+  setStatus('ok','&#10003; Found it &mdash; description' + (price ? ', price, deposit' : '') + extras +
+    ' filled in from MHSRV inventory. Verify against the live listing or your deal structure before continuing.' + priceNote);
+}
+
+lookupBtn.addEventListener('click', lookupStock);
+stockInput.addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){ e.preventDefault(); lookupStock(); }
+});
+
+/* =========================================================
+   4. ADDRESS AUTOCOMPLETE  (OpenStreetMap Nominatim — free,
+      no API key, US-biased)
+   ========================================================= */
+const streetInput = document.getElementById('street');
+const acList      = document.getElementById('acList');
+let acTimer = null, acAbort = null, acItems = [], acIndex = -1;
+
+streetInput.addEventListener('input', ()=>{
+  const q = streetInput.value.trim();
+  clearTimeout(acTimer);
+  if(q.length < 4){ closeAC(); return; }
+  acTimer = setTimeout(()=>searchAddress(q), 350);
+});
+
+async function searchAddress(q){
+  if(acAbort) acAbort.abort();
+  acAbort = new AbortController();
+  try{
+    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=us&limit=5&q=' + encodeURIComponent(q);
+    const res = await fetch(url,{signal:acAbort.signal, headers:{'Accept':'application/json'}});
+    if(!res.ok) return;
+    const results = await res.json();
+    renderAC(results);
+  }catch(e){ /* aborted or offline — fail quietly, field still works manually */ }
+}
+
+function renderAC(results){
+  acItems = results || [];
+  acIndex = -1;
+  if(!acItems.length){ closeAC(); return; }
+  acList.innerHTML = acItems.map((r,i)=>{
+    const a = r.address || {};
+    const line1 = [a.house_number, a.road].filter(Boolean).join(' ') || r.name || '';
+    const line2 = [a.city||a.town||a.village||a.hamlet, a.state, a.postcode].filter(Boolean).join(', ');
+    return '<div class="ac-item" role="option" data-i="'+i+'">'+ (line1||r.display_name.split(',')[0]) +'<small>'+ (line2||r.display_name) +'</small></div>';
+  }).join('');
+  acList.classList.add('open');
+  acList.querySelectorAll('.ac-item').forEach(el=>{
+    el.addEventListener('mousedown', e=>{ e.preventDefault(); pickAC(+el.dataset.i); });
+  });
+}
+
+function pickAC(i){
+  const r = acItems[i]; if(!r) return;
+  const a = r.address || {};
+  // If the result has no house number but the user typed one, keep what they typed
+  const typedNum = (streetInput.value.trim().match(/^(\d+[\w-]*)\s+/) || [])[1] || '';
+  let street = [a.house_number, a.road].filter(Boolean).join(' ');
+  if(!a.house_number && typedNum && a.road) street = typedNum + ' ' + a.road;
+  streetInput.value = street || (typedNum ? typedNum + ' ' : '') + r.display_name.split(',')[0];
+  fillField('city',   a.city || a.town || a.village || a.hamlet || '');
+  fillField('state',  a.state || '');
+  fillField('zip',    a.postcode || '');
+  fillField('county', (a.county || '').replace(/ County$/,''));
+  closeAC();
+}
+
+function closeAC(){ acList.classList.remove('open'); acList.innerHTML=''; acItems=[]; acIndex=-1; }
+
+streetInput.addEventListener('keydown', e=>{
+  if(!acList.classList.contains('open')) return;
+  const items = acList.querySelectorAll('.ac-item');
+  if(e.key === 'ArrowDown'){ e.preventDefault(); acIndex = Math.min(acIndex+1, items.length-1); highlight(items); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); acIndex = Math.max(acIndex-1, 0); highlight(items); }
+  else if(e.key === 'Enter' && acIndex >= 0){ e.preventDefault(); pickAC(acIndex); }
+  else if(e.key === 'Escape'){ closeAC(); }
+});
+function highlight(items){ items.forEach((el,i)=>el.classList.toggle('active', i===acIndex)); }
+document.addEventListener('click', e=>{ if(!e.target.closest('.field')) closeAC(); });
+
+/* =========================================================
+   5. EMAIL PDF — builds a PDF of the filled sheet and emails
+      it WITH the PDF attached, via the Cloudflare Worker
+      (email-worker.js) + SendGrid, from elisha@mhsrv.com
+      straight to the typed recipients. If a send fails, an
+      error is shown and nothing is sent — no fallbacks.
+      The CC# is masked to its last 4 digits in every
+      generated PDF.
+   ========================================================= */
+const SEND_ENDPOINT = 'https://mhs-deal-mailer.ebendele.workers.dev';
+
+const emailBtn    = document.getElementById('emailBtn');
+const emailPanel  = document.getElementById('emailPanel');
+const emailTo     = document.getElementById('emailTo');
+const emailSend   = document.getElementById('emailSend');
+const emailCancel = document.getElementById('emailCancel');
+const emailStatus = document.getElementById('emailStatus');
+
+emailBtn.addEventListener('click', ()=>{
+  emailPanel.hidden = !emailPanel.hidden;
+  if(!emailPanel.hidden){ emailTo.focus(); emailPanel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+});
+emailCancel.addEventListener('click', ()=>{ emailPanel.hidden = true; setEmailStatus('',''); });
+emailTo.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); sendDealEmail(); } });
+
+function setEmailStatus(kind,msg){
+  emailStatus.className = 'email-status ' + kind;
+  emailStatus.textContent = msg;
+}
+
+function loadJsPDF(){
+  if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = resolve;
+    s.onerror = ()=>reject(new Error('could not load the PDF library'));
+    document.head.appendChild(s);
+  });
+}
+
+/* Draws the deal sheet as a real vector PDF from the form's data.
+   Deterministic on every device — no screenshots, no viewport math. */
+function drawDealSheet(doc, maskCC){
+  const NAVY=[20,39,63], GOLD=[198,162,78], GOLDSOFT=[243,232,205], INK=[27,36,48],
+        MUTED=[107,116,128], LINE=[195,199,206], PALE=[150,160,175];
+  const PW=8.5, PH=11, M=0.45, W=PW-2*M, ROW=0.40, G=0.18;
+  const colW=(W-3*G)/4;
+  const X=i=>M+i*(colW+G);
+  const SPAN=n=>n*colW+(n-1)*G;
+  let y;
+
+  const v = id => (document.getElementById(id).value||'').trim();
+  const yn = g => { const b=document.querySelector('.yn[data-group="'+g+'"] button.on'); return b?b.textContent.trim():''; };
+
+  function fit(text,w){
+    let t=String(text||'');
+    if(doc.getTextWidth(t)<=w-0.04) return t;
+    while(t.length>1 && doc.getTextWidth(t+'...')>w-0.04) t=t.slice(0,-1);
+    return t+'...';
+  }
+  function field(label,value,x,w,by){
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.3);
+    doc.setTextColor(MUTED[0],MUTED[1],MUTED[2]);
+    doc.text(String(label).toUpperCase(), x, by);
+    if(value){
+      doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+      doc.setTextColor(INK[0],INK[1],INK[2]);
+      doc.text(fit(value,w), x+0.02, by+0.215);
+    }
+    doc.setDrawColor(LINE[0],LINE[1],LINE[2]); doc.setLineWidth(0.008);
+    doc.line(x, by+0.27, x+w, by+0.27);
+  }
+  function section(title){
+    doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.rect(M, y-0.085, 0.09, 0.09, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
+    doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+    const t=String(title).toUpperCase();
+    doc.text(t, M+0.16, y);
+    doc.setDrawColor(LINE[0],LINE[1],LINE[2]); doc.setLineWidth(0.008);
+    doc.line(M+0.16+doc.getTextWidth(t)+0.12, y-0.032, PW-M, y-0.032);
+    y += 0.28;
+  }
+  function ensure(h){
+    if(y + h > PH - 0.45){ doc.addPage(); y = M + 0.15; }
+  }
+
+  /* ---- Masthead ---- */
+  doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]); doc.rect(0,0,PW,1.02,'F');
+  doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]); doc.rect(0,1.02,PW,0.035,'F');
+  // MHS monogram seal
+  doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]); doc.setLineWidth(0.02);
+  doc.circle(M+0.24, 0.34, 0.22, 'S');
+  doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text('MHS', M+0.24, 0.375, {align:'center'});
+  // Title block
+  doc.setFontSize(21);
+  doc.text("IT'S A DEAL!", PW-M, 0.44, {align:'right'});
+  doc.setTextColor(200,210,224); doc.setFont('helvetica','normal'); doc.setFontSize(6.8);
+  doc.text('MOTOR HOME SPECIALIST  \u00B7  ALVARADO, TX  \u00B7  A BLUE COMPASS RV COMPANY', PW-M, 0.6, {align:'right'});
+  // Deal-type pills
+  const dealType = ((document.querySelector('.deal-type button.on')||{}).textContent||'').trim();
+  doc.setFontSize(8);
+  let dx=M;
+  ['Finance','Cash','Outside Finance'].forEach(t=>{
+    const sel = t===dealType;
+    doc.setFont('helvetica', sel?'bold':'normal');
+    const u=t.toUpperCase();
+    const tw=doc.getTextWidth(u);
+    const pw2=tw+0.22, phh=0.22, py=0.68;
+    if(sel){
+      doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);
+      doc.roundedRect(dx, py, pw2, phh, 0.055, 0.055, 'F');
+      doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+    }else{
+      doc.setDrawColor(96,112,136); doc.setLineWidth(0.008);
+      doc.roundedRect(dx, py, pw2, phh, 0.055, 0.055, 'S');
+      doc.setTextColor(PALE[0],PALE[1],PALE[2]);
+    }
+    doc.text(u, dx+0.11, py+0.15);
+    dx += pw2 + 0.1;
+  });
+
+  /* ---- Meta strip ---- */
+  doc.setFillColor(GOLDSOFT[0],GOLDSOFT[1],GOLDSOFT[2]);
+  doc.rect(0,1.055,PW,0.6,'F');
+  const w3=(W-2*G)/3;
+  let date = v('date');
+  if(/^\d{4}-\d{2}-\d{2}$/.test(date)){
+    const p=date.split('-'); date = p[1]+'/'+p[2]+'/'+p[0];
+  }
+  field('Miles', v('miles'), M, w3, 1.28);
+  field('Last 8 of VIN', v('vin8'), M+w3+G, w3, 1.28);
+  field('Date', date, M+2*(w3+G), w3, 1.28);
+  y = 1.92;
+
+  /* ---- Buyer ---- */
+  section('Buyer');
+  field('Buyer', v('buyer'), X(0), colW, y);
+  field('Co-Buyer', v('cobuyer'), X(1), colW, y);
+  field('Street', v('street'), X(2), SPAN(2), y);
+  y += ROW;
+  field('City', v('city'), X(0), colW, y);
+  field('State', v('state'), X(1), colW, y);
+  field('Zip', v('zip'), X(2), colW, y);
+  field('County', v('county'), X(3), colW, y);
+  y += ROW;
+  field('Phone #', v('phone'), X(0), colW, y);
+  field('Email', v('faxemail'), X(1), SPAN(3), y);
+  y += ROW + 0.10;
+
+  /* ---- The Coach ---- */
+  section('The Coach');
+  field('Stock #', v('stock').toUpperCase(), X(0), colW, y);
+  field('Description', v('description'), X(1), SPAN(2), y);
+  field('Sales Price', v('salesPrice') ? '$ '+v('salesPrice') : '', X(3), colW, y);
+  y += ROW;
+  field('Coach Location', v('coachLoc'), X(0), SPAN(2), y);
+  y += ROW + 0.10;
+
+  /* ---- Trade-Ins (only if any) ---- */
+  const trades = Array.prototype.slice.call(document.querySelectorAll('#tradesList .trade')).map(t=>{
+    const ins = t.querySelectorAll('input');
+    return {desc:ins[0].value.trim(), allow:ins[1].value.trim(), owed:ins[2].value.trim(), bank:ins[3].value.trim()};
+  }).filter(t=>t.desc||t.allow||t.owed||t.bank);
+  if(trades.length){
+    ensure(0.4 + 1.2);
+    section('Trade-Ins');
+    trades.forEach((t,i)=>{
+      ensure(1.2);
+      doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);
+      doc.roundedRect(M, y-0.13, 0.035, 1.02, 0.017, 0.017, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+      doc.text('TRADE-IN #'+(i+1), M+0.13, y);
+      y += 0.16;
+      field('Year / Make / Model / Model # / Length', t.desc, M+0.13, W-0.13, y);
+      y += ROW;
+      field('Allowance', t.allow ? '$ '+t.allow : '', M+0.13, colW-0.13, y);
+      field('Balance Owed', t.owed ? '$ '+t.owed : '', X(1), colW, y);
+      field('Bank', t.bank, X(2), SPAN(2), y);
+      y += ROW + 0.10;
+    });
+  }
+
+  /* ---- Deposit & Delivery ---- */
+  ensure(0.4 + 2*ROW);
+  section('Deposit & Delivery');
+  field('Amount of Deposit', v('deposit') ? '$ '+v('deposit') : '', X(0), colW, y);
+  field('Total Down Payment', v('downPayment') ? '$ '+v('downPayment') : '', X(1), colW, y);
+  let del = v('delDate');
+  if(/^\d{4}-\d{2}-\d{2}$/.test(del)){ const p=del.split('-'); del = p[1]+'/'+p[2]+'/'+p[0]; }
+  field('Est. Delivery Date', del, X(2), colW, y);
+  const slot = document.getElementById('delTime');
+  field('Delivery Slot', slot.value || '', X(3), colW, y);
+  y += ROW;
+  field('First Time Buyer', yn('ftb'), X(0), colW, y);
+  field('Pending Inspection', yn('inspection'), X(1), colW, y);
+  y += ROW + 0.10;
+
+  /* ---- Approvals & Payment ---- */
+  ensure(0.4 + 2*ROW);
+  section('Approvals & Payment');
+  field('Salesman', v('salesman'), X(0), colW, y);
+  field('Manager X', v('manager'), X(1), colW, y);
+  field('Finance Manager', v('finManager'), X(2), colW, y);
+  field('CC Exp Date', v('ccexp'), X(3), colW, y);
+  y += ROW;
+  const ccRaw = v('ccnum');
+  const ccDigits = ccRaw.replace(/\D/g,'');
+  const ccShown = (maskCC && ccDigits.length > 4) ? '**** **** **** ' + ccDigits.slice(-4) : ccRaw;
+  field('CC # (Deposit Card)', ccShown, X(0), SPAN(2), y);
+  y += ROW + 0.10;
+
+  /* ---- Special Instructions (flexes to fill the page) ---- */
+  ensure(1.0);
+  section('Special Instructions');
+  const maxBox = PH - 0.45 - y + 0.05;
+  const boxH = Math.max(0.7, maxBox);
+  doc.setDrawColor(LINE[0],LINE[1],LINE[2]); doc.setLineWidth(0.01);
+  doc.rect(M, y-0.06, W, boxH, 'S');
+  const txt = v('special');
+  if(txt){
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    doc.setTextColor(INK[0],INK[1],INK[2]);
+    const lines = doc.splitTextToSize(txt, W-0.26);
+    const maxLines = Math.max(1, Math.floor((boxH-0.2)/0.16));
+    lines.slice(0, maxLines).forEach((ln,i)=>{
+      doc.text(ln, M+0.13, y+0.14+i*0.16);
+    });
+  }
+}
+
+async function makePdfBlob(maskCC){
+  if(maskCC === undefined) maskCC = true;
+  await loadJsPDF();
+  const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
+  drawDealSheet(doc, maskCC);
+  addIdPages(doc);
+  addVinPage(doc);
+  addFooters(doc);
+  return doc.output('blob');
+}
+
+function pdfFilename(){
+  const stock = document.getElementById('stock').value.trim().toUpperCase();
+  const buyer = document.getElementById('buyer').value.trim().replace(/[^A-Za-z0-9]+/g,'-');
+  return ['Its-A-Deal', stock || null, buyer || null, document.getElementById('date').value]
+    .filter(Boolean).join('_') + '.pdf';
+}
+
+function dealSubject(){
+  const stock = document.getElementById('stock').value.trim().toUpperCase();
+  const buyer = document.getElementById('buyer').value.trim();
+  return "It's a Deal \u2014 " + (buyer || 'New deal') + (stock ? ' \u2014 ' + stock : '');
+}
+
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload  = ()=>resolve(String(r.result).split(',')[1]);
+    r.onerror = ()=>reject(new Error('could not encode the PDF'));
+    r.readAsDataURL(blob);
+  });
+}
+
+async function sendDealEmail(){
+  // Accept multiple addresses separated by commas, semicolons, or spaces
+  const recipients = emailTo.value.split(/[,;\s]+/).map(s=>s.trim()).filter(Boolean);
+  const bad = recipients.filter(r=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r));
+  if(bad.length){
+    setEmailStatus('warn','This doesn\u2019t look like a valid address: ' + bad.join(', '));
+    return;
+  }
+  if(!recipients.length){
+    setEmailStatus('warn','Enter at least one email address first.');
+    return;
+  }
+  if(recipients.length > 8){
+    setEmailStatus('warn','That\u2019s a lot of recipients \u2014 keep it to 8 or fewer per send.');
+    return;
+  }
+
+  emailSend.disabled = true;
+  setEmailStatus('busy','Building the PDF\u2026');
+
+  let blob;
+  try{
+    blob = await makePdfBlob();
+  }catch(err){
+    console.error('PDF build error:', err);
+    setEmailStatus('err','Could not build the PDF (' + (err.message||'unknown error') + '). Use Print / Save PDF instead.');
+    emailSend.disabled = false;
+    return;
+  }
+
+  try{
+    setEmailStatus('busy','Sending to ' + recipients.length + (recipients.length === 1 ? ' recipient\u2026' : ' recipients\u2026'));
+    const res = await fetch(SEND_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: recipients,
+        subject: dealSubject(),
+        filename: pdfFilename(),
+        pdf: await blobToBase64(blob),
+        summary: {
+          Buyer:       document.getElementById('buyer').value.trim() || '\u2014',
+          Stock:       document.getElementById('stock').value.trim().toUpperCase() || '\u2014',
+          Description: document.getElementById('description').value.trim() || '\u2014',
+          Salesman:    document.getElementById('salesman').value.trim() || '\u2014'
+        }
+      })
+    });
+    const out = await res.json().catch(()=>({}));
+    if(!res.ok || !out.sent) throw new Error(out.error || ('send service returned ' + res.status));
+    setEmailStatus('ok','\u2713 Sent to ' + recipients.join(', ') + ' with the PDF attached.');
+    emailTo.value = '';
+  }catch(err){
+    console.error('Email send error:', err);
+    setEmailStatus('err','Sending failed (' + (err.message||'network error') + ') \u2014 nothing was sent. Try again, or use Print / Save PDF.');
+  }finally{
+    emailSend.disabled = false;
+  }
+}
+emailSend.addEventListener('click', sendDealEmail);
+
+/* =========================================================
+   6. LICENSE SCAN — phone-camera scan of the PDF417 barcode
+      on the BACK of a US driver's license (the machine-
+      readable AAMVA record: exact legal name + address).
+      Decoder: zxing-wasm (the C++ ZXing engine in
+      WebAssembly — far stronger on PDF417 than JS ports).
+      Runs entirely on-device; nothing is uploaded. Buttons
+      show only on touch devices with a camera.
+   ========================================================= */
+const ZXWASM_BASE = 'https://cdn.jsdelivr.net/npm/zxing-wasm@2/dist/full/';
+const scanOverlay = document.getElementById('scanOverlay');
+const scanVideo   = document.getElementById('scanVideo');
+const scanStatus  = document.getElementById('scanStatus');
+const scanCancel  = document.getElementById('scanCancel');
+const scanPhotoBtn   = document.getElementById('scanPhotoBtn');
+const scanPhotoInput = document.getElementById('scanPhotoInput');
+const scanTorchBtn   = document.getElementById('scanTorchBtn');
+
+let scanTarget = null, scanDone = false, scanStream = null, scanTimer = null;
+let scanBusy = false, torchOn = false, scanAttempts = 0;
+let barcodeEngine = null, enginePromise = null;
+const scanCanvas = document.createElement('canvas');
+const scanCtx = scanCanvas.getContext('2d', {willReadFrequently:true});
+
+if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+  document.body.classList.add('can-scan');
+}
+
+document.querySelectorAll('.scan-btn[data-scan]').forEach(btn=>{
+  btn.addEventListener('click', ()=>openScanner(btn.dataset.scan));
+});
+scanCancel.addEventListener('click', closeScanner);
+scanPhotoBtn.addEventListener('click', ()=>scanPhotoInput.click());
+scanPhotoInput.addEventListener('change', decodePhoto);
+scanTorchBtn.addEventListener('click', toggleTorch);
+
+function setScanStatus(msg){ scanStatus.textContent = msg; }
+
+/* Decoder: native BarcodeDetector when it supports PDF417
+   (Chrome on Android, newer Safari), else zxing-wasm loaded
+   from the first CDN source that works on this browser. */
+const WASM_SOURCES = [
+  'https://cdn.jsdelivr.net/npm/zxing-wasm@2/dist/full/index.js',
+  'https://unpkg.com/zxing-wasm@2/dist/full/index.js',
+  'https://esm.sh/zxing-wasm@2/full',
+  'https://cdn.jsdelivr.net/npm/zxing-wasm@1.3.4/dist/es/full/index.js',
+  'https://unpkg.com/zxing-wasm@1.3.4/dist/es/full/index.js'
+];
+
+function withTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error(label + ' timed out')), ms))
+  ]);
+}
+
+function getEngine(){
+  if(barcodeEngine) return Promise.resolve(barcodeEngine);
+  if(enginePromise) return enginePromise;
+  enginePromise = (async ()=>{
+    // 1) Native detector (no download at all)
+    try{
+      if('BarcodeDetector' in window){
+        const fmts = await window.BarcodeDetector.getSupportedFormats();
+        if(fmts && fmts.includes('pdf417')){
+          barcodeEngine = {kind:'native', detector:new window.BarcodeDetector({formats:['pdf417']})};
+          return barcodeEngine;
+        }
+      }
+    }catch(e){ /* fall through to wasm */ }
+
+    // 2) zxing-wasm from whichever CDN this browser accepts
+    let lastErr = null;
+    for(const url of WASM_SOURCES){
+      try{
+        const mod = await withTimeout(import(url), 20000, 'download');
+        const read = mod.readBarcodes || mod.readBarcodesFromImageData;
+        if(typeof read !== 'function') throw new Error('unexpected module shape');
+        // Point the engine at its .wasm binary next to the JS file
+        try{
+          const base = url.slice(0, url.lastIndexOf('/') + 1);
+          const locate = (path,prefix)=> String(path).endsWith('.wasm') ? base + path : prefix + path;
+          if(url.indexOf('/dist/') !== -1){
+            if(mod.prepareZXingModule)           mod.prepareZXingModule({overrides:{locateFile:locate}});
+            else if(mod.setZXingModuleOverrides) mod.setZXingModuleOverrides({locateFile:locate});
+          }
+        }catch(e){ /* default resolution may still work */ }
+        // Prove the engine actually initializes (loads its wasm) with a tiny decode
+        const probe = new ImageData(8, 8);
+        await withTimeout(read.call(mod, probe, {formats:['PDF417'], maxNumberOfSymbols:1}), 20000, 'engine start');
+        barcodeEngine = {kind:'wasm', read: (img,opts)=>read.call(mod, img, opts)};
+        return barcodeEngine;
+      }catch(err){
+        console.warn('decoder source failed:', url, err);
+        lastErr = err;
+      }
+    }
+    throw new Error((lastErr && (lastErr.message || lastErr.name)) || 'all decoder sources failed');
+  })();
+  enginePromise.catch(()=>{ enginePromise = null; });
+  return enginePromise;
+}
+
+async function decodeImageData(imgData){
+  const eng = await getEngine();
+  if(eng.kind === 'native'){
+    const codes = await eng.detector.detect(imgData);
+    return (codes && codes[0]) ? codes[0].rawValue : null;
+  }
+  const results = await eng.read(imgData, {formats:['PDF417'], tryHarder:true, maxNumberOfSymbols:1, textMode:'Plain'});
+  return (results && results[0] && results[0].text) ? results[0].text : null;
+}
+
+async function openScanner(target){
+  scanTarget = target;
+  scanDone = false;
+  torchOn = false;
+  scanAttempts = 0;
+  scanOverlay.hidden = false;
+  setScanStatus('Loading the scanner\u2026');
+
+  // Load the decoder first — if this fails, nothing else can work.
+  try{
+    await getEngine();
+  }catch(err){
+    console.error('Decoder load error:', err);
+    setScanStatus('The barcode decoder couldn\u2019t load (' + (err.message||err.name||'unknown') + ') \u2014 check the connection, then close and reopen the scanner.');
+    return;
+  }
+
+  setScanStatus('Starting camera\u2026');
+  try{
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1920}, height:{ideal:1080}
+      }
+    });
+    scanVideo.srcObject = scanStream;
+    await scanVideo.play();
+
+    const track = scanStream.getVideoTracks()[0];
+    try{
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if(caps.focusMode && caps.focusMode.includes('continuous')){
+        await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
+      }
+      scanTorchBtn.hidden = !caps.torch;
+    }catch(e){ /* capabilities are best-effort */ }
+
+    setScanStatus('Hold the BACK of the license flat in the frame \u2014 6\u20138 inches away, good light.');
+    scanTimer = setInterval(decodeVideoFrame, 350);
+  }catch(err){
+    console.error('Camera error:', err);
+    const denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+    setScanStatus(denied
+      ? 'Camera access was blocked \u2014 allow camera for this site in your browser settings, or use "Take a photo instead".'
+      : 'Could not start the live camera (' + (err.message||err.name||'unknown') + ') \u2014 use "Take a photo instead".');
+  }
+}
+
+async function decodeVideoFrame(){
+  if(scanBusy || scanDone || !scanVideo.videoWidth) return;
+  scanBusy = true;
+  try{
+    scanCanvas.width  = scanVideo.videoWidth;
+    scanCanvas.height = scanVideo.videoHeight;
+    scanCtx.drawImage(scanVideo, 0, 0);
+    const imgData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+    const text = await decodeImageData(imgData);
+    if(text && !scanDone){
+      scanDone = true;
+      handleScan(text);
+    }else{
+      scanAttempts++;
+      if(scanAttempts === 20){
+        setScanStatus('Still looking\u2026 tilt slightly to kill the glare \u2014 or use "Take a photo instead", it\u2019s the most reliable.');
+      }
+    }
+  }catch(e){ console.warn('frame decode:', e); }
+  scanBusy = false;
+}
+
+async function fileToImageData(file){
+  let src, w, h;
+  const bmp = await (window.createImageBitmap ? createImageBitmap(file).catch(()=>null) : Promise.resolve(null));
+  if(bmp){
+    src = bmp; w = bmp.width; h = bmp.height;
+  }else{
+    src = await new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error('that image format couldn\u2019t be read'));
+      img.src = URL.createObjectURL(file);
+    });
+    w = src.naturalWidth; h = src.naturalHeight;
+  }
+  const MAX = 3000;
+  const k = Math.min(1, MAX / Math.max(w, h));
+  scanCanvas.width  = Math.round(w * k);
+  scanCanvas.height = Math.round(h * k);
+  scanCtx.drawImage(src, 0, 0, scanCanvas.width, scanCanvas.height);
+  return scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+}
+
+async function decodePhoto(){
+  const file = scanPhotoInput.files && scanPhotoInput.files[0];
+  scanPhotoInput.value = '';
+  if(!file) return;
+  setScanStatus('Reading the photo\u2026');
+  try{
+    const imgData = await fileToImageData(file);
+    const text = await decodeImageData(imgData);
+    if(text){
+      scanDone = true;
+      handleScan(text);
+    }else{
+      setScanStatus('No barcode found in that photo \u2014 get closer so the barcode fills most of the shot, avoid glare, and try again.');
+    }
+  }catch(err){
+    console.error('Photo decode error:', err);
+    setScanStatus('Could not read that photo (' + (err.message||'unknown error') + ') \u2014 try again with the barcode filling the shot.');
+  }
+}
+
+async function toggleTorch(){
+  try{
+    const track = scanStream && scanStream.getVideoTracks()[0];
+    if(!track) return;
+    torchOn = !torchOn;
+    await track.applyConstraints({advanced:[{torch:torchOn}]});
+    scanTorchBtn.textContent = torchOn ? '\uD83D\uDD26 Light off' : '\uD83D\uDD26 Light';
+  }catch(e){ scanTorchBtn.hidden = true; }
+}
+
+function closeScanner(){
+  if(scanTimer){ clearInterval(scanTimer); scanTimer = null; }
+  try{
+    if(scanStream) scanStream.getTracks().forEach(t=>t.stop());
+    scanVideo.srcObject = null;
+  }catch(e){}
+  scanStream = null;
+  scanOverlay.hidden = true;
+}
+
+function titleCase(s){
+  return String(s||'').toLowerCase().replace(/(^|[\s\-'])([a-z])/g, (m,p,c)=>p + c.toUpperCase());
+}
+
+function parseAAMVA(raw){
+  raw = String(raw || '');
+  // Some decoders emit control characters as literal tokens ("<LF>", "<CR>",
+  // "<RS>", "<GS>") — turn those back into the real separators first.
+  raw = raw.replace(/<LF>/gi,'\n').replace(/<CR>/gi,'\r').replace(/<RS>/gi,'\x1e').replace(/<GS>/gi,'\x1d');
+  // Real-world license headers vary ("ANSI ", "ANSI636...", "AAMVA", oddball
+  // separators) — accept if the header OR the standard data element codes show up.
+  const headerOK = /ANSI|AAMVA/i.test(raw);
+  const codeHits = (raw.match(/D(?:AQ|CS|AC|AD|AG|AH|AI|AJ|AK|BB|CT)/g) || []).length;
+  if(!headerOK && codeHits < 2) return null;
+  const get = code=>{
+    const m = raw.match(new RegExp('(?:\\r|\\n|^|DL|ID)' + code + '([^\\r\\n]*)'));
+    return m ? m[1].trim() : '';
+  };
+  const clean = v => (v === 'NONE' || v === 'NONE.') ? '' : v;
+  const last   = clean(get('DCS'));
+  let   first  = clean(get('DAC'));
+  let   middle = clean(get('DAD'));
+  if(!first){ // pre-2009 licenses pack given names into DCT
+    const given = clean(get('DCT'));
+    const parts = given.split(/[\s,]+/).filter(Boolean);
+    first = parts[0] || '';
+    middle = parts.slice(1).join(' ');
+  }
+  if(!first && !last) return {partial:true};
+  const street = [get('DAG'), get('DAH')].filter(Boolean).join(', ');
+  let zip = get('DAK').replace(/[^0-9]/g,'');
+  if(zip.length > 5) zip = /[1-9]/.test(zip.slice(5,9)) ? zip.slice(0,5) + '-' + zip.slice(5,9) : zip.slice(0,5);
+  return {
+    first: titleCase(first), middle: titleCase(middle), last: titleCase(last),
+    street: titleCase(street), city: titleCase(get('DAI')),
+    state: get('DAJ').toUpperCase(), zip
+  };
+}
+
+function handleScan(text){
+  const d = parseAAMVA(text);
+  if(!d || d.partial){
+    scanDone = false;
+    console.log('License scan raw payload (stays on this device):', text);
+    // Show the first few header characters (no personal data lives there) so
+    // an unrecognized format can be diagnosed from a screenshot.
+    const head = String(text||'').slice(0, 18).replace(/[^\x20-\x7E]/g, '\u00B7');
+    setScanStatus((d && d.partial
+      ? 'Read the barcode but couldn\u2019t find the name fields in it \u2014 try once more.'
+      : 'That barcode isn\u2019t a license record \u2014 make sure it\u2019s the wide barcode on the BACK of the license.')
+      + ' [data starts: "' + head + '"]');
+    return;
+  }
+  closeScanner();
+  const fullName = [d.first, d.middle, d.last].filter(Boolean).join(' ');
+  if(scanTarget === 'cobuyer'){
+    fillField('cobuyer', fullName);
+    // Only take the co-buyer's address if none is entered yet
+    if(!document.getElementById('street').value.trim()) fillScannedAddress(d);
+  }else{
+    fillField('buyer', fullName);
+    fillScannedAddress(d);
+  }
+}
+
+function fillScannedAddress(d){
+  if(d.street) fillField('street', d.street);
+  if(d.city)   fillField('city', d.city);
+  if(d.state)  fillField('state', d.state);
+  if(d.zip)    fillField('zip', d.zip);
+}
+
+/* =========================================================
+   7. ID PHOTOS — mobile-only "Front/Back of ID Photo"
+      buttons for Buyer & Co-Buyer. Uses the device's native
+      camera (works on every iOS/Android), compresses each
+      shot to ~1600px JPEG, and conservatively auto-crops to
+      the license ONLY when the detected region is clearly
+      card-shaped — otherwise the full photo is kept, so a
+      bad crop can never eat part of an ID. Captured photos
+      are appended as extra pages to BOTH the printed and
+      emailed PDF.
+   ========================================================= */
+const idPhotos = {};
+let idPhotoSlot = null;
+const idPhotoInput = document.getElementById('idPhotoInput');
+
+document.querySelectorAll('.idphoto-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    idPhotoSlot = btn.dataset.photo;
+    openIdCapture(idPhotoSlot);
+  });
+});
+
+/* ---- Guided capture: crop is exactly the gold frame, every time ---- */
+const idCapOverlay = document.getElementById('idCapOverlay');
+const idCapVideo   = document.getElementById('idCapVideo');
+const idCapFrame   = document.getElementById('idCapFrame');
+const idCapTitle   = document.getElementById('idCapTitle');
+const idCapShutter = document.getElementById('idCapShutter');
+const idCapTorch   = document.getElementById('idCapTorch');
+const idCapCancel  = document.getElementById('idCapCancel');
+let idCapStream = null, idCapTorchOn = false;
+
+const SLOT_TITLES = {
+  buyerFront:   "FRONT of the Buyer\u2019s license",
+  buyerBack:    "BACK of the Buyer\u2019s license",
+  cobuyerFront: "FRONT of the Co-Buyer\u2019s license",
+  cobuyerBack:  "BACK of the Co-Buyer\u2019s license"
+};
+
+async function openIdCapture(slot){
+  idCapTitle.textContent = SLOT_TITLES[slot] || 'Photograph the license';
+  idCapOverlay.hidden = false;
+  idCapTorchOn = false;
+  try{
+    idCapStream = await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}}
+    });
+    idCapVideo.srcObject = idCapStream;
+    await idCapVideo.play();
+    const track = idCapStream.getVideoTracks()[0];
+    try{
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if(caps.focusMode && caps.focusMode.includes('continuous')){
+        await track.applyConstraints({advanced:[{focusMode:'continuous'}]});
+      }
+      idCapTorch.hidden = !caps.torch;
+    }catch(e){}
+  }catch(err){
+    console.error('ID capture camera error:', err);
+    closeIdCapture();
+    idPhotoInput.click();   // fall back to the native camera flow
+  }
+}
+
+function closeIdCapture(){
+  try{
+    if(idCapStream) idCapStream.getTracks().forEach(t=>t.stop());
+    idCapVideo.srcObject = null;
+  }catch(e){}
+  idCapStream = null;
+  idCapOverlay.hidden = true;
+}
+
+idCapCancel.addEventListener('click', closeIdCapture);
+idCapTorch.addEventListener('click', async ()=>{
+  try{
+    const track = idCapStream && idCapStream.getVideoTracks()[0];
+    if(!track) return;
+    idCapTorchOn = !idCapTorchOn;
+    await track.applyConstraints({advanced:[{torch:idCapTorchOn}]});
+    idCapTorch.textContent = idCapTorchOn ? '\ud83d\udd26 Light off' : '\ud83d\udd26 Light';
+  }catch(e){ idCapTorch.hidden = true; }
+});
+
+/* Maps the on-screen guide frame to source-video pixels for an
+   object-fit:cover video. Pure math — unit-tested. */
+function mapGuideToSource(videoRect, guideRect, vw, vh){
+  const scale = Math.max(videoRect.width/vw, videoRect.height/vh);
+  const srcX0 = (vw - videoRect.width/scale) / 2;
+  const srcY0 = (vh - videoRect.height/scale) / 2;
+  let sx = srcX0 + (guideRect.left - videoRect.left)/scale;
+  let sy = srcY0 + (guideRect.top  - videoRect.top)/scale;
+  let sw = guideRect.width/scale;
+  let sh = guideRect.height/scale;
+  // 2% breathing room so edges of the card are never shaved
+  const mx = sw*0.02, my = sh*0.02;
+  sx -= mx; sy -= my; sw += 2*mx; sh += 2*my;
+  // clamp to the frame
+  sx = Math.max(0, sx); sy = Math.max(0, sy);
+  sw = Math.min(sw, vw - sx); sh = Math.min(sh, vh - sy);
+  return {sx:sx, sy:sy, sw:sw, sh:sh};
+}
+
+idCapShutter.addEventListener('click', ()=>{
+  if(!idCapVideo.videoWidth || !idPhotoSlot){ return; }
+  const slot = idPhotoSlot;
+  const m = mapGuideToSource(
+    idCapVideo.getBoundingClientRect(),
+    idCapFrame.getBoundingClientRect(),
+    idCapVideo.videoWidth, idCapVideo.videoHeight
+  );
+  const MAX = 1600;
+  const k = Math.min(1, MAX/Math.max(m.sw, m.sh));
+  const c = document.createElement('canvas');
+  c.width = Math.round(m.sw*k); c.height = Math.round(m.sh*k);
+  c.getContext('2d').drawImage(idCapVideo, m.sx, m.sy, m.sw, m.sh, 0, 0, c.width, c.height);
+  idPhotos[slot] = {data:c.toDataURL('image/jpeg',0.85), w:c.width, h:c.height, cropped:true};
+  closeIdCapture();
+  const btn = document.querySelector('.idphoto-btn[data-photo="'+slot+'"]');
+  if(!btn.dataset.label) btn.dataset.label = btn.textContent.replace(/^\u2713 /,'');
+  btn.textContent = '\u2713 ' + btn.dataset.label;
+  btn.classList.add('has-photo');
+  idHint(btn, '\u2713 Saved \u2014 cropped to the frame.');
+});
+
+idPhotoInput.addEventListener('change', async ()=>{
+  const file = idPhotoInput.files && idPhotoInput.files[0];
+  idPhotoInput.value = '';
+  if(!file || !idPhotoSlot) return;
+  const btn = document.querySelector('.idphoto-btn[data-photo="'+idPhotoSlot+'"]');
+  if(!btn.dataset.label) btn.dataset.label = btn.textContent.replace(/^\u2713 /,'');
+  btn.disabled = true;
+  btn.textContent = 'Processing\u2026';
+  try{
+    const shot = await processIdPhoto(file);
+    idPhotos[idPhotoSlot] = shot;
+    btn.textContent = '\u2713 ' + btn.dataset.label;
+    btn.classList.add('has-photo');
+    idHint(btn, shot.cropped
+      ? '\u2713 Saved \u2014 auto-cropped to the license.'
+      : '\u2713 Saved (full photo).');
+  }catch(err){
+    console.error('ID photo error:', err);
+    delete idPhotos[idPhotoSlot];
+    btn.textContent = btn.dataset.label;
+    btn.classList.remove('has-photo');
+    alert('Could not read that photo \u2014 please try again.');
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+function idHint(btn, msg){
+  const row = btn.closest('.label-row');
+  let el = row.parentElement.querySelector('.id-hint');
+  if(!el){
+    el = document.createElement('small');
+    el.className = 'id-hint';
+    row.insertAdjacentElement('afterend', el);
+  }
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.textContent=''; }, 8000);
+}
+
+async function decodePhotoToCanvas(file, MAX){
+  let src = null, w = 0, h = 0;
+  if(window.createImageBitmap){
+    try{ src = await createImageBitmap(file, {imageOrientation:'from-image'}); }
+    catch(e){ try{ src = await createImageBitmap(file); }catch(e2){} }
+  }
+  if(src){ w = src.width; h = src.height; }
+  else{
+    src = await new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.onload = ()=>resolve(img);
+      img.onerror = ()=>reject(new Error('unreadable image'));
+      img.src = URL.createObjectURL(file);
+    });
+    w = src.naturalWidth; h = src.naturalHeight;
+  }
+  const k = Math.min(1, MAX / Math.max(w, h));
+  const c = document.createElement('canvas');
+  c.width = Math.round(w*k); c.height = Math.round(h*k);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  return c;
+}
+
+async function processIdPhoto(file){
+  const c = await decodePhotoToCanvas(file, 1600);
+  const cx = c.getContext('2d');
+
+  let out = c, cropped = false;
+  try{
+    const crop = autoTrimIdPhoto(c, cx);
+    if(crop){
+      const c2 = document.createElement('canvas');
+      c2.width = crop.w; c2.height = crop.h;
+      c2.getContext('2d').drawImage(c, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
+      out = c2;
+      cropped = true;
+    }
+  }catch(e){ /* keep the full photo */ }
+
+  return {data: out.toDataURL('image/jpeg', 0.82), w: out.width, h: out.height, cropped: cropped};
+}
+
+/* Conservative card finder: Otsu-threshold the luminance, take the dense
+   bright span in each axis, and accept the crop ONLY if it's card-shaped
+   and a sensible fraction of the frame. Anything else returns null. */
+function autoTrimIdPhoto(canvas, ctx){
+  const w = canvas.width, h = canvas.height;
+  const step = Math.max(1, Math.floor(Math.max(w,h)/400));
+  const data = ctx.getImageData(0, 0, w, h).data;
+  const gw = Math.floor(w/step), gh = Math.floor(h/step);
+  if(gw < 20 || gh < 20) return null;
+  const lum = new Float32Array(gw*gh);
+  const hist = new Array(64).fill(0);
+  for(let gy=0; gy<gh; gy++){
+    for(let gx=0; gx<gw; gx++){
+      const p = ((gy*step)*w + (gx*step)) * 4;
+      const l = 0.299*data[p] + 0.587*data[p+1] + 0.114*data[p+2];
+      lum[gy*gw+gx] = l;
+      hist[Math.min(63, l >> 2)]++;
+    }
+  }
+  const total = gw*gh;
+  let sumAll = 0;
+  for(let i=0;i<64;i++) sumAll += i*hist[i];
+  let sumB=0, wB=0, best=0, ti=32;
+  for(let i=0;i<64;i++){
+    wB += hist[i];
+    if(!wB) continue;
+    const wF = total - wB;
+    if(!wF) break;
+    sumB += i*hist[i];
+    const mB = sumB/wB, mF = (sumAll-sumB)/wF;
+    const v = wB*wF*(mB-mF)*(mB-mF);
+    if(v > best){ best = v; ti = i; }
+  }
+  const T = (ti+1)*4;
+
+  function tryBox(isCard){
+    const colD = new Float32Array(gw), rowD = new Float32Array(gh);
+    for(let gy=0; gy<gh; gy++){
+      for(let gx=0; gx<gw; gx++){
+        if(isCard(lum[gy*gw+gx])){ colD[gx]++; rowD[gy]++; }
+      }
+    }
+    function span(d, len, other){
+      const cut = 0.35*other;
+      let a=-1, b=-1;
+      for(let i=0;i<len;i++){ if(d[i] > cut){ a=i; break; } }
+      for(let i=len-1;i>=0;i--){ if(d[i] > cut){ b=i; break; } }
+      return (a>=0 && b>a+3) ? [a,b] : null;
+    }
+    const cs = span(colD, gw, gh), rs = span(rowD, gh, gw);
+    if(!cs || !rs) return null;
+    let x0=cs[0]*step, x1=(cs[1]+1)*step, y0=rs[0]*step, y1=(rs[1]+1)*step;
+    const pw=x1-x0, ph=y1-y0;
+    const fw=pw/w, fh=ph/h, ar=pw/ph;
+    if(fw < 0.25 || fh < 0.2) return null;              // too small — probably noise
+    if(fw > 0.97 && fh > 0.97) return null;              // whole frame — nothing to crop
+    const landscapeCard = ar > 1.25 && ar < 2.1;         // ID cards are ~1.59
+    const portraitCard  = ar > 0.45 && ar < 0.85;        // card held sideways
+    if(!landscapeCard && !portraitCard) return null;
+    const padX = Math.round(pw*0.03), padY = Math.round(ph*0.03);
+    x0 = Math.max(0, x0-padX); y0 = Math.max(0, y0-padY);
+    x1 = Math.min(w, x1+padX); y1 = Math.min(h, y1+padY);
+    return {x:x0, y:y0, w:x1-x0, h:y1-y0};
+  }
+  // Pass 1: light card on a darker surface. Pass 2: dark card on a lighter surface.
+  return tryBox(l => l > T) || tryBox(l => l <= T);
+}
+
+/* Appends one page per person with their ID photos (front above back). */
+function addIdPages(doc){
+  const nameOf = id => (document.getElementById(id).value||'').trim();
+  const sets = [
+    {label:'BUYER',    name:nameOf('buyer'),   front:idPhotos.buyerFront,   back:idPhotos.buyerBack},
+    {label:'CO-BUYER', name:nameOf('cobuyer'), front:idPhotos.cobuyerFront, back:idPhotos.cobuyerBack}
+  ];
+  sets.forEach(s=>{
+    if(!s.front && !s.back) return;
+    doc.addPage();
+    doc.setFillColor(20,39,63); doc.rect(0,0,8.5,0.6,'F');
+    doc.setFillColor(198,162,78); doc.rect(0,0.6,8.5,0.035,'F');
+    doc.setTextColor(198,162,78); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.text("DRIVER'S LICENSE \u2014 " + s.label + (s.name ? ': ' + s.name.toUpperCase() : ''), 0.45, 0.38);
+    let y = 0.95;
+    [['FRONT', s.front], ['BACK', s.back]].forEach(pair=>{
+      const tag = pair[0], ph = pair[1];
+      if(!ph) return;
+      doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      doc.setTextColor(107,116,128);
+      doc.text(tag, 0.45, y);
+      y += 0.12;
+      const maxW = 7.6, maxH = 4.2;
+      const r = Math.min(maxW/ph.w, maxH/ph.h);
+      const iw = ph.w*r, ih = ph.h*r;
+      const ix = (8.5-iw)/2;
+      doc.addImage(ph.data, 'JPEG', ix, y, iw, ih);
+      doc.setDrawColor(195,199,206); doc.setLineWidth(0.01);
+      doc.rect(ix, y, iw, ih, 'S');
+      y += ih + 0.3;
+    });
+  });
+}
+
+/* =========================================================
+   8. PRINT / SAVE PDF — same vector PDF as email (with ID
+      pages), full card number on the office copy. Opens the
+      PDF for printing/saving; if the popup is blocked, it
+      downloads instead.
+   ========================================================= */
+document.getElementById('printBtn').addEventListener('click', printDealPdf);
+async function printDealPdf(){
+  const btn = document.getElementById('printBtn');
+  btn.disabled = true;
+  try{
+    await loadJsPDF();
+    const doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
+    drawDealSheet(doc, false);   // printed office copy keeps the full card number
+    addIdPages(doc);
+    addVinPage(doc);
+    addFooters(doc);
+    doc.autoPrint();
+    const url = doc.output('bloburl');
+    const w = window.open(url, '_blank');
+    if(!w){
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = pdfFilename();
+      a.click();
+    }
+  }catch(err){
+    console.error('Print PDF error:', err);
+    window.print();   // last resort: browser print of the page itself
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+/* =========================================================
+   9. VIN PHOTO — photo of the coach's VIN plate/sticker.
+      No cropping; same compression as ID photos. Attached
+      as an extra page to both printed and emailed PDFs.
+      Works on phones (camera) and desktop (file picker).
+   ========================================================= */
+let vinPhoto = null;
+const vinPhotoBtn   = document.getElementById('vinPhotoBtn');
+const vinPhotoInput = document.getElementById('vinPhotoInput');
+
+vinPhotoBtn.addEventListener('click', ()=>vinPhotoInput.click());
+vinPhotoInput.addEventListener('change', async ()=>{
+  const file = vinPhotoInput.files && vinPhotoInput.files[0];
+  vinPhotoInput.value = '';
+  if(!file) return;
+  if(!vinPhotoBtn.dataset.label) vinPhotoBtn.dataset.label = vinPhotoBtn.textContent.replace(/^\u2713 /,'');
+  vinPhotoBtn.disabled = true;
+  vinPhotoBtn.textContent = 'Processing\u2026';
+  try{
+    const c = await decodePhotoToCanvas(file, 1600);
+    vinPhoto = {data: c.toDataURL('image/jpeg', 0.82), w: c.width, h: c.height};
+    vinPhotoBtn.textContent = '\u2713 ' + vinPhotoBtn.dataset.label;
+    vinPhotoBtn.classList.add('has-photo');
+    idHint(vinPhotoBtn, '\u2713 VIN photo saved \u2014 it will attach to the PDF.');
+  }catch(err){
+    console.error('VIN photo error:', err);
+    vinPhoto = null;
+    vinPhotoBtn.textContent = vinPhotoBtn.dataset.label;
+    vinPhotoBtn.classList.remove('has-photo');
+    alert('Could not read that photo \u2014 please try again.');
+  }finally{
+    vinPhotoBtn.disabled = false;
+  }
+});
+
+/* Appends the VIN photo as its own labeled page. */
+function addVinPage(doc){
+  if(!vinPhoto) return;
+  const stock = (document.getElementById('stock').value||'').trim().toUpperCase();
+  const desc  = (document.getElementById('description').value||'').trim();
+  doc.addPage();
+  doc.setFillColor(20,39,63); doc.rect(0,0,8.5,0.6,'F');
+  doc.setFillColor(198,162,78); doc.rect(0,0.6,8.5,0.035,'F');
+  doc.setTextColor(198,162,78); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('VIN PHOTO' + (stock ? ' \u2014 ' + stock : ''), 0.45, 0.38);
+  if(desc){
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(107,116,128);
+    doc.text(desc, 0.45, 0.85);
+  }
+  const maxW = 7.6, maxH = 8.9;
+  const r = Math.min(maxW/vinPhoto.w, maxH/vinPhoto.h);
+  const iw = vinPhoto.w*r, ih = vinPhoto.h*r;
+  const ix = (8.5-iw)/2;
+  doc.addImage(vinPhoto.data, 'JPEG', ix, 1.1, iw, ih);
+  doc.setDrawColor(195,199,206); doc.setLineWidth(0.01);
+  doc.rect(ix, 1.1, iw, ih, 'S');
+}
+
+/* Small branded footer + page numbers on every page. */
+function addFooters(doc){
+  const n = doc.getNumberOfPages ? doc.getNumberOfPages() : doc.internal.getNumberOfPages();
+  for(let i=1; i<=n; i++){
+    doc.setPage(i);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.2);
+    doc.setTextColor(150,155,165);
+    doc.text('MOTOR HOME SPECIALIST \u00B7 ALVARADO, TX \u00B7 MHSRV.COM', 4.25, 10.82, {align:'center'});
+    doc.text('Page ' + i + ' of ' + n, 8.05, 10.82, {align:'right'});
+  }
+}
+
+/* =========================================================
+   10. INSTALL PROMPT + OFFLINE — makes the deal sheet
+       installable as a home-screen app. Android shows a
+       real Install button; iOS gets Share -> Add to Home
+       Screen instructions (Apple offers no prompt API).
+   ========================================================= */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+(function installPrompt(){
+  const bar     = document.getElementById('installBar');
+  const btn     = document.getElementById('installBtn');
+  const dismiss = document.getElementById('installDismiss');
+  const msg     = document.getElementById('installMsg');
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if(standalone) return;                                  // already installed
+  try{ if(localStorage.getItem('iad-install-dismissed')) return; }catch(e){}
+  const touch = window.matchMedia('(pointer:coarse)').matches;
+  if(!touch) return;                                      // salespeople install on phones
+  const isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', e=>{
+    e.preventDefault();
+    deferred = e;
+    btn.hidden = false;
+    bar.hidden = false;
+  });
+  if(isiOS){
+    msg.innerHTML = 'Use this every day? Add <strong>It\u2019s a Deal</strong> to your home screen: tap the <strong>Share</strong> button, then <strong>\u201CAdd to Home Screen\u201D</strong>.';
+    bar.hidden = false;
+  }
+  btn.addEventListener('click', async ()=>{
+    if(!deferred) return;
+    deferred.prompt();
+    try{ await deferred.userChoice; }catch(e){}
+    deferred = null;
+    bar.hidden = true;
+  });
+  dismiss.addEventListener('click', ()=>{
+    try{ localStorage.setItem('iad-install-dismissed','1'); }catch(e){}
+    bar.hidden = true;
+  });
+})();
+</script>
+</body>
+</html>
