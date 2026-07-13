@@ -856,7 +856,7 @@ document.addEventListener('click', e=>{ if(!e.target.closest('.field')) closeAC(
 
       The CC# is masked to its last 4 digits in every generated PDF.
    ========================================================= */
-const SEND_ENDPOINT = 'PASTE-YOUR-WORKER-URL-HERE'; // e.g. 'https://mhs-deal-mailer.YOUR-ACCOUNT.workers.dev'
+const SEND_ENDPOINT = 'https://mhs-deal-mailer.ebendele.workers.dev';
 const WORKER_READY  = /^https:\/\//.test(SEND_ENDPOINT);
 
 const emailBtn    = document.getElementById('emailBtn');
