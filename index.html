@@ -299,6 +299,10 @@
   .idcap-shutter:active{transform:scale(.92)}
 
 
+  .page-tools{max-width:880px;margin:0 auto 10px;display:flex;justify-content:flex-end}
+  .page-tools .email-btn{padding:9px 16px;font-size:12px}
+  .cc-brand{color:var(--gold);font-weight:700;letter-spacing:.08em;margin-left:6px}
+
   /* ---------- Polish pass ---------- */
   .sheet{border-radius:10px;box-shadow:0 30px 80px rgba(0,0,0,.5),0 6px 18px rgba(0,0,0,.28)}
   .mast{position:relative}
@@ -319,7 +323,7 @@
   .print-btn{box-shadow:0 3px 12px rgba(198,162,78,.35)}
   .yn button.on{border-color:var(--gold)}
   .email-row input{border-radius:6px}
-  .vin-btn{display:inline-flex;align-items:center;gap:5px}
+  .vin-btn,.idphoto-btn{display:inline-flex;align-items:center;gap:5px}
 
   /* ---------- Install banner ---------- */
   .install-bar[hidden]{display:none!important}
@@ -352,7 +356,7 @@
     @page{size:letter;margin:0.35in}
     body{background:#fff;padding:0}
     .sheet{box-shadow:none;max-width:none;border-radius:0}
-    .lookup-btn,.lookup-status,.actions,.email-panel,.ac-list,.spinner,.note,.autofill-tag,.scan-btn,.scan-overlay,.install-bar,.id-hint{display:none!important}
+    .lookup-btn,.lookup-status,.actions,.email-panel,.ac-list,.spinner,.note,.autofill-tag,.scan-btn,.scan-overlay,.install-bar,.id-hint,.page-tools{display:none!important}
     .sec-h h2::before{display:none}
     .add-trade,.remove-trade{display:none!important}
     #secTrades:has(.trades:empty){display:none} /* no trades — skip the section on paper */
@@ -393,6 +397,10 @@
 </style>
 </head>
 <body>
+
+<div class="page-tools">
+  <button type="button" class="email-btn" id="clearBtn">&#8635; Clear Form</button>
+</div>
 
 <div class="sheet">
 
@@ -580,25 +588,29 @@
     <div class="sec-h"><h2>Approvals &amp; Payment</h2></div>
     <div class="grid g2">
       <div class="field">
-        <label for="salesman">Salesman</label>
+        <label for="salesman">Sales Associate</label>
         <input type="text" id="salesman">
       </div>
       <div class="field">
-        <label for="manager">Manager X</label>
+        <label for="manager">Sales Manager</label>
         <input type="text" id="manager">
       </div>
       <div class="field">
         <label for="finManager">Finance Manager</label>
-        <input type="text" id="finManager">
+        <input type="text" id="finManager" placeholder="LEAVE BLANK IF NOT ASSIGNED YET">
       </div>
       <div class="field">
         <label for="ccexp">CC Exp Date</label>
         <input type="text" id="ccexp" placeholder="MM/YY" maxlength="5" inputmode="numeric">
       </div>
-      <div class="field span2">
-        <label for="ccnum">CC # (deposit card)</label>
+      <div class="field">
+        <label for="ccnum">CC # (Deposit Card)<span class="cc-brand" id="ccBrand"></span></label>
         <input type="text" id="ccnum" inputmode="numeric" autocomplete="off">
         <p class="note">Card details stay on this page only &mdash; nothing on this form is transmitted anywhere. Print for the deal jacket, then close the tab.</p>
+      </div>
+      <div class="field">
+        <label for="cvv">CVV</label>
+        <input type="text" id="cvv" inputmode="numeric" maxlength="4" autocomplete="off">
       </div>
     </div>
   </section>
@@ -680,8 +692,8 @@
 </div>
 
 <input type="file" id="idPhotoInput" accept="image/*" capture="environment" hidden>
-<input type="file" id="vinPhotoInput" accept="image/*" capture="environment" hidden>
-<input type="file" id="milesPhotoInput" accept="image/*" capture="environment" hidden>
+<input type="file" id="vinPhotoInput" accept="image/*" hidden>
+<input type="file" id="milesPhotoInput" accept="image/*" hidden>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="inventory.js"></script>
@@ -689,11 +701,12 @@
 /* =========================================================
    1. AUTO-FILL TODAY'S DATE
    ========================================================= */
-(function setToday(){
+function setTodayDate(){
   const d = new Date();
   const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   document.getElementById('date').value = iso;
-})();
+}
+setTodayDate();
 
 /* =========================================================
    2. DEAL-TYPE TABS + Y/N TOGGLES
@@ -724,6 +737,52 @@ phoneInput.addEventListener('input', ()=>{
   else if(d.length > 3) out = '(' + d.slice(0,3) + ') ' + d.slice(3);
   else if(d.length > 0) out = '(' + d;
   phoneInput.value = out;
+});
+
+/* =========================================================
+   2e. PAYMENT FIELD FORMATTING
+        - CC Exp: digits -> MM/YY (typing "3" becomes "03/")
+        - Card #: brand detected from the prefix; hyphens
+          grouped per brand (Visa/MC/Discover 4-4-4-4,
+          Amex 4-6-5, Diners 4-6-4)
+   ========================================================= */
+const ccexpInput = document.getElementById('ccexp');
+ccexpInput.addEventListener('input', ()=>{
+  let d = ccexpInput.value.replace(/\D/g,'').slice(0,4);
+  if(d.length >= 1 && d[0] > '1') d = '0' + d;   // "3" -> "03"
+  ccexpInput.value = d.length >= 3 ? d.slice(0,2) + '/' + d.slice(2) : d;
+});
+
+const ccnumInput = document.getElementById('ccnum');
+const ccBrandEl  = document.getElementById('ccBrand');
+function ccMeta(d){
+  if(/^3[47]/.test(d))            return {brand:'AMEX',       max:15, groups:[4,6,5]};
+  if(/^3(0[0-5]|[68])/.test(d))   return {brand:'DINERS',     max:14, groups:[4,6,4]};
+  if(/^4/.test(d))                return {brand:'VISA',       max:16, groups:[4,4,4,4]};
+  const four = parseInt(d.slice(0,4) || '0', 10);
+  if(/^5[1-5]/.test(d) || (four >= 2221 && four <= 2720))
+                                  return {brand:'MASTERCARD', max:16, groups:[4,4,4,4]};
+  if(/^(6011|65|64[4-9])/.test(d))return {brand:'DISCOVER',   max:16, groups:[4,4,4,4]};
+  return {brand:'', max:19, groups:[4,4,4,4,3]};
+}
+ccnumInput.addEventListener('input', ()=>{
+  let d = ccnumInput.value.replace(/\D/g,'');
+  const meta = ccMeta(d);
+  d = d.slice(0, meta.max);
+  const parts = [];
+  let i = 0;
+  for(const g of meta.groups){
+    if(i >= d.length) break;
+    parts.push(d.slice(i, i+g));
+    i += g;
+  }
+  ccnumInput.value = parts.join('-');
+  ccBrandEl.textContent = meta.brand ? '\u00B7 ' + meta.brand : '';
+});
+
+const cvvInput = document.getElementById('cvv');
+cvvInput.addEventListener('input', ()=>{
+  cvvInput.value = cvvInput.value.replace(/\D/g,'').slice(0,4);
 });
 
 /* =========================================================
@@ -1119,15 +1178,17 @@ function drawDealSheet(doc, maskCC){
   /* ---- Approvals & Payment ---- */
   ensure(0.4 + 2*ROW);
   section('Approvals & Payment');
-  field('Salesman', v('salesman'), X(0), colW, y);
-  field('Manager X', v('manager'), X(1), colW, y);
+  field('Sales Associate', v('salesman'), X(0), colW, y);
+  field('Sales Manager', v('manager'), X(1), colW, y);
   field('Finance Manager', v('finManager'), X(2), colW, y);
   field('CC Exp Date', v('ccexp'), X(3), colW, y);
   y += ROW;
   const ccRaw = v('ccnum');
   const ccDigits = ccRaw.replace(/\D/g,'');
-  const ccShown = (maskCC && ccDigits.length > 4) ? '**** **** **** ' + ccDigits.slice(-4) : ccRaw;
+  const ccShown = (maskCC && ccDigits.length > 4) ? '****-****-****-' + ccDigits.slice(-4) : ccRaw;
   field('CC # (Deposit Card)', ccShown, X(0), SPAN(2), y);
+  const cvvRaw = v('cvv');
+  field('CVV', maskCC ? (cvvRaw ? '***' : '') : cvvRaw, X(2), colW, y);
   y += ROW + 0.10;
 
   /* ---- Special Instructions (flexes to fill the page) ---- */
@@ -1226,7 +1287,7 @@ async function sendDealEmail(){
           Buyer:       document.getElementById('buyer').value.trim() || '\u2014',
           Stock:       document.getElementById('stock').value.trim().toUpperCase() || '\u2014',
           Description: document.getElementById('description').value.trim() || '\u2014',
-          Salesman:    document.getElementById('salesman').value.trim() || '\u2014'
+          'Sales Associate': document.getElementById('salesman').value.trim() || '\u2014'
         }
       })
     });
@@ -1595,7 +1656,10 @@ const idPhotoInput = document.getElementById('idPhotoInput');
 document.querySelectorAll('.idphoto-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     idPhotoSlot = btn.dataset.photo;
-    openIdCapture(idPhotoSlot);
+    const liveCamera = window.matchMedia('(pointer:coarse)').matches &&
+                       navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+    if(liveCamera) openIdCapture(idPhotoSlot);   // phones: guided frame capture
+    else idPhotoInput.click();                   // desktop: upload a file/scan
   });
 });
 
@@ -2045,6 +2109,44 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   });
 }
+
+/* =========================================================
+   11. CLEAR FORM — wipes everything back to a fresh sheet
+       (fields, toggles, trades, photos, statuses) after a
+       confirmation.
+   ========================================================= */
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  if(!confirm('Clear the entire form and start fresh? This removes all fields, trade-ins, and photos.')) return;
+
+  document.querySelectorAll('.sheet input[type=text], .sheet input[type=tel], .sheet input[type=email], .sheet input[type=date], .sheet input[type=time], .sheet textarea')
+    .forEach(el=>{ el.value=''; el.classList.remove('filled'); });
+  document.getElementById('delTime').value = '';
+  ccBrandEl.textContent = '';
+
+  // deal type back to Finance; all Y/N toggles off
+  document.querySelectorAll('.deal-type button').forEach((b,i)=>b.classList.toggle('on', i===0));
+  document.querySelectorAll('.yn button').forEach(b=>b.classList.remove('on'));
+
+  // trades, statuses, tags, hints
+  tradesList.innerHTML = '';
+  document.querySelectorAll('.autofill-tag').forEach(t=>t.classList.remove('show'));
+  document.querySelectorAll('.id-hint').forEach(h=>h.textContent='');
+  setStatus('','');
+  setEmailStatus('','');
+  emailPanel.hidden = true;
+
+  // photos
+  Object.keys(idPhotos).forEach(k=>delete idPhotos[k]);
+  vinPhoto = null;
+  milesPhoto = null;
+  document.querySelectorAll('.idphoto-btn, #vinPhotoBtn, #milesPhotoBtn').forEach(b=>{
+    if(b.dataset.label) b.textContent = b.dataset.label;
+    b.classList.remove('has-photo');
+  });
+
+  setTodayDate();
+  window.scrollTo({top:0, behavior:'smooth'});
+});
 
 (function installPrompt(){
   const bar     = document.getElementById('installBar');
