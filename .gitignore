@@ -1,0 +1,4 @@
+# NetSource export contains the dealer Cost column — never publish it
+netsourcemedia_export.csv
+*.csv
+.DS_Store
