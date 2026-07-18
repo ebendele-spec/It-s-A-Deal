@@ -4,7 +4,7 @@
    Each entry: stock -> [description, sale price, last 8 of VIN, mileage] */
 const MHS_INVENTORY_DATE = 'July 18, 2026';
 const MHS_INVENTORY = {
-"1369854":["2027 Grand Design Lineage Series E 30DC", 159989, "INEAGE02", ""],
+"1369854":["2027 Grand Design Lineage Series E 30DC", 0, "INEAGE02", ""],
 "CM2100244":["Used 2017 Tiffin Allegro Bus 40AP", 179995, "HA117790", "49785"],
 "CM2100258":["Used 2018 Thor Motor Coach Four Winds 31W", 44995, "JDC40960", "22354"],
 "CM920415":["Used 2015 Leisure Travel Unity U24MB", 95995, "F9606626", "65891"],
@@ -19,15 +19,15 @@ const MHS_INVENTORY = {
 "CM920450":["Used 2024 Thor Motor Coach Four Winds 28A", 69999, "PDD36808", "47056"],
 "CM920452":["Used 2024 Thor Motor Coach Four Winds 28A", 69999, "PDD36749", "55789"],
 "CM920454":["Used 2024 Thor Motor Coach Four Winds 28A", 69999, "PDD38445", "60071"],
-"CM920456":["Used 2013 Fleetwood Bounder 35K", 54995, "D0A03557", ""],
+"CM920456":["Used 2013 Fleetwood Bounder 35K", 0, "D0A03557", ""],
 "CM920460":["Used 2012 Itasca Sunstar 30T", 45312, "C0A03441", "43069"],
 "CT2100259":["Used 2025 Forest River R-Pod RP-171", 21995, "SB034176", ""],
 "CT920280":["Used 2022 DRV Mobile Suites 41 RKSB4", 89900, "P1515421", ""],
 "CT920435":["Used 2018 Heartland Big Country 3155RLK", 45495, "JE365351", ""],
 "CT920436":["Used 2023 Dutchmen Astoria 1500 Series 2503RLF", 58995, "PM915502", ""],
-"LINEAGE01":["2027 Grand Design Lineage Series E 30DC", 159989, "INEAGE01", ""],
-"LINEAGE02":["2027 Grand Design Lineage Series E 30DC", 159989, "", ""],
-"LINEAGE03":["2027 Grand Design Lineage Series E 30DC", 159989, "INEAGE03", ""],
+"LINEAGE01":["2027 Grand Design Lineage Series E 30DC", 0, "INEAGE01", ""],
+"LINEAGE02":["2027 Grand Design Lineage Series E 30DC", 0, "", ""],
+"LINEAGE03":["2027 Grand Design Lineage Series E 30DC", 0, "INEAGE03", ""],
 "M100567":["2025 Newmar Ventana 3809", 339900, "SCWC6373", "2184"],
 "M110340-LEX":["2025 Tiffin Allegro Bay 38 AB", 279995, "5CWH5898", ""],
 "M118566-DES":["2026 Tiffin Allegro Bay 38 AB", 279995, "TCWH9830", "756"],

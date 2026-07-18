@@ -9,8 +9,10 @@ Usage:
 Then commit & push the new inventory.js through GitHub Desktop.
 
 Reads only: Stock Number, Year, Brand, Model, Floorplan, Condition,
-Sale Price, Price, VIN, Mileage.
-The dealer Cost column is NEVER read or written.
+Sale Price, VIN, Mileage.
+Sale Price is the ONLY price column read. Cost, MSRP, Price, and every
+other column are never read or written — the published inventory.js
+must not contain them.
 """
 import csv, json, sys, datetime
 
@@ -36,7 +38,7 @@ def main():
                                     r.get('Model','').strip(), r.get('Floorplan','').strip()] if x)
         if r.get('Condition', '').strip().lower() == 'used':
             desc = 'Used ' + desc
-        price = num(r.get('Sale Price')) or num(r.get('Price'))   # never Cost
+        price = num(r.get('Sale Price'))   # Sale Price ONLY — never Cost, MSRP, or Price
         vin = r.get('VIN', '').strip().upper()
         vin8 = vin[-8:] if len(vin) >= 8 else ''
         miles = r.get('Mileage', '').strip()
