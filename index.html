@@ -394,9 +394,85 @@
     .filled{animation:none}
     .spinner{animation-duration:1.5s}
   }
+
+  /* ---------- Login gate ---------- */
+  body.locked .page-tools,
+  body.locked .sheet{display:none}
+  .lock-overlay{
+    position:fixed;inset:0;z-index:9999;
+    display:none;align-items:center;justify-content:center;padding:20px;
+    background:var(--navy);
+    background-image:radial-gradient(1200px 500px at 50% -10%, #1E3A5C 0%, var(--navy) 55%, var(--navy-deep) 100%);
+  }
+  body.locked .lock-overlay{display:flex}
+  .lock-card{
+    width:100%;max-width:360px;background:var(--paper);
+    border-radius:6px;box-shadow:0 24px 60px rgba(0,0,0,.45);
+    border-top:4px solid var(--gold);padding:28px 26px 26px;
+  }
+  .lock-card h2{
+    font-family:'Barlow Semi Condensed',sans-serif;font-weight:800;
+    font-size:24px;text-transform:uppercase;letter-spacing:.03em;
+    color:var(--navy);margin-bottom:4px;
+  }
+  .lock-card p{font-size:13px;color:var(--muted);margin-bottom:18px}
+  .lock-card label{
+    display:block;font-size:11px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--navy);margin:12px 0 4px;
+  }
+  .lock-card input{
+    width:100%;padding:10px 12px;font:inherit;font-size:15px;
+    border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);
+  }
+  .lock-card input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+  .lock-card button{
+    width:100%;margin-top:18px;padding:11px;cursor:pointer;
+    font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:16px;
+    text-transform:uppercase;letter-spacing:.06em;
+    background:var(--navy);color:var(--gold);border:none;border-radius:4px;
+  }
+  .lock-card button:hover{background:var(--navy-deep)}
+  .lock-error{
+    display:none;margin-top:12px;font-size:13px;font-weight:600;
+    color:var(--red);text-align:center;
+  }
+  .lock-error.show{display:block}
 </style>
 </head>
-<body>
+<body class="locked">
+
+<!-- ============ LOGIN GATE ============ -->
+<div class="lock-overlay" id="lockOverlay">
+  <form class="lock-card" id="lockForm" autocomplete="off">
+    <h2>It's a Deal!</h2>
+    <p>Sales team access only. Please sign in.</p>
+    <label for="lockUser">Username</label>
+    <input type="text" id="lockUser" autocapitalize="none" autocorrect="off" required>
+    <label for="lockPass">Password</label>
+    <input type="password" id="lockPass" required>
+    <button type="submit">Sign In</button>
+    <div class="lock-error" id="lockError">Incorrect username or password.</div>
+  </form>
+</div>
+<script>
+(function(){
+  var form = document.getElementById('lockForm');
+  var err  = document.getElementById('lockError');
+  document.getElementById('lockUser').focus();
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var u = document.getElementById('lockUser').value.trim();
+    var p = document.getElementById('lockPass').value;
+    if (u === atob('c2FsZXM=') && p === atob('cHJpY2VzNTE1MHVubG9jaw==')) {
+      document.body.classList.remove('locked');
+    } else {
+      err.classList.add('show');
+      document.getElementById('lockPass').value = '';
+      document.getElementById('lockPass').focus();
+    }
+  });
+})();
+</script>
 
 <div class="page-tools">
   <button type="button" class="email-btn" id="clearBtn">&#8635; Clear Form</button>
