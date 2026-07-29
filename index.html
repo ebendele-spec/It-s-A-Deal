@@ -676,16 +676,15 @@
         <input type="text" id="finManager" placeholder="LEAVE BLANK IF NOT ASSIGNED YET">
       </div>
       <div class="field">
-        <label for="ccexp">CC Exp Date</label>
+        <label for="ccexp">Date</label>
         <input type="text" id="ccexp" placeholder="MM/YY" maxlength="5" inputmode="numeric">
       </div>
       <div class="field">
-        <label for="ccnum">CC # (Deposit Card)<span class="cc-brand" id="ccBrand"></span></label>
+        <label for="ccnum">Card<span class="cc-brand" id="ccBrand"></span></label>
         <input type="text" id="ccnum" inputmode="numeric" autocomplete="off">
-        <p class="note">Card details stay on this page only &mdash; nothing on this form is transmitted anywhere. Print for the deal jacket, then close the tab.</p>
       </div>
       <div class="field">
-        <label for="cvv">CVV</label>
+        <label for="cvv">&nbsp;</label>
         <input type="text" id="cvv" inputmode="numeric" maxlength="4" autocomplete="off">
       </div>
     </div>
@@ -1257,14 +1256,14 @@ function drawDealSheet(doc, maskCC){
   field('Sales Associate', v('salesman'), X(0), colW, y);
   field('Sales Manager', v('manager'), X(1), colW, y);
   field('Finance Manager', v('finManager'), X(2), colW, y);
-  field('CC Exp Date', v('ccexp'), X(3), colW, y);
+  field('Date', v('ccexp'), X(3), colW, y);
   y += ROW;
   const ccRaw = v('ccnum');
   const ccDigits = ccRaw.replace(/\D/g,'');
   const ccShown = (maskCC && ccDigits.length > 4) ? '****-****-****-' + ccDigits.slice(-4) : ccRaw;
-  field('CC # (Deposit Card)', ccShown, X(0), SPAN(2), y);
+  field('Card', ccShown, X(0), SPAN(2), y);
   const cvvRaw = v('cvv');
-  field('CVV', maskCC ? (cvvRaw ? '***' : '') : cvvRaw, X(2), colW, y);
+  field('', maskCC ? (cvvRaw ? '***' : '') : cvvRaw, X(2), colW, y);
   y += ROW + 0.10;
 
   /* ---- Special Instructions (flexes to fill the page) ---- */
