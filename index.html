@@ -676,11 +676,11 @@
         <input type="text" id="finManager" placeholder="LEAVE BLANK IF NOT ASSIGNED YET">
       </div>
       <div class="field">
-        <label for="ccexp">Date</label>
+        <label for="ccexp">&nbsp;</label>
         <input type="text" id="ccexp" placeholder="MM/YY" maxlength="5" inputmode="numeric">
       </div>
       <div class="field">
-        <label for="ccnum">Card<span class="cc-brand" id="ccBrand"></span></label>
+        <label for="ccnum">&nbsp;<span class="cc-brand" id="ccBrand"></span></label>
         <input type="text" id="ccnum" inputmode="numeric" autocomplete="off">
       </div>
       <div class="field">
@@ -1256,12 +1256,12 @@ function drawDealSheet(doc, maskCC){
   field('Sales Associate', v('salesman'), X(0), colW, y);
   field('Sales Manager', v('manager'), X(1), colW, y);
   field('Finance Manager', v('finManager'), X(2), colW, y);
-  field('Date', v('ccexp'), X(3), colW, y);
+  field('', v('ccexp'), X(3), colW, y);
   y += ROW;
   const ccRaw = v('ccnum');
   const ccDigits = ccRaw.replace(/\D/g,'');
   const ccShown = (maskCC && ccDigits.length > 4) ? '****-****-****-' + ccDigits.slice(-4) : ccRaw;
-  field('Card', ccShown, X(0), SPAN(2), y);
+  field('', ccShown, X(0), SPAN(2), y);
   const cvvRaw = v('cvv');
   field('', maskCC ? (cvvRaw ? '***' : '') : cvvRaw, X(2), colW, y);
   y += ROW + 0.10;
