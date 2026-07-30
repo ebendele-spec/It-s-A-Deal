@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade-In Evaluation — Motor Home Specialist</title>
+<script>if(sessionStorage.getItem('iadRole')!=='service')location.replace('./');</script>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#14273F; --navy-deep:#0D1B2E; --paper:#FAF7F0;
+    --gold:#C6A24E; --gold-soft:#F3E8CD; --ink:#1B2430;
+    --muted:#6B7480; --line:#C9CDD4; --green:#2E7D4F; --red:#B3402F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Barlow',sans-serif;color:var(--ink);
+    background:var(--navy);
+    background-image:radial-gradient(1200px 500px at 50% -10%, #1E3A5C 0%, var(--navy) 55%, var(--navy-deep) 100%);
+    min-height:100vh;padding:28px 14px 64px;
+  }
+  .sheet{max-width:980px;margin:0 auto;background:var(--paper);border-radius:6px;
+    box-shadow:0 24px 60px rgba(0,0,0,.45);overflow:hidden}
+  .mast{background:var(--navy);color:#fff;padding:22px 28px 18px;border-bottom:4px solid var(--gold)}
+  .mast-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand img{height:44px;width:auto;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+  h1{font-family:'Barlow Semi Condensed',sans-serif;font-weight:800;
+    font-size:clamp(28px,5vw,42px);letter-spacing:.02em;line-height:1;
+    color:var(--gold);text-transform:uppercase}
+  h1 span{color:#fff}
+  .mast small{display:block;font:600 11px/1.4 'Barlow Semi Condensed',sans-serif;
+    letter-spacing:.14em;text-transform:uppercase;color:#B8C4D4;margin-top:4px}
+  .signout{background:none;border:1px solid #3A5578;color:#B8C4D4;font:600 11px 'Barlow',sans-serif;
+    letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:4px;cursor:pointer;margin-top:8px}
+  .signout:hover{color:#fff;border-color:var(--gold)}
+
+  /* ---------- Stepper ---------- */
+  .stepper{display:flex;gap:6px;padding:14px 22px;background:var(--gold-soft);
+    border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .stepper button{
+    flex:1 0 auto;display:flex;align-items:center;gap:7px;white-space:nowrap;
+    background:#fff;border:1px solid var(--line);border-radius:20px;
+    padding:7px 14px;cursor:pointer;font:600 13px 'Barlow',sans-serif;color:var(--muted);
+  }
+  .stepper button .n{display:inline-flex;align-items:center;justify-content:center;
+    width:20px;height:20px;border-radius:50%;background:var(--line);color:#fff;
+    font:700 11px 'Barlow Semi Condensed',sans-serif}
+  .stepper button.active{border-color:var(--navy);color:var(--navy)}
+  .stepper button.active .n{background:var(--navy);color:var(--gold)}
+  .stepper button.done .n{background:var(--green)}
+
+  /* ---------- Steps & fields ---------- */
+  .step{display:none;padding:24px 26px 30px}
+  .step.on{display:block}
+  h2.sec{font-family:'Barlow Semi Condensed',sans-serif;font-weight:800;font-size:22px;
+    text-transform:uppercase;letter-spacing:.04em;color:var(--navy);
+    border-bottom:2px solid var(--gold);padding-bottom:6px;margin-bottom:18px}
+  h3.sub{font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;font-size:15px;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin:20px 0 10px}
+  h3.sub:first-of-type{margin-top:0}
+  .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:13px 20px}
+  .field label{display:block;font:700 11px 'Barlow',sans-serif;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .field input[type=text],.field textarea{
+    width:100%;padding:9px 11px;font:inherit;font-size:15px;background:#fff;
+    border:1px solid var(--line);border-radius:4px;color:var(--ink)}
+  .field input:focus,.field textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+  .field textarea{min-height:64px;resize:vertical}
+  .field.wide{grid-column:1/-1}
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg button{
+    padding:8px 13px;min-width:42px;cursor:pointer;background:#fff;
+    border:1px solid var(--line);border-radius:4px;
+    font:600 14px 'Barlow',sans-serif;color:var(--ink)}
+  .seg button.on{background:var(--navy);border-color:var(--navy);color:var(--gold);font-weight:700}
+  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+
+  /* ---------- Damage step ---------- */
+  .legend{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+  .legend button{display:flex;align-items:center;gap:6px;padding:8px 12px;cursor:pointer;
+    background:#fff;border:1px solid var(--line);border-radius:4px;font:600 13px 'Barlow',sans-serif}
+  .legend button b{display:inline-flex;align-items:center;justify-content:center;
+    min-width:22px;height:22px;padding:0 3px;border-radius:50%;
+    background:var(--gold-soft);color:var(--navy);font:700 11px 'Barlow Semi Condensed',sans-serif}
+  .legend button.on{background:var(--navy);border-color:var(--navy);color:var(--gold)}
+  .legend button.on b{background:var(--gold);color:var(--navy)}
+  .diag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px}
+  .diag{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px}
+  .diag h4{font:700 12px 'Barlow',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--navy);text-align:center;margin-bottom:6px}
+  .diag svg{width:100%;height:auto;display:block;touch-action:manipulation}
+  .diag svg .body{fill:#fff;stroke:var(--navy);stroke-width:2.5}
+  .diag svg .det{fill:none;stroke:#8FA0B5;stroke-width:1.8}
+  .diag svg .mk circle{fill:var(--gold);stroke:var(--navy);stroke-width:1.5}
+  .diag svg .mk text{font:700 10px 'Barlow Semi Condensed',sans-serif;fill:var(--navy);
+    text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .dmg-tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .dmg-tools button{padding:8px 14px;cursor:pointer;background:#fff;border:1px solid var(--line);
+    border-radius:4px;font:600 13px 'Barlow',sans-serif;color:var(--ink)}
+
+  /* ---------- Nav & buttons ---------- */
+  .stepnav{display:flex;justify-content:space-between;gap:10px;padding:0 26px 28px}
+  .btn{padding:12px 26px;cursor:pointer;border-radius:4px;border:none;
+    font:700 16px 'Barlow Semi Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em}
+  .btn.primary{background:var(--navy);color:var(--gold)}
+  .btn.primary:hover{background:var(--navy-deep)}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn.danger{background:#fff;border:1px solid var(--red);color:var(--red)}
+
+  /* ---------- Review ---------- */
+  .rev-note{background:var(--gold-soft);border-left:4px solid var(--gold);
+    padding:12px 14px;font-size:14px;border-radius:0 4px 4px 0;margin-bottom:18px}
+  .missing{font-size:14px;margin:14px 0;color:var(--red);font-weight:600}
+
+  /* ---------- Print sheet ---------- */
+  #printSheet{display:none}
+  @media print{
+    body{background:#fff;padding:0}
+    body > *:not(#printSheet){display:none !important}
+    #printSheet{display:block;font-family:'Barlow',sans-serif;color:#000}
+    @page{size:letter;margin:0.35in}
+    #printSheet .p-head{display:flex;justify-content:space-between;align-items:baseline;
+      border-bottom:3px solid #000;padding-bottom:4px;margin-bottom:8px}
+    #printSheet .p-head h1{font:800 20px 'Barlow Semi Condensed',sans-serif;color:#000;text-transform:uppercase}
+    #printSheet .p-head span{font:600 10px 'Barlow',sans-serif}
+    #printSheet h2{font:800 12px 'Barlow Semi Condensed',sans-serif;text-transform:uppercase;
+      letter-spacing:.06em;border-bottom:1.5px solid #000;margin:8px 0 4px;padding-bottom:1px;
+      break-after:avoid}
+    #printSheet .cols{columns:3;column-gap:16px}
+    #printSheet .cols.two{columns:2}
+    #printSheet .pf{display:block;font-size:9.5px;line-height:1.75;break-inside:avoid;
+      border-bottom:0.5px dotted #999}
+    #printSheet .pf b{font-weight:700}
+    #printSheet .pline{font-size:9.5px;line-height:1.7;margin-top:2px}
+    #printSheet .pline b{font-weight:700}
+    #printSheet .p-dmg{break-before:page}
+    #printSheet .p-diags{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+    #printSheet .p-diag{border:1px solid #000;padding:4px;text-align:center}
+    #printSheet .p-diag h4{font:700 9px 'Barlow',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+    #printSheet .p-diag svg{width:100%;max-height:2.4in}
+    #printSheet .p-diag svg .body{fill:#fff;stroke:#000;stroke-width:2.5}
+    #printSheet .p-diag svg .det{fill:none;stroke:#777;stroke-width:1.8}
+    #printSheet .p-diag svg .mk circle{fill:#fff;stroke:#000;stroke-width:1.5}
+    #printSheet .p-diag svg .mk text{font:700 10px 'Barlow Semi Condensed',sans-serif;fill:#000;
+      text-anchor:middle;dominant-baseline:central}
+    #printSheet .sig-row{display:flex;gap:24px;margin-top:22px}
+    #printSheet .sig{flex:1;border-top:1px solid #000;font:700 10px 'Barlow',sans-serif;
+      text-transform:uppercase;padding-top:3px}
+    #printSheet .p-foot{font-size:8px;text-align:right;margin-top:10px;color:#555}
+  }
+
+  @media(max-width:640px){
+    body{padding:12px 6px 40px}
+    .step{padding:18px 14px 24px}
+    .stepnav{padding:0 14px 22px}
+    .fgrid{grid-template-columns:1fr 1fr}
+    .field.wide{grid-column:1/-1}
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <header class="mast">
+    <div class="mast-top">
+      <div class="brand">
+        <img src="https://mhsrv.s3.amazonaws.com/images/homeimage/logo--mhs-bc.png" alt="Motor Home Specialist">
+      </div>
+      <div style="text-align:right">
+        <h1>Trade-In <span>Evaluation</span></h1>
+        <small>Motor Home Specialist &middot; Alvarado, TX</small>
+        <button type="button" class="signout" id="signOut">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="stepper" id="stepper"></nav>
+  <div id="steps"></div>
+
+  <div class="stepnav">
+    <button type="button" class="btn ghost" id="backBtn">&larr; Back</button>
+    <button type="button" class="btn primary" id="nextBtn">Next &rarr;</button>
+  </div>
+</div>
+
+<div id="printSheet"></div>
+
+<script>
+(function(){
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+var YN = ['Y','N'];
+
+/* ============================================================
+   FIELD SCHEMA — every item on the paper MHS Trade-In Sheet
+   t: text | seg (pick one) | multi (pick many) | area
+   ============================================================ */
+var SECTIONS = [
+ { key:'unit', title:'Unit Info', groups:[
+   { fields:[
+     {id:'stock',    l:'Stock #',        t:'text'},
+     {id:'vin',      l:'VIN',            t:'text', w:1},
+     {id:'yr',       l:'Yr',             t:'text', im:'numeric'},
+     {id:'make',     l:'Make',           t:'text'},
+     {id:'model',    l:'Model',          t:'text'},
+     {id:'unitClass',l:'Class',          t:'text'},
+     {id:'length',   l:'Length',         t:'text'},
+     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric'},
+     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric'},
+     {id:'regExp',   l:'Reg Exp Date',   t:'text', ph:'MM/YY'},
+     {id:'inspExp',  l:'Inspection Exp', t:'text', ph:'MM/YY'},
+     {id:'fourX4',   l:'4x4',            t:'seg', o:YN},
+   ]},
+ ]},
+ { key:'chassis', title:'Chassis & Systems', groups:[
+   { sub:'Drivetrain / Chassis', fields:[
+     {id:'engineMfg', l:'Engine Mfg',     t:'text'},
+     {id:'engineHp',  l:'Engine HP/Size', t:'text'},
+     {id:'fuelType',  l:'Fuel Type',      t:'text'},
+     {id:'transMfg',  l:'Trans Mfg',      t:'text'},
+     {id:'transSpeed',l:'Trans Speed',    t:'text'},
+     {id:'chassisMfg',l:'Chassis Mfg',    t:'text'},
+   ]},
+   { sub:'Coach Systems', fields:[
+     {id:'slides',     l:'Slides',        t:'seg', o:['0','1','2','3','4','5']},
+     {id:'levelMfg',   l:'Leveling Mfg',  t:'text'},
+     {id:'levelType',  l:'Leveling Type', t:'seg', o:['Air','Hydraulic','4pt. Stabilizers']},
+     {id:'cameras',    l:'Cameras',       t:'seg', o:['N/A','1','2','3','4']},
+     {id:'acUnits',    l:'A/C Units',     t:'seg', o:['1','2','3','4']},
+     {id:'acDucted',   l:'A/C Ducted',    t:'seg', o:YN},
+     {id:'heatPump',   l:'Heat Pump',     t:'seg', o:['N/A','1','2','3','4']},
+     {id:'genType',    l:'Generator',     t:'seg', o:['Gas','Diesel','LP']},
+     {id:'genRuns',    l:'Generator Runs',t:'seg', o:YN},
+     {id:'genLoads',   l:'Generator Loads',t:'seg', o:YN},
+     {id:'genAgs',     l:'AGS',           t:'seg', o:YN},
+     {id:'satDish',    l:'Sat Dish',      t:'text'},
+     {id:'dashAc',     l:'Dash A/C',      t:'seg', o:['Good','Bad']},
+   ]},
+   { sub:'Wheels / Tires / Body', fields:[
+     {id:'alumWheels', l:'Alum Wheels',      t:'seg', o:YN},
+     {id:'tireAge',    l:'Tires: Age',       t:'text'},
+     {id:'tireDryRot', l:'Tires: Dry Rot / Crack', t:'seg', o:YN},
+     {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
+     {id:'wsGood',     l:'Windshield Good',  t:'seg', o:YN},
+     {id:'wsDmg',      l:'Windshield Cracks / Stars', t:'multi', o:['Cracks','Stars']},
+     {id:'hitchWeight',l:'Hitch Weight',     t:'text'},
+     {id:'smoker',     l:'Smoker',           t:'seg', o:YN},
+     {id:'pets',       l:'Pets',             t:'seg', o:YN},
+   ]},
+ ]},
+ { key:'ext', title:'Exterior', groups:[
+   { sub:'Cockpit / Driving', fields:[
+     {id:'steerWheel', l:'Steering Wheel',  t:'multi', o:['Tilt','Telescoping']},
+     {id:'smartWheel', l:'Smart Wheel',     t:'seg', o:YN},
+     {id:'secBrake',   l:'Secondary Brake', t:'seg', o:['Aux','Engine','Exhaust']},
+     {id:'tireMon',    l:'Tire Monitoring', t:'seg', o:YN},
+     {id:'pwrPedals',  l:'Pwr Pedals',      t:'seg', o:YN},
+     {id:'memSeat',    l:'Driver Mem Seat', t:'seg', o:YN},
+     {id:'driverDoor', l:'Driver Door',     t:'seg', o:YN},
+     {id:'pwrVisor',   l:'Power Visor',     t:'seg', o:YN},
+     {id:'mobileEye',  l:'Mobile Eye',      t:'seg', o:YN},
+     {id:'tripTek',    l:'Trip Tek',        t:'seg', o:YN},
+     {id:'gps',        l:'GPS',             t:'seg', o:YN},
+     {id:'keyless',    l:'Keyless Entry',   t:'seg', o:YN},
+     {id:'pwrWindows', l:'Power Windows',   t:'seg', o:YN},
+     {id:'pwrLocks',   l:'Power Door Locks',t:'seg', o:YN},
+     {id:'cruise',     l:'Cruise Control',  t:'seg', o:YN},
+   ]},
+   { sub:'Exterior Equipment', fields:[
+     {id:'aquaHot',    l:'Aqua-Hot',    t:'seg', o:YN},
+     {id:'hydroHot',   l:'Hydro-Hot',   t:'seg', o:YN},
+     {id:'waterMan',   l:'Water Manifold', t:'seg', o:YN},
+     {id:'patioAwn',   l:'Patio Awning',   t:'seg', o:YN},
+     {id:'doorAwn',    l:'Door Awning',    t:'seg', o:YN},
+     {id:'winAwn',     l:'Window Awning',  t:'seg', o:YN},
+     {id:'cargoTray',  l:'Cargo Tray',     t:'seg', o:YN},
+     {id:'passThru',   l:'Pass-Thru',      t:'seg', o:YN},
+     {id:'bagSwing',   l:'Baggage Door Side Swing', t:'seg', o:YN},
+     {id:'ledLights',  l:'LED Running Lights', t:'seg', o:YN},
+     {id:'dockLights', l:'Docking Lights', t:'seg', o:YN},
+     {id:'tankFlush',  l:'Black Tank Flush', t:'seg', o:YN},
+     {id:'waterFilt',  l:'Water Filtration', t:'seg', o:YN},
+     {id:'hoseReel',   l:'Pwr Water Hose Reel', t:'seg', o:YN},
+     {id:'elecReel',   l:'Power Electrical Reel', t:'seg', o:YN},
+     {id:'extShower',  l:'Exterior Shower', t:'seg', o:YN},
+     {id:'extGrill',   l:'Exterior Grill',  t:'seg', o:YN},
+     {id:'extFreezer', l:'Exterior Freezer',t:'seg', o:YN},
+     {id:'extKitchen', l:'Ext Kitchen',     t:'seg', o:YN},
+     {id:'extTv',      l:'Exterior TV',     t:'seg', o:YN},
+     {id:'clearMask',  l:'Clear Paint Mask',t:'seg', o:YN},
+     {id:'fgRoof',     l:'Fiberglass Roof', t:'seg', o:YN},
+     {id:'ladder',     l:'Ladder',          t:'seg', o:YN},
+     {id:'solar',      l:'Solar',           t:'seg', o:YN},
+     {id:'solarNum',   l:'Solar #',         t:'text', im:'numeric'},
+     {id:'inverter',   l:'Inverter',        t:'seg', o:YN},
+     {id:'airRide',    l:'Air Ride',        t:'seg', o:YN},
+     {id:'liquidSpr',  l:'Liquid Springs',  t:'seg', o:YN},
+     {id:'lithium',    l:'Lithium Batteries', t:'seg', o:YN},
+   ]},
+   { sub:'Exterior Condition', fields:[
+     {id:'extCond',    l:'Ext Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
+     {id:'extRepairs', l:'Ext Repairs Needed', t:'area', w:1},
+   ]},
+ ]},
+ { key:'int', title:'Interior', groups:[
+   { sub:'Living Area', fields:[
+     {id:'ceramicTile',l:'Ceramic Tile',     t:'seg', o:YN},
+     {id:'allElectric',l:'All Electric Coach', t:'seg', o:YN},
+     {id:'leather',    l:'Seating Leather',  t:'seg', o:YN},
+     {id:'boothSleep', l:'Booth to Sleeper', t:'seg', o:YN},
+     {id:'washerDryer',l:'Washer/Dryer',     t:'seg', o:YN},
+     {id:'wdType',     l:'Washer/Dryer Type',t:'seg', o:['Stack','Comb']},
+     {id:'centralVac', l:'Central Vacuum',   t:'seg', o:YN},
+     {id:'heatedFloors',l:'Heated Floors',   t:'seg', o:YN},
+     {id:'sevenFt',    l:'7 Foot Ceilings',  t:'seg', o:YN},
+     {id:'dualPane',   l:'Windows Dual Pane',t:'seg', o:YN},
+     {id:'fireplace',  l:'Fireplace',        t:'seg', o:YN},
+     {id:'multiplex',  l:'Multi-Plex',       t:'seg', o:YN},
+     {id:'hardwoodCab',l:'Hardwood Cab',     t:'seg', o:YN},
+     {id:'shades',     l:'Shades',           t:'multi', o:['Manual','Pwr','Solar','Black-Out']},
+     {id:'blinds',     l:'Blinds',           t:'multi', o:['Day','Night']},
+     {id:'theaterSeats',l:'Theater Seats',   t:'seg', o:YN},
+   ]},
+   { sub:'Kitchen', fields:[
+     {id:'dishwasher', l:'Dishwasher',       t:'seg', o:YN},
+     {id:'microwave',  l:'Microwave',        t:'seg', o:YN},
+     {id:'microConv',  l:'Microwave Convection', t:'seg', o:YN},
+     {id:'fridgeRes',  l:'Fridge Residential', t:'seg', o:YN},
+     {id:'iceMaker',   l:'Ice Maker',        t:'seg', o:YN},
+     {id:'range',      l:'Range',            t:'seg', o:['Electric','Gas']},
+     {id:'burners',    l:'Burners',          t:'seg', o:['2','3','4']},
+     {id:'oven',       l:'Oven',             t:'seg', o:YN},
+     {id:'solidSurf',  l:'Solid Surface Counter', t:'seg', o:YN},
+   ]},
+   { sub:'Bath & Bedroom', fields:[
+     {id:'bkTile',     l:'Bathroom/Kitchen Tile Floors', t:'seg', o:YN},
+     {id:'showerDoor', l:'Shower Door',      t:'seg', o:YN},
+     {id:'tileAccents',l:'Tile Accents',     t:'seg', o:['Glass','Curtain']},
+     {id:'bath',       l:'Bath',             t:'seg', o:['1/2','1','1-1/2','2 Full']},
+     {id:'bedSize',    l:'Bed Size',         t:'text'},
+     {id:'bedType',    l:'Bed Type',         t:'seg', o:['Sleep Number','Pillow Top','Memory Foam','N/A']},
+     {id:'bunkBeds',   l:'Bunk Beds',        t:'seg', o:YN},
+     {id:'bunkTv',     l:'Bunk TV',          t:'text'},
+     {id:'cabOver',    l:'Cab Over Bunk',    t:'seg', o:YN},
+     {id:'cabOverPwr', l:'Cab Over Bunk Power', t:'seg', o:YN},
+   ]},
+   { sub:'TVs', fields:[
+     {id:'lrTvNum',    l:'Livingroom TV #',  t:'text', im:'numeric'},
+     {id:'lrTvType',   l:'Livingroom TV Type', t:'seg', o:['Box','Flat Panel']},
+     {id:'brTv',       l:'Bedroom TV',       t:'seg', o:['N/A','Box','Flat Panel']},
+   ]},
+   { sub:'Interior Condition', fields:[
+     {id:'intCond',    l:'Int Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
+     {id:'intRepairs', l:'Int Repairs Needed', t:'area', w:1},
+   ]},
+ ]},
+];
+
+/* Damage-step extra fields (rendered inside the damage step) */
+var DMG_FIELDS = [
+  {id:'dmgDate',    l:'Date',            t:'text', ph:'MM/DD/YY'},
+  {id:'claimMark',  l:'Claim Mark',      t:'seg', o:['Yes','No']},
+  {id:'insClaim',   l:'Insurance Claim To Place', t:'text'},
+  {id:'deductible', l:'Deductible Amount', t:'text', ph:'$'},
+  {id:'dmgNotes',   l:'Notes',           t:'area', w:1},
+];
+/* Review-step fields */
+var REV_FIELDS = [
+  {id:'comments',  l:'Additional Comments', t:'area', w:1},
+  {id:'custDate',  l:'Customer Signature Date', t:'text', ph:'MM/DD/YY'},
+  {id:'salesDate', l:'Sales Signature Date',    t:'text', ph:'MM/DD/YY'},
+];
+
+var LEGEND = [
+  {c:'C', n:'Chip'}, {c:'S', n:'Scratch'}, {c:'D', n:'Dent'}, {c:'R', n:'Rust'},
+  {c:'CR', n:'Crack'}, {c:'P', n:'Paint Damage'}, {c:'O', n:'Other'}
+];
+var VEH_TYPES = ['Motorhome','Travel Trailer','Fifth Wheel'];
+
+/* ============================================================
+   Vehicle outline diagrams (schematic — for damage marking)
+   ============================================================ */
+function sideMH(){ return '<rect class="body" x="15" y="22" width="310" height="80" rx="14"/>'+
+  '<rect class="det" x="32" y="36" width="46" height="24" rx="3"/><rect class="det" x="86" y="36" width="46" height="24" rx="3"/>'+
+  '<rect class="det" x="140" y="36" width="46" height="24" rx="3"/><rect class="det" x="194" y="36" width="46" height="24" rx="3"/>'+
+  '<rect class="det" x="258" y="40" width="30" height="60" rx="3"/><line class="det" x1="15" y1="78" x2="255" y2="78"/>'+
+  '<circle class="det" cx="75" cy="102" r="15"/><circle class="det" cx="245" cy="102" r="15"/>'; }
+function sideTT(){ return '<rect class="body" x="42" y="25" width="283" height="70" rx="10"/>'+
+  '<path class="det" d="M42,88 L8,97 M8,97 l0,8"/>'+
+  '<rect class="det" x="60" y="37" width="42" height="22" rx="3"/><rect class="det" x="112" y="37" width="42" height="22" rx="3"/>'+
+  '<rect class="det" x="230" y="37" width="42" height="22" rx="3"/><rect class="det" x="170" y="40" width="26" height="52" rx="3"/>'+
+  '<circle class="det" cx="120" cy="95" r="13"/><circle class="det" cx="150" cy="95" r="13"/>'; }
+function sideFW(){ return '<path class="body" d="M20,38 Q20,24 34,24 L311,24 Q325,24 325,38 L325,95 L140,95 L140,68 L20,68 Z"/>'+
+  '<rect class="det" x="34" y="34" width="40" height="20" rx="3"/><rect class="det" x="160" y="37" width="42" height="24" rx="3"/>'+
+  '<rect class="det" x="270" y="37" width="42" height="24" rx="3"/><rect class="det" x="212" y="40" width="26" height="54" rx="3"/>'+
+  '<circle class="det" cx="240" cy="95" r="13"/><circle class="det" cx="270" cy="95" r="13"/><circle class="det" cx="300" cy="95" r="13"/>'+
+  '<line class="det" x1="60" y1="68" x2="60" y2="80"/>'; }
+function frontMH(){ return '<rect class="body" x="30" y="10" width="110" height="125" rx="12"/>'+
+  '<rect class="det" x="40" y="22" width="90" height="38" rx="4"/>'+
+  '<rect class="det" x="38" y="108" width="24" height="10" rx="2"/><rect class="det" x="108" y="108" width="24" height="10" rx="2"/>'+
+  '<line class="det" x1="30" y1="126" x2="140" y2="126"/>'; }
+function frontTT(){ return '<path class="body" d="M40,135 L40,40 Q40,12 85,12 Q130,12 130,40 L130,135 Z"/>'+
+  '<line class="det" x1="48" y1="45" x2="122" y2="45"/><line class="det" x1="52" y1="28" x2="118" y2="28"/>'+
+  '<path class="det" d="M85,135 L85,148"/>'; }
+function rearGen(hasLadder){ return '<rect class="body" x="30" y="10" width="110" height="125" rx="12"/>'+
+  '<rect class="det" x="42" y="24" width="86" height="32" rx="4"/>'+
+  '<rect class="det" x="38" y="110" width="18" height="9" rx="2"/><rect class="det" x="114" y="110" width="18" height="9" rx="2"/>'+
+  (hasLadder ? '<line class="det" x1="118" y1="18" x2="118" y2="105"/><line class="det" x1="130" y1="18" x2="130" y2="105"/>'+
+    '<line class="det" x1="118" y1="30" x2="130" y2="30"/><line class="det" x1="118" y1="48" x2="130" y2="48"/>'+
+    '<line class="det" x1="118" y1="66" x2="130" y2="66"/><line class="det" x1="118" y1="84" x2="130" y2="84"/>' : ''); }
+var DIAGRAMS = {
+  'Motorhome':      [ {v:'front',l:'Front',vb:'0 0 170 150',art:frontMH},
+                      {v:'driver',l:'Driver Side',vb:'0 0 340 125',art:sideMH},
+                      {v:'passenger',l:'Passenger Side',vb:'0 0 340 125',art:sideMH},
+                      {v:'rear',l:'Rear',vb:'0 0 170 150',art:function(){return rearGen(true);}} ],
+  'Travel Trailer': [ {v:'front',l:'Front',vb:'0 0 170 155',art:frontTT},
+                      {v:'driver',l:'Driver Side',vb:'0 0 340 115',art:sideTT},
+                      {v:'passenger',l:'Passenger Side',vb:'0 0 340 115',art:sideTT},
+                      {v:'rear',l:'Rear',vb:'0 0 170 150',art:function(){return rearGen(false);}} ],
+  'Fifth Wheel':    [ {v:'front',l:'Front',vb:'0 0 170 155',art:frontTT},
+                      {v:'driver',l:'Driver Side',vb:'0 0 340 115',art:sideFW},
+                      {v:'passenger',l:'Passenger Side',vb:'0 0 340 115',art:sideFW},
+                      {v:'rear',l:'Rear',vb:'0 0 170 150',art:function(){return rearGen(true);}} ]
+};
+
+/* ============================================================
+   State + persistence
+   ============================================================ */
+var DRAFT_KEY = 'tradeEvalDraft-v1';
+var state = { v:{}, m:{}, mk:{}, dmgType:'Motorhome' };
+VEH_TYPES.forEach(function(t){ state.mk[t] = {front:[],driver:[],passenger:[],rear:[]}; });
+try{
+  var saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+  if(saved && saved.v){ state = saved;
+    VEH_TYPES.forEach(function(t){ if(!state.mk[t]) state.mk[t]={front:[],driver:[],passenger:[],rear:[]}; });
+  }
+}catch(e){}
+function save(){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(state)); }catch(e){} }
+
+/* ============================================================
+   Render fields
+   ============================================================ */
+function fieldHTML(f){
+  var wide = (f.w || f.t==='area') ? ' wide' : '';
+  var h = '<div class="field'+wide+'"><label>'+f.l+'</label>';
+  if(f.t==='text'){
+    h += '<input type="text" data-f="'+f.id+'"'+(f.ph?' placeholder="'+f.ph+'"':'')+(f.im?' inputmode="'+f.im+'"':'')+' autocomplete="off">';
+  }else if(f.t==='area'){
+    h += '<textarea data-f="'+f.id+'"></textarea>';
+  }else{
+    h += '<div class="seg" data-'+(f.t==='multi'?'multi':'seg')+'="'+f.id+'">';
+    f.o.forEach(function(o){ h += '<button type="button" data-o="'+o+'">'+o+'</button>'; });
+    h += '</div>';
+  }
+  return h+'</div>';
+}
+function groupHTML(g){
+  var h = g.sub ? '<h3 class="sub">'+g.sub+'</h3>' : '';
+  h += '<div class="fgrid">'+g.fields.map(fieldHTML).join('')+'</div>';
+  return h;
+}
+
+var stepsEl = $('steps');
+var STEP_TITLES = ['Unit Info','Chassis & Systems','Exterior','Interior','Body Damage','Review & Print'];
+
+/* Steps 0-3: schema sections */
+SECTIONS.forEach(function(sec,i){
+  var d = document.createElement('section');
+  d.className = 'step'; d.dataset.step = i;
+  d.innerHTML = '<h2 class="sec">'+sec.title+'</h2>' + sec.groups.map(groupHTML).join('');
+  stepsEl.appendChild(d);
+});
+
+/* Step 4: body damage */
+(function(){
+  var d = document.createElement('section');
+  d.className = 'step'; d.dataset.step = 4;
+  var h = '<h2 class="sec">Body Damage Notations</h2>';
+  h += '<div class="field"><label>Vehicle Type</label><div class="seg" id="vehTypeSeg">';
+  VEH_TYPES.forEach(function(t){ h += '<button type="button" data-o="'+t+'">'+t+'</button>'; });
+  h += '</div></div>';
+  h += '<p class="hint" style="margin-top:12px">Pick a damage type below, then tap the diagram where the damage is. Tap a marker to remove it.</p>';
+  h += '<div class="legend" id="legend">';
+  LEGEND.forEach(function(x){ h += '<button type="button" data-c="'+x.c+'"><b>'+x.c+'</b>'+x.n+'</button>'; });
+  h += '</div>';
+  h += '<div class="diag-grid" id="diagGrid"></div>';
+  h += '<div class="dmg-tools"><button type="button" id="undoMark">&#8630; Undo Last Mark</button>'+
+       '<button type="button" id="clearMarks">Clear All Marks</button></div>';
+  h += '<h3 class="sub">Claim Info</h3><div class="fgrid">'+DMG_FIELDS.map(fieldHTML).join('')+'</div>';
+  d.innerHTML = h;
+  stepsEl.appendChild(d);
+})();
+
+/* Step 5: review */
+(function(){
+  var d = document.createElement('section');
+  d.className = 'step'; d.dataset.step = 5;
+  var h = '<h2 class="sec">Review &amp; Print</h2>';
+  h += '<div class="rev-note">Printing produces the full MHS Trade-In Sheet (all fields plus the body-damage '+
+       'diagrams) for the deal jacket. Signature lines print blank for pen signatures.</div>';
+  h += '<div class="fgrid">'+REV_FIELDS.map(fieldHTML).join('')+'</div>';
+  h += '<div id="missingBox" class="missing"></div>';
+  h += '<div class="dmg-tools" style="margin-top:18px">'+
+       '<button type="button" class="btn primary" id="printBtn">&#128424; Print / Save PDF</button>'+
+       '<button type="button" class="btn danger" id="clearAll">&#8635; Clear Form</button></div>';
+  d.innerHTML = h;
+  stepsEl.appendChild(d);
+})();
+
+/* Stepper chips */
+var stepperEl = $('stepper');
+STEP_TITLES.forEach(function(t,i){
+  var b = document.createElement('button');
+  b.type='button'; b.innerHTML = '<span class="n">'+(i+1)+'</span>'+t;
+  b.addEventListener('click', function(){ go(i); });
+  stepperEl.appendChild(b);
+});
+
+var cur = 0;
+function go(i){
+  cur = Math.max(0, Math.min(5, i));
+  var steps = stepsEl.querySelectorAll('.step');
+  steps.forEach ? null : 0;
+  Array.prototype.forEach.call(steps, function(s,idx){ s.classList.toggle('on', idx===cur); });
+  Array.prototype.forEach.call(stepperEl.children, function(c,idx){
+    c.classList.toggle('active', idx===cur);
+    c.classList.toggle('done', idx<cur);
+  });
+  $('backBtn').style.visibility = cur===0 ? 'hidden' : 'visible';
+  $('nextBtn').style.display = cur===5 ? 'none' : '';
+  if(cur===4) renderDiagrams();
+  if(cur===5) updateMissing();
+  window.scrollTo({top:0});
+}
+$('backBtn').addEventListener('click', function(){ go(cur-1); });
+$('nextBtn').addEventListener('click', function(){ go(cur+1); });
+
+/* ============================================================
+   Wire inputs to state
+   ============================================================ */
+function restoreInputs(){
+  Array.prototype.forEach.call(document.querySelectorAll('[data-f]'), function(el){
+    el.value = state.v[el.dataset.f] || '';
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-seg]'), function(segEl){
+    var id = segEl.dataset.seg;
+    Array.prototype.forEach.call(segEl.children, function(b){
+      b.classList.toggle('on', state.v[id]===b.dataset.o);
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-multi]'), function(segEl){
+    var id = segEl.dataset.multi, arr = state.m[id]||[];
+    Array.prototype.forEach.call(segEl.children, function(b){
+      b.classList.toggle('on', arr.indexOf(b.dataset.o)>-1);
+    });
+  });
+}
+document.addEventListener('input', function(e){
+  var f = e.target.dataset && e.target.dataset.f;
+  if(f){ state.v[f] = e.target.value; save(); }
+});
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('button[data-o]') : null;
+  if(!b) return;
+  var wrap = b.parentElement;
+  if(wrap.id==='vehTypeSeg'){
+    state.dmgType = b.dataset.o; save();
+    Array.prototype.forEach.call(wrap.children, function(x){ x.classList.toggle('on', x===b); });
+    renderDiagrams(); return;
+  }
+  if(wrap.dataset.seg !== undefined && wrap.dataset.seg !== null && wrap.dataset.seg !== ''){
+    var id = wrap.dataset.seg;
+    if(state.v[id]===b.dataset.o){ state.v[id]=''; b.classList.remove('on'); }
+    else{
+      state.v[id]=b.dataset.o;
+      Array.prototype.forEach.call(wrap.children, function(x){ x.classList.toggle('on', x===b); });
+    }
+    save(); return;
+  }
+  if(wrap.dataset.multi){
+    var mid = wrap.dataset.multi;
+    var arr = state.m[mid] = state.m[mid] || [];
+    var ix = arr.indexOf(b.dataset.o);
+    if(ix>-1){ arr.splice(ix,1); b.classList.remove('on'); }
+    else{ arr.push(b.dataset.o); b.classList.add('on'); }
+    save();
+  }
+});
+
+/* ============================================================
+   Damage diagrams
+   ============================================================ */
+var activeCode = 'C';
+var legendEl = $('legend');
+legendEl.addEventListener('click', function(e){
+  var b = e.target.closest('button[data-c]'); if(!b) return;
+  activeCode = b.dataset.c;
+  Array.prototype.forEach.call(legendEl.children, function(x){ x.classList.toggle('on', x===b); });
+});
+legendEl.querySelector('button[data-c="C"]').classList.add('on');
+var markOrder = [];   /* for undo: {type, view, idx} */
+
+function svgFor(spec, markers, interactive){
+  var s = '<svg viewBox="'+spec.vb+'" xmlns="http://www.w3.org/2000/svg"'+(interactive?' data-view="'+spec.v+'"':'')+'>';
+  s += spec.art();
+  s += '<g class="mk">';
+  (markers||[]).forEach(function(m,i){
+    s += '<g'+(interactive?' data-mi="'+i+'"':'')+'><circle cx="'+m.x+'" cy="'+m.y+'" r="11"/>'+
+         '<text x="'+m.x+'" y="'+m.y+'">'+m.c+'</text></g>';
+  });
+  s += '</g></svg>';
+  return s;
+}
+function renderDiagrams(){
+  var seg = $('vehTypeSeg');
+  Array.prototype.forEach.call(seg.children, function(x){ x.classList.toggle('on', x.dataset.o===state.dmgType); });
+  var grid = $('diagGrid'); grid.innerHTML='';
+  DIAGRAMS[state.dmgType].forEach(function(spec){
+    var card = document.createElement('div'); card.className='diag';
+    card.innerHTML = '<h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[state.dmgType][spec.v], true);
+    grid.appendChild(card);
+  });
+}
+$('diagGrid').addEventListener('click', function(e){
+  var svg = e.target.closest('svg'); if(!svg) return;
+  var view = svg.dataset.view;
+  var mkG = e.target.closest('g[data-mi]');
+  var list = state.mk[state.dmgType][view];
+  if(mkG){ list.splice(+mkG.dataset.mi,1); save(); renderDiagrams(); return; }
+  var pt = svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+  var p = pt.matrixTransform(svg.getScreenCTM().inverse());
+  list.push({x:Math.round(p.x), y:Math.round(p.y), c:activeCode});
+  markOrder.push({type:state.dmgType, view:view});
+  save(); renderDiagrams();
+});
+$('undoMark').addEventListener('click', function(){
+  var last = markOrder.pop(); if(!last) return;
+  state.mk[last.type][last.view].pop(); save(); renderDiagrams();
+});
+$('clearMarks').addEventListener('click', function(){
+  if(!confirm('Remove all damage marks for '+state.dmgType+'?')) return;
+  state.mk[state.dmgType] = {front:[],driver:[],passenger:[],rear:[]};
+  markOrder = []; save(); renderDiagrams();
+});
+
+/* ============================================================
+   Review: missing-field nudge (top essentials only)
+   ============================================================ */
+function updateMissing(){
+  var need = [['stock','Stock #'],['vin','VIN'],['yr','Yr'],['make','Make'],['model','Model'],['mileage','Mileage']];
+  var miss = need.filter(function(n){ return !(state.v[n[0]]||'').trim(); }).map(function(n){ return n[1]; });
+  $('missingBox').textContent = miss.length ? 'Still blank: '+miss.join(', ') : '';
+}
+document.addEventListener('input', function(){ if(cur===5) updateMissing(); });
+
+/* ============================================================
+   Print sheet
+   ============================================================ */
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function pv(id){ var x=(state.v[id]||'').trim(); return x?esc(x):'________'; }
+function pm(id){ var a=state.m[id]||[]; return a.length?esc(a.join(', ')):'________'; }
+function buildPrint(){
+  var h = '<div class="p-head"><h1>MHS Trade-In Sheet</h1>'+
+          '<span>Motor Home Specialist &middot; Alvarado, TX &middot; Stock # '+pv('stock')+'</span></div>';
+  SECTIONS.forEach(function(sec){
+    h += '<h2>'+sec.title+'</h2><div class="cols">';
+    sec.groups.forEach(function(g){
+      g.fields.forEach(function(f){
+        var val = f.t==='multi' ? pm(f.id) : pv(f.id);
+        h += '<span class="pf"><b>'+f.l+':</b> '+val+'</span>';
+      });
+    });
+    h += '</div>';
+  });
+  /* damage page */
+  var t = state.dmgType;
+  h += '<div class="p-dmg"><div class="p-head"><h1>'+esc(t)+' Body Damage Notations</h1>'+
+       '<span>Stock # '+pv('stock')+' &middot; Date: '+pv('dmgDate')+'</span></div>';
+  h += '<div class="pline"><b>Legend:</b> '+LEGEND.map(function(x){ return x.c+' - '+x.n; }).join(' &nbsp; ')+'</div>';
+  h += '<div class="p-diags">';
+  DIAGRAMS[t].forEach(function(spec){
+    h += '<div class="p-diag"><h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[t][spec.v], false)+'</div>';
+  });
+  h += '</div>';
+  h += '<div class="pline"><b>Notes:</b> '+pv('dmgNotes')+'</div>';
+  h += '<div class="pline"><b>Claim Mark:</b> '+pv('claimMark')+
+       ' &nbsp;&nbsp; <b>Insurance Claim To Place:</b> '+pv('insClaim')+
+       ' &nbsp;&nbsp; <b>Deductible Amount:</b> '+pv('deductible')+'</div>';
+  h += '<h2>Additional Comments</h2><div class="pline">'+pv('comments')+'</div>';
+  h += '<div class="sig-row"><div class="sig">Customer Signature &nbsp;&nbsp; Date: '+pv('custDate')+'</div>'+
+       '<div class="sig">Sales Signature &nbsp;&nbsp; Date: '+pv('salesDate')+'</div></div>';
+  h += '<div class="p-foot">MHS Trade-In Evaluation &middot; mhsrv.app</div></div>';
+  $('printSheet').innerHTML = h;
+}
+$('printBtn').addEventListener('click', function(){ buildPrint(); window.print(); });
+
+/* ============================================================
+   Clear + sign out
+   ============================================================ */
+$('clearAll').addEventListener('click', function(){
+  if(!confirm('Clear the entire evaluation? This cannot be undone.')) return;
+  localStorage.removeItem(DRAFT_KEY);
+  location.reload();
+});
+$('signOut').addEventListener('click', function(){
+  sessionStorage.removeItem('iadRole');
+  location.href = './';
+});
+
+restoreInputs();
+renderDiagrams();
+go(0);
+})();
+</script>
+</body>
+</html>

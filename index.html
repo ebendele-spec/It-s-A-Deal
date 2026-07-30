@@ -445,7 +445,7 @@
 <div class="lock-overlay" id="lockOverlay">
   <form class="lock-card" id="lockForm" autocomplete="off">
     <h2>It's a Deal!</h2>
-    <p>Sales team access only. Please sign in.</p>
+    <p>MHSRV staff only. Please sign in.</p>
     <label for="lockUser">Username</label>
     <input type="text" id="lockUser" autocapitalize="none" autocorrect="off" required>
     <label for="lockPass">Password</label>
@@ -464,7 +464,11 @@
     var u = document.getElementById('lockUser').value.trim();
     var p = document.getElementById('lockPass').value;
     if (u === atob('c2FsZXM=') && p === atob('cHJpY2VzNTE1MHVubG9jaw==')) {
+      sessionStorage.setItem('iadRole','sales');
       document.body.classList.remove('locked');
+    } else if (u === atob('c2VydmljZQ==') && p === atob('dHJhZGVzNTE1MHVubG9jaw==')) {
+      sessionStorage.setItem('iadRole','service');
+      location.href = 'trade-eval.html';
     } else {
       err.classList.add('show');
       document.getElementById('lockPass').value = '';
