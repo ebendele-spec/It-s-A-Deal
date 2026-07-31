@@ -1,7 +1,7 @@
 /* It's a Deal — service worker.
    Same-origin: network-first (pushed updates always win), cache fallback offline.
    CDN libraries: cache-first (they're versioned and never change). */
-const CACHE = 'iad-v2';
+const CACHE = 'iad-v3';
 const CORE = ['./', 'index.html', 'trade-eval.html', 'inventory.js', 'manifest.webmanifest',
               'icons/icon-192.png', 'icons/icon-512.png'];
 

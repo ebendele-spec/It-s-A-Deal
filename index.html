@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>It's a Deal! — Motor Home Specialist</title>
+<title>MHS Tools — Motor Home Specialist</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#14273F">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="It's a Deal">
+<meta name="apple-mobile-web-app-title" content="MHS Tools">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -437,36 +437,97 @@
     color:var(--red);text-align:center;
   }
   .lock-error.show{display:block}
+  .tool-btn{
+    display:flex;align-items:center;gap:14px;width:100%;margin-top:12px;
+    padding:13px 14px;cursor:pointer;text-align:left;font:inherit;
+    background:#fff;border:1px solid var(--line);border-radius:6px;
+  }
+  .tool-btn:hover{border-color:var(--gold);background:var(--gold-soft)}
+  .tool-btn svg{width:42px;height:42px;flex:0 0 42px}
+  .tool-btn b{
+    display:block;font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;
+    font-size:17px;text-transform:uppercase;letter-spacing:.03em;color:var(--navy);
+  }
+  .tool-btn small{font-size:12px;color:var(--muted)}
+  .lock-back{
+    display:block;width:100%;margin-top:12px;background:none;border:none;cursor:pointer;
+    font:600 13px 'Barlow',sans-serif;color:var(--muted);text-align:center;
+  }
+  .lock-back:hover{color:var(--navy)}
 </style>
 </head>
 <body class="locked">
 
 <!-- ============ LOGIN GATE ============ -->
 <div class="lock-overlay" id="lockOverlay">
-  <form class="lock-card" id="lockForm" autocomplete="off">
-    <h2>It's a Deal!</h2>
-    <p>MHSRV staff only. Please sign in.</p>
-    <label for="lockUser">Username</label>
-    <input type="text" id="lockUser" autocapitalize="none" autocorrect="off" required>
-    <label for="lockPass">Password</label>
-    <input type="password" id="lockPass" required>
-    <button type="submit">Sign In</button>
-    <div class="lock-error" id="lockError">Incorrect username or password.</div>
-  </form>
+  <div class="lock-card">
+    <div id="toolPick">
+      <h2>MHS Tools</h2>
+      <p>MHSRV staff only. Choose a tool to sign in.</p>
+      <button type="button" class="tool-btn" data-tool="deal">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="21" fill="#C6A24E"/>
+          <circle cx="24" cy="24" r="16.5" fill="none" stroke="#14273F" stroke-width="2"/>
+          <path d="M15 24.5 l6.5 6.5 L33 18.5" stroke="#14273F" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span><b>It&rsquo;s A Deal!</b><small>Deal sheet &amp; deposit</small></span>
+      </button>
+      <button type="button" class="tool-btn" data-tool="trade">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <rect x="9" y="7" width="30" height="37" rx="4" fill="#14273F"/>
+          <rect x="17" y="3" width="14" height="9" rx="2.5" fill="#C6A24E"/>
+          <path d="M15 20 h13 M15 27 h13 M15 34 h8" stroke="#FAF7F0" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="33" cy="34" r="8.5" fill="#C6A24E"/>
+          <path d="M29.5 34 l2.6 2.6 L37 32" stroke="#14273F" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span><b>Trade-In Evaluation</b><small>Used coach check-in</small></span>
+      </button>
+    </div>
+    <form id="lockForm" autocomplete="off" hidden>
+      <h2 id="lockTitle">Sign In</h2>
+      <p>MHSRV staff only. Please sign in.</p>
+      <label for="lockUser">Username</label>
+      <input type="text" id="lockUser" autocapitalize="none" autocorrect="off" required>
+      <label for="lockPass">Password</label>
+      <input type="password" id="lockPass" required>
+      <button type="submit">Sign In</button>
+      <button type="button" class="lock-back" id="lockBack">&larr; Back to tools</button>
+      <div class="lock-error" id="lockError">Incorrect username or password.</div>
+    </form>
+  </div>
 </div>
 <script>
 (function(){
+  var pick = document.getElementById('toolPick');
   var form = document.getElementById('lockForm');
   var err  = document.getElementById('lockError');
-  document.getElementById('lockUser').focus();
+  var tool = null;
+  pick.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('.tool-btn') : null;
+    if(!b) return;
+    tool = b.dataset.tool;
+    document.getElementById('lockTitle').textContent =
+      tool === 'deal' ? "It's A Deal!" : 'Trade-In Evaluation';
+    pick.hidden = true;
+    form.hidden = false;
+    err.classList.remove('show');
+    document.getElementById('lockUser').focus();
+  });
+  document.getElementById('lockBack').addEventListener('click', function(){
+    form.hidden = true;
+    pick.hidden = false;
+    err.classList.remove('show');
+    document.getElementById('lockUser').value = '';
+    document.getElementById('lockPass').value = '';
+  });
   form.addEventListener('submit', function(e){
     e.preventDefault();
     var u = document.getElementById('lockUser').value.trim();
     var p = document.getElementById('lockPass').value;
-    if (u === atob('c2FsZXM=') && p === atob('cHJpY2VzNTE1MHVubG9jaw==')) {
+    if (tool === 'deal' && u === atob('c2FsZXM=') && p === atob('cHJpY2VzNTE1MHVubG9jaw==')) {
       sessionStorage.setItem('iadRole','sales');
       document.body.classList.remove('locked');
-    } else if (u === atob('c2VydmljZQ==') && p === atob('dHJhZGVzNTE1MHVubG9jaw==')) {
+    } else if (tool === 'trade' && u === atob('c2VydmljZQ==') && p === atob('dHJhZGVzNTE1MHVubG9jaw==')) {
       sessionStorage.setItem('iadRole','service');
       location.href = 'trade-eval.html';
     } else {

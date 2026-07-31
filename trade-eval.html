@@ -80,6 +80,23 @@
   .seg button.on{background:var(--navy);border-color:var(--navy);color:var(--gold);font-weight:700}
   .hint{font-size:12px;color:var(--muted);margin-top:4px}
 
+  /* ---------- Vehicle-type icon grid ---------- */
+  .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+  .tgrid button{display:flex;flex-direction:column;align-items:center;gap:5px;
+    padding:9px 6px 8px;background:#fff;border:1px solid var(--line);border-radius:6px;
+    cursor:pointer;font:600 12px 'Barlow',sans-serif;color:var(--ink);text-align:center}
+  .tgrid button svg{width:100%;height:42px;color:var(--navy)}
+  .tgrid button:hover{border-color:var(--gold)}
+  .tgrid button.on{background:var(--navy);border-color:var(--navy);color:var(--gold)}
+  .tgrid button.on svg{color:var(--gold)}
+
+  /* ---------- Photo buttons ---------- */
+  .photo-btn{display:inline-flex;align-items:center;gap:5px;margin-top:7px;
+    padding:7px 12px;cursor:pointer;background:#fff;border:1px dashed var(--gold);
+    border-radius:4px;font:600 12px 'Barlow',sans-serif;color:#8A6D2A}
+  .photo-btn.has-photo{border-style:solid;border-color:var(--green);color:var(--green);background:#EDF5EF}
+  .photo-btn:disabled{opacity:.6}
+
   /* ---------- Damage step ---------- */
   .legend{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
   .legend button{display:flex;align-items:center;gap:6px;padding:8px 12px;cursor:pointer;
@@ -89,15 +106,17 @@
     background:var(--gold-soft);color:var(--navy);font:700 11px 'Barlow Semi Condensed',sans-serif}
   .legend button.on{background:var(--navy);border-color:var(--navy);color:var(--gold)}
   .legend button.on b{background:var(--gold);color:var(--navy)}
-  .diag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px}
-  .diag{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px}
+  .diag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:14px}
+  .diag{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px;text-align:center}
+  .diag.roofcard{grid-column:1/-1}
   .diag h4{font:700 12px 'Barlow',sans-serif;letter-spacing:.1em;text-transform:uppercase;
     color:var(--navy);text-align:center;margin-bottom:6px}
-  .diag svg{width:100%;height:auto;display:block;touch-action:manipulation}
-  .diag svg .body{fill:#fff;stroke:var(--navy);stroke-width:2.5}
-  .diag svg .det{fill:none;stroke:#8FA0B5;stroke-width:1.8}
-  .diag svg .mk circle{fill:var(--gold);stroke:var(--navy);stroke-width:1.5}
-  .diag svg .mk text{font:700 10px 'Barlow Semi Condensed',sans-serif;fill:var(--navy);
+  .diag svg{width:100%;height:auto;display:block;touch-action:manipulation;color:#22344E;max-height:190px;margin:0 auto}
+  .diag.roofcard svg{max-width:560px}
+  .diag svg .cut{stroke:#FAF7F0;fill:none}
+  .diag svg .cutfill{fill:#FAF7F0}
+  .diag svg .mk circle{fill:var(--gold);stroke:var(--navy);stroke-width:1}
+  .diag svg .mk text{font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;fill:var(--navy);
     text-anchor:middle;dominant-baseline:central;pointer-events:none}
   .dmg-tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
   .dmg-tools button{padding:8px 14px;cursor:pointer;background:#fff;border:1px solid var(--line);
@@ -132,7 +151,6 @@
       letter-spacing:.06em;border-bottom:1.5px solid #000;margin:8px 0 4px;padding-bottom:1px;
       break-after:avoid}
     #printSheet .cols{columns:3;column-gap:16px}
-    #printSheet .cols.two{columns:2}
     #printSheet .pf{display:block;font-size:9.5px;line-height:1.75;break-inside:avoid;
       border-bottom:0.5px dotted #999}
     #printSheet .pf b{font-weight:700}
@@ -141,13 +159,19 @@
     #printSheet .p-dmg{break-before:page}
     #printSheet .p-diags{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
     #printSheet .p-diag{border:1px solid #000;padding:4px;text-align:center}
+    #printSheet .p-diag.roofcard{grid-column:1/-1}
     #printSheet .p-diag h4{font:700 9px 'Barlow',sans-serif;text-transform:uppercase;letter-spacing:.08em}
-    #printSheet .p-diag svg{width:100%;max-height:2.4in}
-    #printSheet .p-diag svg .body{fill:#fff;stroke:#000;stroke-width:2.5}
-    #printSheet .p-diag svg .det{fill:none;stroke:#777;stroke-width:1.8}
-    #printSheet .p-diag svg .mk circle{fill:#fff;stroke:#000;stroke-width:1.5}
-    #printSheet .p-diag svg .mk text{font:700 10px 'Barlow Semi Condensed',sans-serif;fill:#000;
+    #printSheet .p-diag svg{width:100%;max-height:2.2in;color:#000}
+    #printSheet .p-diag.roofcard svg{max-height:1.8in}
+    #printSheet .p-diag svg .cut{stroke:#fff;fill:none}
+    #printSheet .p-diag svg .cutfill{fill:#fff}
+    #printSheet .p-diag svg .mk circle{fill:#fff;stroke:#000;stroke-width:1}
+    #printSheet .p-diag svg .mk text{font-family:'Barlow Semi Condensed',sans-serif;font-weight:700;fill:#000;
       text-anchor:middle;dominant-baseline:central}
+    #printSheet .p-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+    #printSheet .p-ph{border:1px solid #000;padding:4px;text-align:center;break-inside:avoid}
+    #printSheet .p-ph h4{font:700 9px 'Barlow',sans-serif;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+    #printSheet .p-ph img{max-width:100%;max-height:3.1in}
     #printSheet .sig-row{display:flex;gap:24px;margin-top:22px}
     #printSheet .sig{flex:1;border-top:1px solid #000;font:700 10px 'Barlow',sans-serif;
       text-transform:uppercase;padding-top:3px}
@@ -160,6 +184,7 @@
     .stepnav{padding:0 14px 22px}
     .fgrid{grid-template-columns:1fr 1fr}
     .field.wide{grid-column:1/-1}
+    .tgrid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
   }
 </style>
 </head>
@@ -189,6 +214,7 @@
 </div>
 
 <div id="printSheet"></div>
+<input type="file" id="photoInput" accept="image/*" hidden>
 
 <script>
 (function(){
@@ -197,24 +223,119 @@ var $ = function(id){ return document.getElementById(id); };
 var YN = ['Y','N'];
 
 /* ============================================================
+   Shop By Type artwork (from the MHSRV redesign site) —
+   silhouette SVG inner markup, all viewBox 0 0 120 68.
+   ============================================================ */
+var ART = {"Class A Gas": "<path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M12 47 V24 q0 -4 4 -4 h14 v-3 h12 v3 h10 v-3 h12 v3 h28 l10 14 V51 L97 51 a9 9 0 0 1 -18 0 L51 51 a9 9 0 0 1 -18 0 L16 51 q-4 0 -4 -4z  M93 23 l7 10 v3 h-7 z M25 26 h12 a2 2 0 0 1 2 2 v5 a2 2 0 0 1 -2 2 h-12 a2 2 0 0 1 -2 -2 v-5 a2 2 0 0 1 2 -2 z M47 26 h12 a2 2 0 0 1 2 2 v5 a2 2 0 0 1 -2 2 h-12 a2 2 0 0 1 -2 -2 v-5 a2 2 0 0 1 2 -2 z M70.5 26 h5 a2.5 2.5 0 0 1 2.5 2.5 v13 a2.5 2.5 0 0 1 -2.5 2.5 h-5 a2.5 2.5 0 0 1 -2.5 -2.5 v-13 a2.5 2.5 0 0 1 2.5 -2.5 z M21.5 42 h9 a1.5 1.5 0 0 1 1.5 1.5 v0 a1.5 1.5 0 0 1 -1.5 1.5 h-9 a1.5 1.5 0 0 1 -1.5 -1.5 v0 a1.5 1.5 0 0 1 1.5 -1.5 z \"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M35.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M38.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"42\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M81.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M84.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"88\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/>", "Class C & B+": "<path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M14 47 V20 q0 -4 4 -4 h20 v-3 h12 v3 h20 q10 0 12 8 l4 6 l6 11 l8 2 V51 L97 51 a9 9 0 0 1 -18 0 L45 51 a9 9 0 0 1 -18 0 L18 51 q-4 0 -4 -4z  M86.5 31 l5.5 9.5 h-7.5 v-9.5 z M72.5 30 h6 a1.5 1.5 0 0 1 1.5 1.5 v5 a1.5 1.5 0 0 1 -1.5 1.5 h-6 a1.5 1.5 0 0 1 -1.5 -1.5 v-5 a1.5 1.5 0 0 1 1.5 -1.5 z M24 22 h12 a2 2 0 0 1 2 2 v5 a2 2 0 0 1 -2 2 h-12 a2 2 0 0 1 -2 -2 v-5 a2 2 0 0 1 2 -2 z M50.5 26 h5 a2.5 2.5 0 0 1 2.5 2.5 v13 a2.5 2.5 0 0 1 -2.5 2.5 h-5 a2.5 2.5 0 0 1 -2.5 -2.5 v-13 a2.5 2.5 0 0 1 2.5 -2.5 z M70 26 h11 a1 1 0 0 1 1 1 v0 a1 1 0 0 1 -1 1 h-11 a1 1 0 0 1 -1 -1 v0 a1 1 0 0 1 1 -1 z \"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M29.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M32.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"36\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M81.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M84.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"88\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/>", "Class B / Van": "<path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M26 47 V24 q0 -4 4 -4 h12 v-2.5 h10 v2.5 h20 q8 0 11 5 l7 12 q2 3 2 6 V51 L91 51 a9 9 0 0 1 -18 0 L47 51 a9 9 0 0 1 -18 0 L30 51 q-4 0 -4 -4z  M77 22 q4 1 6 5 l5 9 h-11 z M38 25 h9 a2 2 0 0 1 2 2 v5 a2 2 0 0 1 -2 2 h-9 a2 2 0 0 1 -2 -2 v-5 a2 2 0 0 1 2 -2 z M55 25 h9 a2 2 0 0 1 2 2 v5 a2 2 0 0 1 -2 2 h-9 a2 2 0 0 1 -2 -2 v-5 a2 2 0 0 1 2 -2 z M53.2 23 h0 a1 1 0 0 1 1 1 v21 a1 1 0 0 1 -1 1 h0 a1 1 0 0 1 -1 -1 v-21 a1 1 0 0 1 1 -1 z \"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M31.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M34.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"38\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M75.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M78.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"82\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/>", "Diesel Pusher": "<path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M8 47 V20 q0 -4 4 -4 h16 v-3 h12 v3 h10 v-3 h12 v3 h34 l10 13 V51 L99 51 a9 9 0 0 1 -18 0 L53 51 a9 9 0 0 1 -18 0 L35 51 a9 9 0 0 1 -18 0 L12 51 q-4 0 -4 -4z  M92 18.5 l9 10.5 v4 h-9 z M20 22 h13 a2 2 0 0 1 2 2 v6 a2 2 0 0 1 -2 2 h-13 a2 2 0 0 1 -2 -2 v-6 a2 2 0 0 1 2 -2 z M43 22 h13 a2 2 0 0 1 2 2 v6 a2 2 0 0 1 -2 2 h-13 a2 2 0 0 1 -2 -2 v-6 a2 2 0 0 1 2 -2 z M72.5 22 h5 a2.5 2.5 0 0 1 2.5 2.5 v15 a2.5 2.5 0 0 1 -2.5 2.5 h-5 a2.5 2.5 0 0 1 -2.5 -2.5 v-15 a2.5 2.5 0 0 1 2.5 -2.5 z M15.5 42 h7 a1.5 1.5 0 0 1 1.5 1.5 v0 a1.5 1.5 0 0 1 -1.5 1.5 h-7 a1.5 1.5 0 0 1 -1.5 -1.5 v0 a1.5 1.5 0 0 1 1.5 -1.5 z M29.5 42 h7 a1.5 1.5 0 0 1 1.5 1.5 v0 a1.5 1.5 0 0 1 -1.5 1.5 h-7 a1.5 1.5 0 0 1 -1.5 -1.5 v0 a1.5 1.5 0 0 1 1.5 -1.5 z \"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M19.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M22.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"26\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M37.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M40.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"44\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M83.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M86.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"90\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/>", "Super C": "<path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M8 47 V18 q0 -4 4 -4 h16 v-3 h12 v3 h28 q8 0 12 5 l6 7 h8 l7 11 l9 3 V51 L105 51 a9 9 0 0 1 -18 0 L53 51 a9 9 0 0 1 -18 0 L35 51 a9 9 0 0 1 -18 0 L12 51 q-4 0 -4 -4z  M92.5 28 l6 9 h-8.5 v-9 z M18 20 h13 a2 2 0 0 1 2 2 v6 a2 2 0 0 1 -2 2 h-13 a2 2 0 0 1 -2 -2 v-6 a2 2 0 0 1 2 -2 z M41 20 h13 a2 2 0 0 1 2 2 v6 a2 2 0 0 1 -2 2 h-13 a2 2 0 0 1 -2 -2 v-6 a2 2 0 0 1 2 -2 z M66.5 20 h5 a2.5 2.5 0 0 1 2.5 2.5 v15 a2.5 2.5 0 0 1 -2.5 2.5 h-5 a2.5 2.5 0 0 1 -2.5 -2.5 v-15 a2.5 2.5 0 0 1 2.5 -2.5 z M86 27 h0 a1 1 0 0 1 1 1 v6 a1 1 0 0 1 -1 1 h0 a1 1 0 0 1 -1 -1 v-6 a1 1 0 0 1 1 -1 z \"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M19.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M22.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"26\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M37.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M40.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"44\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M89.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M92.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"96\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/>", "5th Wheel": "<path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M16 47 V30 q0 -4 4 -4 h44 V18 q0 -4 4 -4 h8 v-3 h10 v3 h10 q8 0 8 10 v16 h-16 v11 L85 51 a9 9 0 0 1 -18 0 L67 51 a9 9 0 0 1 -18 0 L20 51 q-4 0 -4 -4z  M74 18 h9 a2 2 0 0 1 2 2 v4 a2 2 0 0 1 -2 2 h-9 a2 2 0 0 1 -2 -2 v-4 a2 2 0 0 1 2 -2 z M26 30 h11 a2 2 0 0 1 2 2 v5 a2 2 0 0 1 -2 2 h-11 a2 2 0 0 1 -2 -2 v-5 a2 2 0 0 1 2 -2 z M48.5 30 h5 a2.5 2.5 0 0 1 2.5 2.5 v12 a2.5 2.5 0 0 1 -2.5 2.5 h-5 a2.5 2.5 0 0 1 -2.5 -2.5 v-12 a2.5 2.5 0 0 1 2.5 -2.5 z \"/><path fill=\"currentColor\" stroke=\"none\" d=\"M95 40 h4 v6 q0 1.5 -2 1.5 q-2 0 -2 -1.5 z\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M51.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M54.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"58\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M69.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M72.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"76\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/>", "Toy Hauler": "<path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M24 47 V18 q0 -4 4 -4 h14 v-3 h12 v3 h20 q8 0 12 5 l6 7 h6 l7 11 l8 3 V51 L109 51 a9 9 0 0 1 -18 0 L65 51 a9 9 0 0 1 -18 0 L47 51 a9 9 0 0 1 -18 0 L28 51 q-4 0 -4 -4z  M96 28 l6 9 h-8.5 v-9 z M34 20 h11 a2 2 0 0 1 2 2 v6 a2 2 0 0 1 -2 2 h-11 a2 2 0 0 1 -2 -2 v-6 a2 2 0 0 1 2 -2 z M54 20 h6 a2 2 0 0 1 2 2 v6 a2 2 0 0 1 -2 2 h-6 a2 2 0 0 1 -2 -2 v-6 a2 2 0 0 1 2 -2 z \"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M23 19 L27.2 20.6 L11.2 60 L7 58.4 z M20.2 29.5 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 M16 39.5 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 M11.799999999999999 49.5 a1.3 1.3 0 1 0 2.6 0 a1.3 1.3 0 1 0 -2.6 0 \"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M31.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M34.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"38\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M49.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M52.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"56\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M93.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M96.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"100\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/>", "Travel Trailer": "<path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M14 47 V24 q0 -4 4 -4 h20 v-3 h12 v3 h32 q9 0 10 8 V51 L79 51 a9 9 0 0 1 -18 0 L61 51 a9 9 0 0 1 -18 0 L18 51 q-4 0 -4 -4z  M24 26 h11 a2 2 0 0 1 2 2 v5 a2 2 0 0 1 -2 2 h-11 a2 2 0 0 1 -2 -2 v-5 a2 2 0 0 1 2 -2 z M68 26 h9 a2 2 0 0 1 2 2 v5 a2 2 0 0 1 -2 2 h-9 a2 2 0 0 1 -2 -2 v-5 a2 2 0 0 1 2 -2 z M46.5 26 h5 a2.5 2.5 0 0 1 2.5 2.5 v12 a2.5 2.5 0 0 1 -2.5 2.5 h-5 a2.5 2.5 0 0 1 -2.5 -2.5 v-12 a2.5 2.5 0 0 1 2.5 -2.5 z \"/><path fill=\"currentColor\" stroke=\"none\" d=\"M92 42.6 L108.5 45.8 l-0.7 3 L91.6 45.6 z M103 47 h3 v8 h-3 z M99.5 54.5 h10 q1 0 1 1.2 q0 1.3 -1 1.3 h-10 q-1 0 -1 -1.3 q0 -1.2 1 -1.2 z\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M92.9 39.4 a3.1 3.1 0 1 0 6.2 0 a3.1 3.1 0 1 0 -6.2 0 M98.9 40.6 a3.1 3.1 0 1 0 6.2 0 a3.1 3.1 0 1 0 -6.2 0 M94.9 39.4 a1.1 1.1 0 1 0 2.2 0 a1.1 1.1 0 1 0 -2.2 0 M100.9 40.6 a1.1 1.1 0 1 0 2.2 0 a1.1 1.1 0 1 0 -2.2 0 \"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M45.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M48.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"52\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/><path fill=\"currentColor\" stroke=\"none\" fill-rule=\"evenodd\" d=\"M63.2 53 a6.8 6.8 0 1 0 13.6 0 a6.8 6.8 0 1 0 -13.6 0 M66.4 53 a3.6 3.6 0 1 0 7.2 0 a3.6 3.6 0 1 0 -7.2 0 \"/><circle cx=\"70\" cy=\"53\" r=\"1.7\" fill=\"currentColor\"/>"};
+
+var TYPES = [
+  {n:'Class A Gas',    fam:'flat', roof:{len:200,ac:2}},
+  {n:'Class C & B+',   fam:'cab',  roof:{len:170,ac:1}},
+  {n:'Class B / Van',  fam:'van',  roof:{len:140,ac:1}},
+  {n:'Diesel Pusher',  fam:'flat', roof:{len:206,ac:2}},
+  {n:'Super C',        fam:'cab',  roof:{len:200,ac:2}},
+  {n:'5th Wheel',      fam:'fw',   roof:{len:196,ac:2}},
+  {n:'Toy Hauler',     fam:'cab',  rearRamp:true, roof:{len:200,ac:2}},
+  {n:'Travel Trailer', fam:'tt',   roof:{len:180,ac:1}}
+];
+var TYPE_NAMES = TYPES.map(function(t){ return t.n; });
+
+/* ---- Front / Rear / Roof views (created to match the silhouette style) ---- */
+function frontFlat(){
+  return '<path fill="currentColor" fill-rule="evenodd" d="M24,94 V22 q0,-12 12,-12 h48 q12,0 12,12 v72 z '+
+    'M33,20 h54 a5,5 0 0 1 5,5 v20 a5,5 0 0 1 -5,5 h-54 a5,5 0 0 1 -5,-5 v-20 a5,5 0 0 1 5,-5 z '+
+    'M34,78 h16 v7 h-16 z M70,78 h16 v7 h-16 z M42,60 h36 v4 h-36 z"/>'+
+    '<rect x="12" y="26" width="8" height="16" rx="2.5" fill="currentColor"/>'+
+    '<rect x="100" y="26" width="8" height="16" rx="2.5" fill="currentColor"/>';
+}
+function frontCab(){
+  return '<path fill="currentColor" d="M20,48 v-8 q0,-10 10,-10 h60 q10,0 10,10 v8 z"/>'+
+    '<path fill="currentColor" fill-rule="evenodd" d="M24,94 V56 q0,-4 4,-4 h64 q4,0 4,4 v38 z '+
+    'M33,56 h54 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-54 a4,4 0 0 1 -4,-4 v-12 a4,4 0 0 1 4,-4 z '+
+    'M34,82 h14 v6 h-14 z M72,82 h14 v6 h-14 z"/>'+
+    '<rect x="13" y="58" width="8" height="14" rx="2.5" fill="currentColor"/>'+
+    '<rect x="99" y="58" width="8" height="14" rx="2.5" fill="currentColor"/>';
+}
+function frontVan(){
+  return '<path fill="currentColor" fill-rule="evenodd" d="M28,94 V30 q0,-14 14,-14 h36 q14,0 14,14 v64 z '+
+    'M36,24 h48 a5,5 0 0 1 5,5 v18 a5,5 0 0 1 -5,5 h-48 a5,5 0 0 1 -5,-5 v-18 a5,5 0 0 1 5,-5 z '+
+    'M36,62 h48 v4 h-48 z M38,80 h12 v6 h-12 z M70,80 h12 v6 h-12 z"/>'+
+    '<rect x="17" y="30" width="8" height="14" rx="2.5" fill="currentColor"/>'+
+    '<rect x="95" y="30" width="8" height="14" rx="2.5" fill="currentColor"/>';
+}
+function frontTT(){
+  return '<path fill="currentColor" fill-rule="evenodd" d="M26,82 V26 q0,-12 12,-12 h44 q12,0 12,12 v56 z '+
+    'M36,24 h48 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-48 a4,4 0 0 1 -4,-4 v-12 a4,4 0 0 1 4,-4 z"/>'+
+    '<circle cx="50" cy="90" r="6" fill="currentColor"/><circle cx="66" cy="90" r="6" fill="currentColor"/>'+
+    '<rect x="56" y="82" width="4" height="16" fill="currentColor"/>';
+}
+function frontFW(){
+  return '<path fill="currentColor" fill-rule="evenodd" d="M28,94 V36 q0,-14 14,-14 h36 q14,0 14,14 v58 z '+
+    'M37,30 h46 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-46 a4,4 0 0 1 -4,-4 v-10 a4,4 0 0 1 4,-4 z"/>'+
+    '<rect x="52" y="94" width="16" height="5" fill="currentColor"/>';
+}
+function rearBox(ladder){
+  var s = '<path fill="currentColor" fill-rule="evenodd" d="M24,94 V22 q0,-12 12,-12 h48 q12,0 12,12 v72 z '+
+    'M34,22 h38 a4,4 0 0 1 4,4 v16 a4,4 0 0 1 -4,4 h-38 a4,4 0 0 1 -4,-4 v-16 a4,4 0 0 1 4,-4 z '+
+    'M32,80 h14 v6 h-14 z M74,80 h14 v6 h-14 z"/>';
+  if(ladder){
+    s += '<path class="cut" stroke-width="2.5" d="M84,16 V78 M94,16 V78 M84,26 h10 M84,38 h10 M84,50 h10 M84,62 h10 M84,74 h10"/>';
+  }
+  return s;
+}
+function rearRamp(){
+  return '<path fill="currentColor" d="M24,94 V22 q0,-12 12,-12 h48 q12,0 12,12 v72 z"/>'+
+    '<rect class="cut" stroke-width="2.5" x="34" y="28" width="52" height="58"/>'+
+    '<path class="cut" stroke-width="2.5" d="M34,80 h52 M55,34 h10"/>';
+}
+function roofArt(len, ac){
+  var x0=16, y0=13, h=58;
+  var s = '<rect fill="currentColor" x="'+x0+'" y="'+y0+'" width="'+len+'" height="'+h+'" rx="22"/>';
+  s += '<path fill="currentColor" d="M6,'+(y0+h/2)+' l8,-9 v18 z"/>';
+  for(var i=0;i<ac;i++){
+    s += '<rect class="cutfill" x="'+(x0+42+i*74)+'" y="'+(y0+16)+'" width="36" height="26" rx="4"/>';
+  }
+  s += '<circle class="cutfill" cx="'+(x0+24)+'" cy="'+(y0+16)+'" r="5"/>';
+  s += '<circle class="cutfill" cx="'+(x0+len-24)+'" cy="'+(y0+h-16)+'" r="5"/>';
+  return s;
+}
+function viewsFor(t){
+  var fronts = {flat:frontFlat, cab:frontCab, van:frontVan, tt:frontTT, fw:frontFW};
+  var rear;
+  if(t.rearRamp) rear = rearRamp();
+  else if(t.fam==='tt') rear = rearBox(false);
+  else if(t.fam==='van') rear = rearBox(false);
+  else rear = rearBox(true);
+  return [
+    {v:'front',     l:'Front',          vb:'0 0 120 102', art:fronts[t.fam](), mr:7},
+    {v:'driver',    l:'Driver Side',    vb:'0 0 120 68',  art:'<g transform="translate(120,0) scale(-1,1)">'+ART[t.n]+'</g>', mr:6},
+    {v:'passenger', l:'Passenger Side', vb:'0 0 120 68',  art:ART[t.n], mr:6},
+    {v:'rear',      l:'Rear',           vb:'0 0 120 102', art:rear, mr:7},
+    {v:'roof',      l:'Roof (front at left)', vb:'0 0 240 84', art:roofArt(t.roof.len, t.roof.ac), mr:8, roof:true}
+  ];
+}
+var VIEW_IDS = ['front','driver','passenger','rear','roof'];
+var VIEW_LABELS = {front:'Front', driver:'Driver Side', passenger:'Passenger Side', rear:'Rear', roof:'Roof'};
+
+/* ============================================================
    FIELD SCHEMA — every item on the paper MHS Trade-In Sheet
-   t: text | seg (pick one) | multi (pick many) | area
+   t: text | seg | multi | area | icons     p:1 = photo button
    ============================================================ */
 var SECTIONS = [
  { key:'unit', title:'Unit Info', groups:[
    { fields:[
      {id:'stock',    l:'Stock #',        t:'text'},
-     {id:'vin',      l:'VIN',            t:'text', w:1},
-     {id:'yr',       l:'Yr',             t:'text', im:'numeric'},
+     {id:'vin',      l:'VIN',            t:'text', w:1, p:1},
+     {id:'yr',       l:'Year',           t:'text', im:'numeric'},
      {id:'make',     l:'Make',           t:'text'},
      {id:'model',    l:'Model',          t:'text'},
-     {id:'unitClass',l:'Class',          t:'text'},
      {id:'length',   l:'Length',         t:'text'},
-     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric'},
-     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric'},
+     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1},
+     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric', p:1},
      {id:'regExp',   l:'Reg Exp Date',   t:'text', ph:'MM/YY'},
      {id:'inspExp',  l:'Inspection Exp', t:'text', ph:'MM/YY'},
      {id:'fourX4',   l:'4x4',            t:'seg', o:YN},
+     {id:'unitClass',l:'Class',          t:'icons', w:1},
    ]},
  ]},
  { key:'chassis', title:'Chassis & Systems', groups:[
@@ -243,12 +364,12 @@ var SECTIONS = [
    ]},
    { sub:'Wheels / Tires / Body', fields:[
      {id:'alumWheels', l:'Alum Wheels',      t:'seg', o:YN},
-     {id:'tireAge',    l:'Tires: Age',       t:'text'},
+     {id:'tireAge',    l:'Tires: Age',       t:'text', p:1},
      {id:'tireDryRot', l:'Tires: Dry Rot / Crack', t:'seg', o:YN},
      {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
-     {id:'wsGood',     l:'Windshield Good',  t:'seg', o:YN},
+     {id:'wsGood',     l:'Windshield Good',  t:'seg', o:YN, p:1},
      {id:'wsDmg',      l:'Windshield Cracks / Stars', t:'multi', o:['Cracks','Stars']},
-     {id:'hitchWeight',l:'Hitch Weight',     t:'text'},
+     {id:'hitchWeight',l:'Hitch Weight',     t:'text', p:1},
      {id:'smoker',     l:'Smoker',           t:'seg', o:YN},
      {id:'pets',       l:'Pets',             t:'seg', o:YN},
    ]},
@@ -361,7 +482,6 @@ var SECTIONS = [
  ]},
 ];
 
-/* Damage-step extra fields (rendered inside the damage step) */
 var DMG_FIELDS = [
   {id:'dmgDate',    l:'Date',            t:'text', ph:'MM/DD/YY'},
   {id:'claimMark',  l:'Claim Mark',      t:'seg', o:['Yes','No']},
@@ -369,7 +489,6 @@ var DMG_FIELDS = [
   {id:'deductible', l:'Deductible Amount', t:'text', ph:'$'},
   {id:'dmgNotes',   l:'Notes',           t:'area', w:1},
 ];
-/* Review-step fields */
 var REV_FIELDS = [
   {id:'comments',  l:'Additional Comments', t:'area', w:1},
   {id:'custDate',  l:'Customer Signature Date', t:'text', ph:'MM/DD/YY'},
@@ -378,84 +497,79 @@ var REV_FIELDS = [
 
 var LEGEND = [
   {c:'C', n:'Chip'}, {c:'S', n:'Scratch'}, {c:'D', n:'Dent'}, {c:'R', n:'Rust'},
-  {c:'CR', n:'Crack'}, {c:'P', n:'Paint Damage'}, {c:'O', n:'Other'}
+  {c:'CR', n:'Crack'}, {c:'P', n:'Paint Damage'},
+  {c:'PT', n:'Patch'}, {c:'CS', n:'Cracked Sealant'}, {c:'NS', n:'No Sealant'}, {c:'T', n:'Tear'},
+  {c:'O', n:'Other'}
 ];
-var VEH_TYPES = ['Motorhome','Travel Trailer','Fifth Wheel'];
 
-/* ============================================================
-   Vehicle outline diagrams (schematic — for damage marking)
-   ============================================================ */
-function sideMH(){ return '<rect class="body" x="15" y="22" width="310" height="80" rx="14"/>'+
-  '<rect class="det" x="32" y="36" width="46" height="24" rx="3"/><rect class="det" x="86" y="36" width="46" height="24" rx="3"/>'+
-  '<rect class="det" x="140" y="36" width="46" height="24" rx="3"/><rect class="det" x="194" y="36" width="46" height="24" rx="3"/>'+
-  '<rect class="det" x="258" y="40" width="30" height="60" rx="3"/><line class="det" x1="15" y1="78" x2="255" y2="78"/>'+
-  '<circle class="det" cx="75" cy="102" r="15"/><circle class="det" cx="245" cy="102" r="15"/>'; }
-function sideTT(){ return '<rect class="body" x="42" y="25" width="283" height="70" rx="10"/>'+
-  '<path class="det" d="M42,88 L8,97 M8,97 l0,8"/>'+
-  '<rect class="det" x="60" y="37" width="42" height="22" rx="3"/><rect class="det" x="112" y="37" width="42" height="22" rx="3"/>'+
-  '<rect class="det" x="230" y="37" width="42" height="22" rx="3"/><rect class="det" x="170" y="40" width="26" height="52" rx="3"/>'+
-  '<circle class="det" cx="120" cy="95" r="13"/><circle class="det" cx="150" cy="95" r="13"/>'; }
-function sideFW(){ return '<path class="body" d="M20,38 Q20,24 34,24 L311,24 Q325,24 325,38 L325,95 L140,95 L140,68 L20,68 Z"/>'+
-  '<rect class="det" x="34" y="34" width="40" height="20" rx="3"/><rect class="det" x="160" y="37" width="42" height="24" rx="3"/>'+
-  '<rect class="det" x="270" y="37" width="42" height="24" rx="3"/><rect class="det" x="212" y="40" width="26" height="54" rx="3"/>'+
-  '<circle class="det" cx="240" cy="95" r="13"/><circle class="det" cx="270" cy="95" r="13"/><circle class="det" cx="300" cy="95" r="13"/>'+
-  '<line class="det" x1="60" y1="68" x2="60" y2="80"/>'; }
-function frontMH(){ return '<rect class="body" x="30" y="10" width="110" height="125" rx="12"/>'+
-  '<rect class="det" x="40" y="22" width="90" height="38" rx="4"/>'+
-  '<rect class="det" x="38" y="108" width="24" height="10" rx="2"/><rect class="det" x="108" y="108" width="24" height="10" rx="2"/>'+
-  '<line class="det" x1="30" y1="126" x2="140" y2="126"/>'; }
-function frontTT(){ return '<path class="body" d="M40,135 L40,40 Q40,12 85,12 Q130,12 130,40 L130,135 Z"/>'+
-  '<line class="det" x1="48" y1="45" x2="122" y2="45"/><line class="det" x1="52" y1="28" x2="118" y2="28"/>'+
-  '<path class="det" d="M85,135 L85,148"/>'; }
-function rearGen(hasLadder){ return '<rect class="body" x="30" y="10" width="110" height="125" rx="12"/>'+
-  '<rect class="det" x="42" y="24" width="86" height="32" rx="4"/>'+
-  '<rect class="det" x="38" y="110" width="18" height="9" rx="2"/><rect class="det" x="114" y="110" width="18" height="9" rx="2"/>'+
-  (hasLadder ? '<line class="det" x1="118" y1="18" x2="118" y2="105"/><line class="det" x1="130" y1="18" x2="130" y2="105"/>'+
-    '<line class="det" x1="118" y1="30" x2="130" y2="30"/><line class="det" x1="118" y1="48" x2="130" y2="48"/>'+
-    '<line class="det" x1="118" y1="66" x2="130" y2="66"/><line class="det" x1="118" y1="84" x2="130" y2="84"/>' : ''); }
-var DIAGRAMS = {
-  'Motorhome':      [ {v:'front',l:'Front',vb:'0 0 170 150',art:frontMH},
-                      {v:'driver',l:'Driver Side',vb:'0 0 340 125',art:sideMH},
-                      {v:'passenger',l:'Passenger Side',vb:'0 0 340 125',art:sideMH},
-                      {v:'rear',l:'Rear',vb:'0 0 170 150',art:function(){return rearGen(true);}} ],
-  'Travel Trailer': [ {v:'front',l:'Front',vb:'0 0 170 155',art:frontTT},
-                      {v:'driver',l:'Driver Side',vb:'0 0 340 115',art:sideTT},
-                      {v:'passenger',l:'Passenger Side',vb:'0 0 340 115',art:sideTT},
-                      {v:'rear',l:'Rear',vb:'0 0 170 150',art:function(){return rearGen(false);}} ],
-  'Fifth Wheel':    [ {v:'front',l:'Front',vb:'0 0 170 155',art:frontTT},
-                      {v:'driver',l:'Driver Side',vb:'0 0 340 115',art:sideFW},
-                      {v:'passenger',l:'Passenger Side',vb:'0 0 340 115',art:sideFW},
-                      {v:'rear',l:'Rear',vb:'0 0 170 150',art:function(){return rearGen(true);}} ]
+var PHOTO_LABELS = {
+  vin:'VIN Photo', mileage:'Mileage Photo', ecmMiles:'ECM Mileage Photo',
+  tireAge:'Tires Photo', wsGood:'Windshield Photo', hitchWeight:'Hitch Weight Photo'
 };
 
 /* ============================================================
    State + persistence
    ============================================================ */
-var DRAFT_KEY = 'tradeEvalDraft-v1';
-var state = { v:{}, m:{}, mk:{}, dmgType:'Motorhome' };
-VEH_TYPES.forEach(function(t){ state.mk[t] = {front:[],driver:[],passenger:[],rear:[]}; });
+var DRAFT_KEY = 'tradeEvalDraft-v2';
+var PHOTO_KEY = 'tradeEvalPhotos-v1';
+function blankMarks(){ var o={}; VIEW_IDS.forEach(function(v){ o[v]=[]; }); return o; }
+var state = { v:{}, m:{}, mk:{}, dmgType:TYPE_NAMES[0] };
+TYPE_NAMES.forEach(function(t){ state.mk[t] = blankMarks(); });
 try{
   var saved = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
-  if(saved && saved.v){ state = saved;
-    VEH_TYPES.forEach(function(t){ if(!state.mk[t]) state.mk[t]={front:[],driver:[],passenger:[],rear:[]}; });
+  if(saved && saved.v){
+    state = saved;
+    if(TYPE_NAMES.indexOf(state.dmgType) < 0) state.dmgType = TYPE_NAMES[0];
+    if(!state.mk) state.mk = {};
+    TYPE_NAMES.forEach(function(t){
+      if(!state.mk[t]) state.mk[t] = blankMarks();
+      VIEW_IDS.forEach(function(v){ if(!state.mk[t][v]) state.mk[t][v]=[]; });
+    });
+    if(!state.m) state.m = {};
   }
 }catch(e){}
+var photos = {};
+try{ photos = JSON.parse(localStorage.getItem(PHOTO_KEY) || '{}') || {}; }catch(e){ photos = {}; }
 function save(){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(state)); }catch(e){} }
+var photoWarned = false;
+function savePhotos(){
+  try{ localStorage.setItem(PHOTO_KEY, JSON.stringify(photos)); }
+  catch(e){
+    if(!photoWarned){
+      photoWarned = true;
+      alert('Device storage is full, so photos will stay attached only while this page is open. Print before closing the tab.');
+    }
+  }
+}
 
 /* ============================================================
    Render fields
    ============================================================ */
+function typeGridHTML(segId){
+  var h = '<div class="tgrid" data-seg="'+segId+'">';
+  TYPES.forEach(function(t){
+    h += '<button type="button" data-o="'+t.n.replace(/&/g,'&amp;')+'">'+
+         '<svg viewBox="0 0 120 68" aria-hidden="true">'+ART[t.n]+'</svg>'+
+         '<span>'+t.n.replace(/&/g,'&amp;')+'</span></button>';
+  });
+  return h+'</div>';
+}
 function fieldHTML(f){
   var wide = (f.w || f.t==='area') ? ' wide' : '';
-  var h = '<div class="field'+wide+'"><label>'+f.l+'</label>';
+  var h = '<div class="field'+wide+'" data-fw="'+f.id+'"><label>'+f.l+'</label>';
   if(f.t==='text'){
     h += '<input type="text" data-f="'+f.id+'"'+(f.ph?' placeholder="'+f.ph+'"':'')+(f.im?' inputmode="'+f.im+'"':'')+' autocomplete="off">';
   }else if(f.t==='area'){
     h += '<textarea data-f="'+f.id+'"></textarea>';
+  }else if(f.t==='icons'){
+    h += typeGridHTML(f.id);
   }else{
     h += '<div class="seg" data-'+(f.t==='multi'?'multi':'seg')+'="'+f.id+'">';
     f.o.forEach(function(o){ h += '<button type="button" data-o="'+o+'">'+o+'</button>'; });
     h += '</div>';
+  }
+  if(f.p){
+    h += '<br><button type="button" class="photo-btn" data-photo="'+f.id+'">&#128247; Photo</button>';
   }
   return h+'</div>';
 }
@@ -468,7 +582,6 @@ function groupHTML(g){
 var stepsEl = $('steps');
 var STEP_TITLES = ['Unit Info','Chassis & Systems','Exterior','Interior','Body Damage','Review & Print'];
 
-/* Steps 0-3: schema sections */
 SECTIONS.forEach(function(sec,i){
   var d = document.createElement('section');
   d.className = 'step'; d.dataset.step = i;
@@ -481,9 +594,7 @@ SECTIONS.forEach(function(sec,i){
   var d = document.createElement('section');
   d.className = 'step'; d.dataset.step = 4;
   var h = '<h2 class="sec">Body Damage Notations</h2>';
-  h += '<div class="field"><label>Vehicle Type</label><div class="seg" id="vehTypeSeg">';
-  VEH_TYPES.forEach(function(t){ h += '<button type="button" data-o="'+t+'">'+t+'</button>'; });
-  h += '</div></div>';
+  h += '<div class="field wide"><label>Vehicle Type</label><div id="vehTypeWrap">'+typeGridHTML('__vehType')+'</div></div>';
   h += '<p class="hint" style="margin-top:12px">Pick a damage type below, then tap the diagram where the damage is. Tap a marker to remove it.</p>';
   h += '<div class="legend" id="legend">';
   LEGEND.forEach(function(x){ h += '<button type="button" data-c="'+x.c+'"><b>'+x.c+'</b>'+x.n+'</button>'; });
@@ -501,8 +612,8 @@ SECTIONS.forEach(function(sec,i){
   var d = document.createElement('section');
   d.className = 'step'; d.dataset.step = 5;
   var h = '<h2 class="sec">Review &amp; Print</h2>';
-  h += '<div class="rev-note">Printing produces the full MHS Trade-In Sheet (all fields plus the body-damage '+
-       'diagrams) for the deal jacket. Signature lines print blank for pen signatures.</div>';
+  h += '<div class="rev-note">Printing produces the full MHS Trade-In Sheet (all fields, the body-damage '+
+       'diagrams, and every attached photo) for the deal jacket. Signature lines print blank for pen signatures.</div>';
   h += '<div class="fgrid">'+REV_FIELDS.map(fieldHTML).join('')+'</div>';
   h += '<div id="missingBox" class="missing"></div>';
   h += '<div class="dmg-tools" style="margin-top:18px">'+
@@ -524,9 +635,7 @@ STEP_TITLES.forEach(function(t,i){
 var cur = 0;
 function go(i){
   cur = Math.max(0, Math.min(5, i));
-  var steps = stepsEl.querySelectorAll('.step');
-  steps.forEach ? null : 0;
-  Array.prototype.forEach.call(steps, function(s,idx){ s.classList.toggle('on', idx===cur); });
+  Array.prototype.forEach.call(stepsEl.querySelectorAll('.step'), function(s,idx){ s.classList.toggle('on', idx===cur); });
   Array.prototype.forEach.call(stepperEl.children, function(c,idx){
     c.classList.toggle('active', idx===cur);
     c.classList.toggle('done', idx<cur);
@@ -543,12 +652,17 @@ $('nextBtn').addEventListener('click', function(){ go(cur+1); });
 /* ============================================================
    Wire inputs to state
    ============================================================ */
+function updateConditionals(){
+  var el = document.querySelector('[data-fw="wsDmg"]');
+  if(el) el.style.display = state.v.wsGood==='Y' ? '' : 'none';
+}
 function restoreInputs(){
   Array.prototype.forEach.call(document.querySelectorAll('[data-f]'), function(el){
     el.value = state.v[el.dataset.f] || '';
   });
   Array.prototype.forEach.call(document.querySelectorAll('[data-seg]'), function(segEl){
     var id = segEl.dataset.seg;
+    if(id==='__vehType') return;
     Array.prototype.forEach.call(segEl.children, function(b){
       b.classList.toggle('on', state.v[id]===b.dataset.o);
     });
@@ -559,28 +673,31 @@ function restoreInputs(){
       b.classList.toggle('on', arr.indexOf(b.dataset.o)>-1);
     });
   });
+  updateConditionals();
+  refreshPhotoBtns();
 }
 document.addEventListener('input', function(e){
   var f = e.target.dataset && e.target.dataset.f;
   if(f){ state.v[f] = e.target.value; save(); }
 });
 document.addEventListener('click', function(e){
+  var pb = e.target.closest ? e.target.closest('button[data-photo]') : null;
+  if(pb){ startPhoto(pb.dataset.photo); return; }
   var b = e.target.closest ? e.target.closest('button[data-o]') : null;
   if(!b) return;
   var wrap = b.parentElement;
-  if(wrap.id==='vehTypeSeg'){
+  if(wrap.dataset.seg==='__vehType'){
     state.dmgType = b.dataset.o; save();
-    Array.prototype.forEach.call(wrap.children, function(x){ x.classList.toggle('on', x===b); });
     renderDiagrams(); return;
   }
-  if(wrap.dataset.seg !== undefined && wrap.dataset.seg !== null && wrap.dataset.seg !== ''){
+  if(wrap.dataset.seg){
     var id = wrap.dataset.seg;
     if(state.v[id]===b.dataset.o){ state.v[id]=''; b.classList.remove('on'); }
     else{
       state.v[id]=b.dataset.o;
       Array.prototype.forEach.call(wrap.children, function(x){ x.classList.toggle('on', x===b); });
     }
-    save(); return;
+    save(); updateConditionals(); return;
   }
   if(wrap.dataset.multi){
     var mid = wrap.dataset.multi;
@@ -593,6 +710,60 @@ document.addEventListener('click', function(e){
 });
 
 /* ============================================================
+   Photos (same pipeline as the deal sheet: <=1600px JPEG 0.82)
+   ============================================================ */
+async function decodePhotoToCanvas(file, MAX){
+  var src = null, w = 0, h = 0;
+  if(window.createImageBitmap){
+    try{ src = await createImageBitmap(file, {imageOrientation:'from-image'}); }
+    catch(e){ try{ src = await createImageBitmap(file); }catch(e2){} }
+  }
+  if(src){ w = src.width; h = src.height; }
+  else{
+    src = await new Promise(function(resolve,reject){
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = function(){ reject(new Error('unreadable image')); };
+      img.src = URL.createObjectURL(file);
+    });
+    w = src.naturalWidth; h = src.naturalHeight;
+  }
+  var k = Math.min(1, MAX / Math.max(w, h));
+  var c = document.createElement('canvas');
+  c.width = Math.round(w*k); c.height = Math.round(h*k);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  return c;
+}
+var photoInput = $('photoInput');
+var pendingPhoto = null;
+function startPhoto(key){ pendingPhoto = key; photoInput.click(); }
+photoInput.addEventListener('change', async function(){
+  var file = photoInput.files && photoInput.files[0];
+  photoInput.value = '';
+  var key = pendingPhoto; pendingPhoto = null;
+  if(!file || !key) return;
+  var btns = document.querySelectorAll('button[data-photo="'+key+'"]');
+  Array.prototype.forEach.call(btns, function(b){ b.disabled=true; b.textContent='Processing…'; });
+  try{
+    var c = await decodePhotoToCanvas(file, 1600);
+    photos[key] = {data: c.toDataURL('image/jpeg', 0.82), w: c.width, h: c.height};
+    savePhotos();
+  }catch(err){
+    alert('Could not read that photo — please try again.');
+  }finally{
+    Array.prototype.forEach.call(btns, function(b){ b.disabled=false; });
+    refreshPhotoBtns();
+  }
+});
+function refreshPhotoBtns(){
+  Array.prototype.forEach.call(document.querySelectorAll('button[data-photo]'), function(b){
+    var has = !!photos[b.dataset.photo];
+    b.classList.toggle('has-photo', has);
+    b.innerHTML = has ? '&#10003; Photo (tap to retake)' : '&#128247; Photo';
+  });
+}
+
+/* ============================================================
    Damage diagrams
    ============================================================ */
 var activeCode = 'C';
@@ -603,30 +774,38 @@ legendEl.addEventListener('click', function(e){
   Array.prototype.forEach.call(legendEl.children, function(x){ x.classList.toggle('on', x===b); });
 });
 legendEl.querySelector('button[data-c="C"]').classList.add('on');
-var markOrder = [];   /* for undo: {type, view, idx} */
+var markOrder = [];
 
 function svgFor(spec, markers, interactive){
   var s = '<svg viewBox="'+spec.vb+'" xmlns="http://www.w3.org/2000/svg"'+(interactive?' data-view="'+spec.v+'"':'')+'>';
-  s += spec.art();
+  s += spec.art;
   s += '<g class="mk">';
   (markers||[]).forEach(function(m,i){
-    s += '<g'+(interactive?' data-mi="'+i+'"':'')+'><circle cx="'+m.x+'" cy="'+m.y+'" r="11"/>'+
-         '<text x="'+m.x+'" y="'+m.y+'">'+m.c+'</text></g>';
+    s += '<g'+(interactive?' data-mi="'+i+'"':'')+'><circle cx="'+m.x+'" cy="'+m.y+'" r="'+spec.mr+'"/>'+
+         '<text x="'+m.x+'" y="'+m.y+'" font-size="'+(spec.mr*0.95)+'">'+m.c+'</text></g>';
   });
   s += '</g></svg>';
   return s;
 }
 function renderDiagrams(){
-  var seg = $('vehTypeSeg');
-  Array.prototype.forEach.call(seg.children, function(x){ x.classList.toggle('on', x.dataset.o===state.dmgType); });
+  var wrap = $('vehTypeWrap');
+  Array.prototype.forEach.call(wrap.querySelectorAll('button[data-o]'), function(x){
+    x.classList.toggle('on', x.dataset.o===state.dmgType);
+  });
+  var t = TYPES[TYPE_NAMES.indexOf(state.dmgType)];
   var grid = $('diagGrid'); grid.innerHTML='';
-  DIAGRAMS[state.dmgType].forEach(function(spec){
-    var card = document.createElement('div'); card.className='diag';
-    card.innerHTML = '<h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[state.dmgType][spec.v], true);
+  viewsFor(t).forEach(function(spec){
+    var card = document.createElement('div');
+    card.className = 'diag'+(spec.roof?' roofcard':'');
+    var pk = 'dmg|'+state.dmgType+'|'+spec.v;
+    card.innerHTML = '<h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[state.dmgType][spec.v], true)+
+      '<button type="button" class="photo-btn" data-photo="'+pk+'">&#128247; Photo</button>';
     grid.appendChild(card);
   });
+  refreshPhotoBtns();
 }
 $('diagGrid').addEventListener('click', function(e){
+  if(e.target.closest('button[data-photo]')) return;
   var svg = e.target.closest('svg'); if(!svg) return;
   var view = svg.dataset.view;
   var mkG = e.target.closest('g[data-mi]');
@@ -644,16 +823,17 @@ $('undoMark').addEventListener('click', function(){
 });
 $('clearMarks').addEventListener('click', function(){
   if(!confirm('Remove all damage marks for '+state.dmgType+'?')) return;
-  state.mk[state.dmgType] = {front:[],driver:[],passenger:[],rear:[]};
+  state.mk[state.dmgType] = blankMarks();
   markOrder = []; save(); renderDiagrams();
 });
 
 /* ============================================================
-   Review: missing-field nudge (top essentials only)
+   Review: missing-field nudge
    ============================================================ */
 function updateMissing(){
-  var need = [['stock','Stock #'],['vin','VIN'],['yr','Yr'],['make','Make'],['model','Model'],['mileage','Mileage']];
+  var need = [['stock','Stock #'],['vin','VIN'],['yr','Year'],['make','Make'],['model','Model'],['mileage','Mileage']];
   var miss = need.filter(function(n){ return !(state.v[n[0]]||'').trim(); }).map(function(n){ return n[1]; });
+  if(!(state.v.unitClass||'').trim()) miss.push('Class');
   $('missingBox').textContent = miss.length ? 'Still blank: '+miss.join(', ') : '';
 }
 document.addEventListener('input', function(){ if(cur===5) updateMissing(); });
@@ -677,14 +857,14 @@ function buildPrint(){
     });
     h += '</div>';
   });
-  /* damage page */
-  var t = state.dmgType;
-  h += '<div class="p-dmg"><div class="p-head"><h1>'+esc(t)+' Body Damage Notations</h1>'+
+  var tn = state.dmgType;
+  var t = TYPES[TYPE_NAMES.indexOf(tn)];
+  h += '<div class="p-dmg"><div class="p-head"><h1>'+esc(tn)+' Body Damage Notations</h1>'+
        '<span>Stock # '+pv('stock')+' &middot; Date: '+pv('dmgDate')+'</span></div>';
   h += '<div class="pline"><b>Legend:</b> '+LEGEND.map(function(x){ return x.c+' - '+x.n; }).join(' &nbsp; ')+'</div>';
   h += '<div class="p-diags">';
-  DIAGRAMS[t].forEach(function(spec){
-    h += '<div class="p-diag"><h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[t][spec.v], false)+'</div>';
+  viewsFor(t).forEach(function(spec){
+    h += '<div class="p-diag'+(spec.roof?' roofcard':'')+'"><h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[tn][spec.v], false)+'</div>';
   });
   h += '</div>';
   h += '<div class="pline"><b>Notes:</b> '+pv('dmgNotes')+'</div>';
@@ -694,6 +874,24 @@ function buildPrint(){
   h += '<h2>Additional Comments</h2><div class="pline">'+pv('comments')+'</div>';
   h += '<div class="sig-row"><div class="sig">Customer Signature &nbsp;&nbsp; Date: '+pv('custDate')+'</div>'+
        '<div class="sig">Sales Signature &nbsp;&nbsp; Date: '+pv('salesDate')+'</div></div>';
+  /* photos */
+  var entries = [];
+  Object.keys(PHOTO_LABELS).forEach(function(k){
+    if(photos[k]) entries.push({label:PHOTO_LABELS[k], data:photos[k].data});
+  });
+  TYPE_NAMES.forEach(function(typeName){
+    VIEW_IDS.forEach(function(v){
+      var p = photos['dmg|'+typeName+'|'+v];
+      if(p) entries.push({label:typeName+' — '+VIEW_LABELS[v]+' Photo', data:p.data});
+    });
+  });
+  if(entries.length){
+    h += '<h2 style="break-before:page">Photos</h2><div class="p-photos">';
+    entries.forEach(function(en){
+      h += '<div class="p-ph"><h4>'+esc(en.label)+'</h4><img src="'+en.data+'"></div>';
+    });
+    h += '</div>';
+  }
   h += '<div class="p-foot">MHS Trade-In Evaluation &middot; mhsrv.app</div></div>';
   $('printSheet').innerHTML = h;
 }
@@ -703,8 +901,9 @@ $('printBtn').addEventListener('click', function(){ buildPrint(); window.print()
    Clear + sign out
    ============================================================ */
 $('clearAll').addEventListener('click', function(){
-  if(!confirm('Clear the entire evaluation? This cannot be undone.')) return;
+  if(!confirm('Clear the entire evaluation, including photos? This cannot be undone.')) return;
   localStorage.removeItem(DRAFT_KEY);
+  localStorage.removeItem(PHOTO_KEY);
   location.reload();
 });
 $('signOut').addEventListener('click', function(){

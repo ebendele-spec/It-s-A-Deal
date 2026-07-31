@@ -1,7 +1,7 @@
 {
-  "name": "It's a Deal! — MHSRV Deal Sheet",
-  "short_name": "It's a Deal",
-  "description": "Motor Home Specialist deal sheet — fill, print, and email deals from anywhere.",
+  "name": "MHS Tools — MHSRV Staff Tools",
+  "short_name": "MHS Tools",
+  "description": "Motor Home Specialist staff tools — deal sheets and trade-in evaluations from anywhere.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
