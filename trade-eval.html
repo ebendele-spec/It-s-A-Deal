@@ -340,12 +340,14 @@ var SECTIONS = [
  ]},
  { key:'chassis', title:'Chassis & Systems', groups:[
    { sub:'Drivetrain / Chassis', fields:[
-     {id:'engineMfg', l:'Engine Mfg',     t:'text'},
+     {id:'engineMfg', l:'Engine Manufacturer', t:'text'},
      {id:'engineHp',  l:'Engine HP/Size', t:'text'},
      {id:'fuelType',  l:'Fuel Type',      t:'text'},
-     {id:'transMfg',  l:'Trans Mfg',      t:'text'},
+     {id:'transMfg',  l:'Trans Manufacturer', t:'text'},
      {id:'transSpeed',l:'Trans Speed',    t:'text'},
-     {id:'chassisMfg',l:'Chassis Mfg',    t:'text'},
+     {id:'chassisMfg',l:'Chassis Manufacturer', t:'seg', w:1,
+      o:['Ford','Chevrolet','Mercedes','RAM','Freightliner','Spartan','Tiffin PowerGlide','Newell','Prevost','Other']},
+     {id:'chassisMfgOther', l:'Chassis Manufacturer (Other)', t:'text', ph:'Type the chassis manufacturer'},
    ]},
    { sub:'Coach Systems', fields:[
      {id:'slides',     l:'Slides',        t:'seg', o:['0','1','2','3','4','5']},
@@ -654,7 +656,9 @@ $('nextBtn').addEventListener('click', function(){ go(cur+1); });
    ============================================================ */
 function updateConditionals(){
   var el = document.querySelector('[data-fw="wsDmg"]');
-  if(el) el.style.display = state.v.wsGood==='Y' ? '' : 'none';
+  if(el) el.style.display = state.v.wsGood==='N' ? '' : 'none';
+  var co = document.querySelector('[data-fw="chassisMfgOther"]');
+  if(co) co.style.display = state.v.chassisMfg==='Other' ? '' : 'none';
 }
 function restoreInputs(){
   Array.prototype.forEach.call(document.querySelectorAll('[data-f]'), function(el){
