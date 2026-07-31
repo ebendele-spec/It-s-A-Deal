@@ -240,71 +240,139 @@ var TYPES = [
 ];
 var TYPE_NAMES = TYPES.map(function(t){ return t.n; });
 
-/* ---- Front / Rear / Roof views (created to match the silhouette style) ---- */
+/* ---- Front / Rear / Roof / Roof views — drawn flat-render style to match the
+        img/types side renders (white body, gray skirt, dark glass) ---- */
+var P = {body:'#F4F5F6', body2:'#E2E4E6', edge:'#BFC3C7', skirt:'#9EA3A8', skirtD:'#7E8388',
+         glass:'#333A41', glassHi:'#59636D', dark:'#2E2E2E', amber:'#E8B84B', red:'#B8443A',
+         metal:'#D8DADC', white:'#FFFFFF', shadow:'rgba(0,0,0,0.10)'};
+function R(x,y,w,h,r,f){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+r+'" fill="'+f+'"/>'; }
+function RO(x,y,w,h,r){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+r+'" fill="none" stroke="'+P.edge+'" stroke-width="1.2"/>'; }
+function EL(cx,cy,rx,ry,f){ return '<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'" fill="'+f+'"/>'; }
+function DOTS(y){ return EL(48,y,2,2,P.amber)+EL(60,y,2,2,P.amber)+EL(72,y,2,2,P.amber); }
+
 function frontFlat(){
-  return '<path fill="currentColor" fill-rule="evenodd" d="M24,94 V22 q0,-12 12,-12 h48 q12,0 12,12 v72 z '+
-    'M33,20 h54 a5,5 0 0 1 5,5 v20 a5,5 0 0 1 -5,5 h-54 a5,5 0 0 1 -5,-5 v-20 a5,5 0 0 1 5,-5 z '+
-    'M34,78 h16 v7 h-16 z M70,78 h16 v7 h-16 z M42,60 h36 v4 h-36 z"/>'+
-    '<rect x="12" y="26" width="8" height="16" rx="2.5" fill="currentColor"/>'+
-    '<rect x="100" y="26" width="8" height="16" rx="2.5" fill="currentColor"/>';
+  return EL(60,96,40,4,P.shadow)+
+    R(24,6,72,86,8,P.body)+R(27,8,66,7,4,P.body2)+RO(24,6,72,86,8)+DOTS(11)+
+    R(30,17,60,29,5,P.glass)+
+    '<path d="M34,20 L56,20 L44,43 L36,43 Z" fill="'+P.glassHi+'" opacity="0.55"/>'+
+    R(14,24,6,16,2,P.dark)+R(20,27,4,3,0,P.dark)+
+    R(100,24,6,16,2,P.dark)+R(96,27,4,3,0,P.dark)+
+    R(24,72,72,20,3,P.skirt)+R(22,84,76,9,3,P.skirtD)+
+    R(30,75,14,5,2,P.white)+R(76,75,14,5,2,P.white)+R(50,77,20,3,1,P.skirtD);
 }
 function frontCab(){
-  return '<path fill="currentColor" d="M20,48 v-8 q0,-10 10,-10 h60 q10,0 10,10 v8 z"/>'+
-    '<path fill="currentColor" fill-rule="evenodd" d="M24,94 V56 q0,-4 4,-4 h64 q4,0 4,4 v38 z '+
-    'M33,56 h54 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-54 a4,4 0 0 1 -4,-4 v-12 a4,4 0 0 1 4,-4 z '+
-    'M34,82 h14 v6 h-14 z M72,82 h14 v6 h-14 z"/>'+
-    '<rect x="13" y="58" width="8" height="14" rx="2.5" fill="currentColor"/>'+
-    '<rect x="99" y="58" width="8" height="14" rx="2.5" fill="currentColor"/>';
+  return EL(60,96,42,4,P.shadow)+
+    R(20,6,80,22,8,P.body)+R(20,24,80,4,1,P.body2)+RO(20,6,80,22,8)+DOTS(11)+
+    R(26,30,68,62,4,P.body)+RO(26,30,68,62,4)+
+    R(32,32,56,22,3,P.glass)+
+    '<path d="M35,34 L54,34 L44,52 L37,52 Z" fill="'+P.glassHi+'" opacity="0.55"/>'+
+    R(30,55,60,10,2,P.body2)+
+    R(34,67,52,12,2,P.dark)+R(36,70,48,2,1,'#585858')+R(36,74,48,2,1,'#585858')+
+    R(27,67,6,9,1,P.white)+R(87,67,6,9,1,P.white)+
+    R(16,34,7,12,2,P.dark)+R(97,34,7,12,2,P.dark)+
+    R(24,81,72,11,3,P.metal);
 }
 function frontVan(){
-  return '<path fill="currentColor" fill-rule="evenodd" d="M28,94 V30 q0,-14 14,-14 h36 q14,0 14,14 v64 z '+
-    'M36,24 h48 a5,5 0 0 1 5,5 v18 a5,5 0 0 1 -5,5 h-48 a5,5 0 0 1 -5,-5 v-18 a5,5 0 0 1 5,-5 z '+
-    'M36,62 h48 v4 h-48 z M38,80 h12 v6 h-12 z M70,80 h12 v6 h-12 z"/>'+
-    '<rect x="17" y="30" width="8" height="14" rx="2.5" fill="currentColor"/>'+
-    '<rect x="95" y="30" width="8" height="14" rx="2.5" fill="currentColor"/>';
+  return EL(60,96,34,4,P.shadow)+
+    R(30,8,60,84,12,P.body)+RO(30,8,60,84,12)+
+    R(35,16,50,26,6,P.glass)+
+    '<path d="M38,19 L56,19 L46,39 L39,39 Z" fill="'+P.glassHi+'" opacity="0.55"/>'+
+    R(33,44,54,11,3,P.body2)+
+    R(36,57,48,9,3,P.dark)+R(36,61,48,2,1,P.metal)+
+    R(30,55,8,10,2,P.white)+R(82,55,8,10,2,P.white)+
+    R(22,26,7,11,2,P.dark)+R(91,26,7,11,2,P.dark)+
+    R(28,78,64,13,4,P.skirt);
 }
 function frontTT(){
-  return '<path fill="currentColor" fill-rule="evenodd" d="M26,82 V26 q0,-12 12,-12 h44 q12,0 12,12 v56 z '+
-    'M36,24 h48 a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-48 a4,4 0 0 1 -4,-4 v-12 a4,4 0 0 1 4,-4 z"/>'+
-    '<circle cx="50" cy="90" r="6" fill="currentColor"/><circle cx="66" cy="90" r="6" fill="currentColor"/>'+
-    '<rect x="56" y="82" width="4" height="16" fill="currentColor"/>';
+  return EL(60,98,36,3.5,P.shadow)+
+    R(26,8,68,72,8,P.body)+RO(26,8,68,72,8)+DOTS(13)+
+    '<path d="M26,48 L94,24 L94,36 L26,60 Z" fill="'+P.body2+'"/>'+
+    '<path d="M26,56 L94,32 L94,36 L26,60 Z" fill="'+P.skirt+'" opacity="0.5"/>'+
+    R(26,64,68,16,3,P.skirt)+
+    '<path d="M46,80 L58,97 L62,97 L52,80 Z" fill="'+P.dark+'"/>'+
+    '<path d="M74,80 L62,97 L58,97 L68,80 Z" fill="'+P.dark+'"/>'+
+    '<circle cx="51" cy="87" r="6.5" fill="'+P.metal+'" stroke="'+P.edge+'"/>'+
+    '<circle cx="66" cy="87" r="6.5" fill="'+P.metal+'" stroke="'+P.edge+'"/>'+
+    R(56,93,8,7,2,P.dark)+R(58,100,4,2,1,P.dark);
 }
 function frontFW(){
-  return '<path fill="currentColor" fill-rule="evenodd" d="M28,94 V36 q0,-14 14,-14 h36 q14,0 14,14 v58 z '+
-    'M37,30 h46 a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-46 a4,4 0 0 1 -4,-4 v-10 a4,4 0 0 1 4,-4 z"/>'+
-    '<rect x="52" y="94" width="16" height="5" fill="currentColor"/>';
+  return EL(60,96,36,4,P.shadow)+
+    '<path d="M26,44 V22 q0,-14 14,-14 h40 q14,0 14,14 v22 z" fill="'+P.body+'"/>'+
+    '<path d="M26,44 V22 q0,-14 14,-14 h40 q14,0 14,14 v22 z" fill="none" stroke="'+P.edge+'" stroke-width="1.2"/>'+
+    DOTS(14)+
+    R(26,44,68,46,3,P.body)+RO(26,44,68,46,3)+
+    '<path d="M26,52 L94,34 L94,44 L26,62 Z" fill="'+P.body2+'"/>'+
+    '<path d="M26,60 L94,42 L94,46 L26,64 Z" fill="'+P.skirt+'" opacity="0.5"/>'+
+    R(44,90,32,7,2,P.skirtD)+R(56,97,8,4,1,P.dark);
 }
 function rearBox(ladder){
-  var s = '<path fill="currentColor" fill-rule="evenodd" d="M24,94 V22 q0,-12 12,-12 h48 q12,0 12,12 v72 z '+
-    'M34,22 h38 a4,4 0 0 1 4,4 v16 a4,4 0 0 1 -4,4 h-38 a4,4 0 0 1 -4,-4 v-16 a4,4 0 0 1 4,-4 z '+
-    'M32,80 h14 v6 h-14 z M74,80 h14 v6 h-14 z"/>';
+  var s = EL(60,96,40,4,P.shadow)+
+    R(24,6,72,86,8,P.body)+R(27,8,66,7,4,P.body2)+RO(24,6,72,86,8)+
+    R(34,16,44,23,4,P.glass)+
+    R(26,70,7,14,2,P.red)+R(87,70,7,14,2,P.red)+
+    R(52,73,16,9,1,P.metal)+
+    R(22,84,76,9,3,P.skirtD);
   if(ladder){
-    s += '<path class="cut" stroke-width="2.5" d="M84,16 V78 M94,16 V78 M84,26 h10 M84,38 h10 M84,50 h10 M84,62 h10 M84,74 h10"/>';
+    s += R(83,16,3,50,1,P.metal)+R(92,16,3,50,1,P.metal);
+    for(var y=22;y<=60;y+=9){ s += R(83,y,12,2.5,1,P.metal); }
+  }
+  return s;
+}
+function rearVan(){
+  return EL(60,96,34,4,P.shadow)+
+    R(30,8,60,84,12,P.body)+RO(30,8,60,84,12)+
+    R(59,14,2,66,1,P.edge)+
+    R(35,16,21,20,3,P.glass)+R(64,16,21,20,3,P.glass)+
+    R(30,60,6,20,2,P.red)+R(84,60,6,20,2,P.red)+
+    R(28,80,64,12,4,P.skirt);
+}
+function rearTrail(ladder){
+  var s = EL(60,96,36,3.5,P.shadow)+
+    R(26,8,68,76,6,P.body)+RO(26,8,68,76,6)+
+    '<path d="M26,40 L94,22 L94,32 L26,50 Z" fill="'+P.body2+'"/>'+
+    R(30,64,14,7,2,P.red)+R(76,64,14,7,2,P.red)+
+    R(52,66,16,9,1,P.metal)+
+    R(24,84,72,7,2,P.dark);
+  if(ladder){
+    s += R(80,14,3,46,1,P.metal)+R(89,14,3,46,1,P.metal);
+    for(var y=20;y<=56;y+=9){ s += R(80,y,12,2.5,1,P.metal); }
   }
   return s;
 }
 function rearRamp(){
-  return '<path fill="currentColor" d="M24,94 V22 q0,-12 12,-12 h48 q12,0 12,12 v72 z"/>'+
-    '<rect class="cut" stroke-width="2.5" x="34" y="28" width="52" height="58"/>'+
-    '<path class="cut" stroke-width="2.5" d="M34,80 h52 M55,34 h10"/>';
+  var s = EL(60,96,40,4,P.shadow)+
+    R(24,6,72,86,6,P.body)+RO(24,6,72,86,6)+DOTS(11)+
+    R(32,24,56,58,3,P.body2)+RO(32,24,56,58,3)+
+    R(32,78,56,3,1,P.skirt)+
+    R(38,28,7,4,1,P.dark)+R(75,28,7,4,1,P.dark)+
+    R(26,64,6,16,2,P.red)+R(88,64,6,16,2,P.red)+
+    R(22,86,76,7,3,P.skirtD);
+  return s;
 }
 function roofArt(len, ac){
-  var x0=16, y0=13, h=58;
-  var s = '<rect fill="currentColor" x="'+x0+'" y="'+y0+'" width="'+len+'" height="'+h+'" rx="22"/>';
-  s += '<path fill="currentColor" d="M6,'+(y0+h/2)+' l8,-9 v18 z"/>';
+  var x0=14, y0=12, h=60;
+  var s = EL(x0+len/2, 78, len/2, 3.5, P.shadow)+
+    R(x0,y0,len,h,24,'#F7F8F9')+
+    '<rect x="'+x0+'" y="'+y0+'" width="'+len+'" height="'+h+'" rx="24" fill="none" stroke="'+P.edge+'" stroke-width="1.4"/>'+
+    '<line x1="'+(x0+34)+'" y1="'+y0+'" x2="'+(x0+34)+'" y2="'+(y0+h)+'" stroke="'+P.edge+'" stroke-width="1"/>'+
+    '<line x1="'+(x0+len-28)+'" y1="'+y0+'" x2="'+(x0+len-28)+'" y2="'+(y0+h)+'" stroke="'+P.edge+'" stroke-width="1"/>'+
+    '<path d="M4,'+(y0+h/2)+' l8,-9 v18 z" fill="'+P.skirtD+'"/>';
   for(var i=0;i<ac;i++){
-    s += '<rect class="cutfill" x="'+(x0+42+i*74)+'" y="'+(y0+16)+'" width="36" height="26" rx="4"/>';
+    var x = x0+52+i*78;
+    s += R(x,y0+14,38,28,5,P.metal)+RO(x,y0+14,38,28,5)+R(x+4,y0+18,30,20,3,'#E9EBED');
   }
-  s += '<circle class="cutfill" cx="'+(x0+24)+'" cy="'+(y0+16)+'" r="5"/>';
-  s += '<circle class="cutfill" cx="'+(x0+len-24)+'" cy="'+(y0+h-16)+'" r="5"/>';
+  s += R(x0+38,y0+8,16,12,2,P.white)+RO(x0+38,y0+8,16,12,2);
+  s += R(x0+len-46,y0+40,9,9,2,P.skirt)+R(x0+len-60,y0+10,9,9,2,P.skirt);
+  s += '<circle cx="'+(x0+len-16)+'" cy="'+(y0+h-14)+'" r="4" fill="'+P.metal+'" stroke="'+P.edge+'"/>';
   return s;
 }
 function viewsFor(t){
   var fronts = {flat:frontFlat, cab:frontCab, van:frontVan, tt:frontTT, fw:frontFW};
   var rear;
   if(t.rearRamp) rear = rearRamp();
-  else if(t.fam==='tt') rear = rearBox(false);
-  else if(t.fam==='van') rear = rearBox(false);
+  else if(t.fam==='van') rear = rearVan();
+  else if(t.fam==='tt') rear = rearTrail(false);
+  else if(t.fam==='fw') rear = rearTrail(true);
   else rear = rearBox(true);
   return [
     {v:'front',     l:'Front',          vb:'0 0 120 102', art:fronts[t.fam](), mr:7},
@@ -343,15 +411,15 @@ var SECTIONS = [
      {id:'engineMfg', l:'Engine Manufacturer', t:'text'},
      {id:'engineHp',  l:'Engine HP/Size', t:'text'},
      {id:'fuelType',  l:'Fuel Type',      t:'text'},
-     {id:'transMfg',  l:'Trans Manufacturer', t:'text'},
-     {id:'transSpeed',l:'Trans Speed',    t:'text'},
+     {id:'transMfg',  l:'Transmission Manufacturer', t:'text'},
+     {id:'transSpeed',l:'Transmission Speed',    t:'text'},
      {id:'chassisMfg',l:'Chassis Manufacturer', t:'seg', w:1,
       o:['Ford','Chevrolet','Mercedes','RAM','Freightliner','Spartan','Tiffin PowerGlide','Newell','Prevost','Other']},
      {id:'chassisMfgOther', l:'Chassis Manufacturer (Other)', t:'text', ph:'Type the chassis manufacturer'},
    ]},
    { sub:'Coach Systems', fields:[
      {id:'slides',     l:'Slides',        t:'seg', o:['0','1','2','3','4','5']},
-     {id:'levelMfg',   l:'Leveling Mfg',  t:'text'},
+     {id:'levelMfg',   l:'Leveling Manufacturer',  t:'text'},
      {id:'levelType',  l:'Leveling Type', t:'seg', o:['Air','Hydraulic','4pt. Stabilizers']},
      {id:'cameras',    l:'Cameras',       t:'seg', o:['N/A','1','2','3','4']},
      {id:'acUnits',    l:'A/C Units',     t:'seg', o:['1','2','3','4']},
@@ -365,7 +433,7 @@ var SECTIONS = [
      {id:'dashAc',     l:'Dash A/C',      t:'seg', o:['Good','Bad']},
    ]},
    { sub:'Wheels / Tires / Body', fields:[
-     {id:'alumWheels', l:'Alum Wheels',      t:'seg', o:YN},
+     {id:'alumWheels', l:'Aluminum Wheels',      t:'seg', o:YN},
      {id:'tireAge',    l:'Tires: Age',       t:'text', p:1},
      {id:'tireDryRot', l:'Tires: Dry Rot / Crack', t:'seg', o:YN},
      {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
@@ -382,8 +450,8 @@ var SECTIONS = [
      {id:'smartWheel', l:'Smart Wheel',     t:'seg', o:YN},
      {id:'secBrake',   l:'Secondary Brake', t:'seg', o:['Aux','Engine','Exhaust']},
      {id:'tireMon',    l:'Tire Monitoring', t:'seg', o:YN},
-     {id:'pwrPedals',  l:'Pwr Pedals',      t:'seg', o:YN},
-     {id:'memSeat',    l:'Driver Mem Seat', t:'seg', o:YN},
+     {id:'pwrPedals',  l:'Power Pedals',      t:'seg', o:YN},
+     {id:'memSeat',    l:'Driver Memory Seat', t:'seg', o:YN},
      {id:'driverDoor', l:'Driver Door',     t:'seg', o:YN},
      {id:'pwrVisor',   l:'Power Visor',     t:'seg', o:YN},
      {id:'mobileEye',  l:'Mobile Eye',      t:'seg', o:YN},
@@ -408,12 +476,12 @@ var SECTIONS = [
      {id:'dockLights', l:'Docking Lights', t:'seg', o:YN},
      {id:'tankFlush',  l:'Black Tank Flush', t:'seg', o:YN},
      {id:'waterFilt',  l:'Water Filtration', t:'seg', o:YN},
-     {id:'hoseReel',   l:'Pwr Water Hose Reel', t:'seg', o:YN},
+     {id:'hoseReel',   l:'Power Water Hose Reel', t:'seg', o:YN},
      {id:'elecReel',   l:'Power Electrical Reel', t:'seg', o:YN},
      {id:'extShower',  l:'Exterior Shower', t:'seg', o:YN},
      {id:'extGrill',   l:'Exterior Grill',  t:'seg', o:YN},
      {id:'extFreezer', l:'Exterior Freezer',t:'seg', o:YN},
-     {id:'extKitchen', l:'Ext Kitchen',     t:'seg', o:YN},
+     {id:'extKitchen', l:'Exterior Kitchen',     t:'seg', o:YN},
      {id:'extTv',      l:'Exterior TV',     t:'seg', o:YN},
      {id:'clearMask',  l:'Clear Paint Mask',t:'seg', o:YN},
      {id:'fgRoof',     l:'Fiberglass Roof', t:'seg', o:YN},
@@ -426,8 +494,8 @@ var SECTIONS = [
      {id:'lithium',    l:'Lithium Batteries', t:'seg', o:YN},
    ]},
    { sub:'Exterior Condition', fields:[
-     {id:'extCond',    l:'Ext Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
-     {id:'extRepairs', l:'Ext Repairs Needed', t:'area', w:1},
+     {id:'extCond',    l:'Exterior Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
+     {id:'extRepairs', l:'Exterior Repairs Needed', t:'area', w:1},
    ]},
  ]},
  { key:'int', title:'Interior', groups:[
@@ -437,7 +505,7 @@ var SECTIONS = [
      {id:'leather',    l:'Seating Leather',  t:'seg', o:YN},
      {id:'boothSleep', l:'Booth to Sleeper', t:'seg', o:YN},
      {id:'washerDryer',l:'Washer/Dryer',     t:'seg', o:YN},
-     {id:'wdType',     l:'Washer/Dryer Type',t:'seg', o:['Stack','Comb']},
+     {id:'wdType',     l:'Washer/Dryer Type',t:'seg', o:['Stackable','Combo','Side By Side']},
      {id:'centralVac', l:'Central Vacuum',   t:'seg', o:YN},
      {id:'heatedFloors',l:'Heated Floors',   t:'seg', o:YN},
      {id:'sevenFt',    l:'7 Foot Ceilings',  t:'seg', o:YN},
@@ -445,7 +513,7 @@ var SECTIONS = [
      {id:'fireplace',  l:'Fireplace',        t:'seg', o:YN},
      {id:'multiplex',  l:'Multi-Plex',       t:'seg', o:YN},
      {id:'hardwoodCab',l:'Hardwood Cab',     t:'seg', o:YN},
-     {id:'shades',     l:'Shades',           t:'multi', o:['Manual','Pwr','Solar','Black-Out']},
+     {id:'shades',     l:'Shades',           t:'multi', o:['Manual','Power','Solar','Black-Out']},
      {id:'blinds',     l:'Blinds',           t:'multi', o:['Day','Night']},
      {id:'theaterSeats',l:'Theater Seats',   t:'seg', o:YN},
    ]},
@@ -464,7 +532,7 @@ var SECTIONS = [
      {id:'bkTile',     l:'Bathroom/Kitchen Tile Floors', t:'seg', o:YN},
      {id:'showerDoor', l:'Shower Door',      t:'seg', o:YN},
      {id:'tileAccents',l:'Tile Accents',     t:'seg', o:['Glass','Curtain']},
-     {id:'bath',       l:'Bath',             t:'seg', o:['1/2','1','1-1/2','2 Full']},
+     {id:'bath',       l:'# of Bathrooms',             t:'seg', o:['1/2','1','1-1/2','2 Full']},
      {id:'bedSize',    l:'Bed Size',         t:'text'},
      {id:'bedType',    l:'Bed Type',         t:'seg', o:['Sleep Number','Pillow Top','Memory Foam','N/A']},
      {id:'bunkBeds',   l:'Bunk Beds',        t:'seg', o:YN},
