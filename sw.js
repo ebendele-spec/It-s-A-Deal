@@ -1,12 +1,14 @@
 /* It's a Deal — service worker.
    Same-origin: network-first (pushed updates always win), cache fallback offline.
    CDN libraries: cache-first (they're versioned and never change). */
-const CACHE = 'iad-v4';
+const CACHE = 'iad-v5';
+const TYPE_BASES = ['class_a', 'class_b', 'class_c', 'diesel_pusher',
+                    'fifth_wheel', 'super_c', 'toy_hauler', 'travel_trailer'];
+const VIEWS = ['passenger', 'driver', 'front', 'rear', 'roof'];
 const CORE = ['./', 'index.html', 'trade-eval.html', 'inventory.js', 'manifest.webmanifest',
               'icons/icon-192.png', 'icons/icon-512.png',
-              'img/types/class_a.webp', 'img/types/class_b.webp', 'img/types/class_c.webp',
-              'img/types/diesel_pusher.webp', 'img/types/fifth_wheel.webp', 'img/types/super_c.webp',
-              'img/types/toy_hauler.webp', 'img/types/travel_trailer.webp'];
+              ...TYPE_BASES.map(t => `img/types/${t}.webp`),
+              ...TYPE_BASES.flatMap(t => VIEWS.map(v => `img/types/views/${t}_${v}.webp`))];
 
 self.addEventListener('install', e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()));
