@@ -1,7 +1,7 @@
 /* It's a Deal — service worker.
    Same-origin: network-first (pushed updates always win), cache fallback offline.
    CDN libraries: cache-first (they're versioned and never change). */
-const CACHE = 'iad-v5';
+const CACHE = 'iad-v6';
 const TYPE_BASES = ['class_a', 'class_b', 'class_c', 'diesel_pusher',
                     'fifth_wheel', 'super_c', 'toy_hauler', 'travel_trailer'];
 const VIEWS = ['passenger', 'driver', 'front', 'rear', 'roof'];
