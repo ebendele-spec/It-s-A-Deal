@@ -482,6 +482,20 @@
         </svg>
         <span><b>Trade-In Evaluation</b><small>Used coach check-in</small></span>
       </button>
+      <button type="button" class="tool-btn" data-tool="loaner">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M8 27 l3.5-9.5 A4 4 0 0 1 15.2 15 h13.6 a4 4 0 0 1 3.7 2.5 L36 27" fill="none" stroke="#14273F" stroke-width="3" stroke-linejoin="round"/>
+          <rect x="5" y="26" width="34" height="10" rx="3" fill="#14273F"/>
+          <circle cx="12.5" cy="36.5" r="4.5" fill="#14273F" stroke="#FAF7F0" stroke-width="1.6"/>
+          <circle cx="31.5" cy="36.5" r="4.5" fill="#14273F" stroke="#FAF7F0" stroke-width="1.6"/>
+          <circle cx="12.5" cy="36.5" r="1.7" fill="#C6A24E"/>
+          <circle cx="31.5" cy="36.5" r="1.7" fill="#C6A24E"/>
+          <circle cx="38" cy="16" r="6.5" fill="#C6A24E"/>
+          <circle cx="38" cy="16" r="2.4" fill="none" stroke="#14273F" stroke-width="1.8"/>
+          <path d="M38 22.5 v7 l2.6 2 M38 26 l2.4 1.8" stroke="#C6A24E" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        </svg>
+        <span><b>Loaner Vehicle</b><small>Check out &amp; check in</small></span>
+      </button>
     </div>
     <form id="lockForm" autocomplete="off" hidden>
       <h2 id="lockTitle">Sign In</h2>
@@ -507,7 +521,8 @@
     if(!b) return;
     tool = b.dataset.tool;
     document.getElementById('lockTitle').textContent =
-      tool === 'deal' ? "It's A Deal!" : 'Trade-In Evaluation';
+      tool === 'deal' ? "It's A Deal!" :
+      tool === 'trade' ? 'Trade-In Evaluation' : 'Loaner Vehicle';
     pick.hidden = true;
     form.hidden = false;
     err.classList.remove('show');
@@ -530,6 +545,9 @@
     } else if (tool === 'trade' && u === atob('c2VydmljZQ==') && p === atob('dHJhZGVzNTE1MHVubG9jaw==')) {
       sessionStorage.setItem('iadRole','service');
       location.href = 'trade-eval.html';
+    } else if (tool === 'loaner' && u === atob('bG9hbmVy') && p === atob('bG9hbmVyNTE1MHVubG9jaw==')) {
+      sessionStorage.setItem('iadRole','loaner');
+      location.href = 'loaner.html';
     } else {
       err.classList.add('show');
       document.getElementById('lockPass').value = '';

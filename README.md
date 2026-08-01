@@ -7,8 +7,9 @@ stock-number lookup from the NetSource inventory export.
 
 | File | Purpose | Deploy? |
 |---|---|---|
-| `index.html` | The deal sheet itself (+ sign-in gate for both tools) | Yes |
+| `index.html` | The deal sheet itself (+ sign-in gate for all three tools) | Yes |
 | `trade-eval.html` | Trade-In Evaluation tool for techs (service login) | Yes |
+| `loaner.html` | Loaner Vehicle check-out / check-in agreement (loaner login) | Yes |
 | `inventory.js` | Stock lookup data (1,224 units, generated July 11, 2026) | Yes |
 | `update-inventory.py` | Regenerates inventory.js from a new CSV | No — keep locally |
 | `email-worker.js` | Cloudflare Worker that sends the emailed PDFs | No — deploy to Cloudflare |

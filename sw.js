@@ -1,11 +1,11 @@
 /* It's a Deal — service worker.
    Same-origin: network-first (pushed updates always win), cache fallback offline.
    CDN libraries: cache-first (they're versioned and never change). */
-const CACHE = 'iad-v6';
+const CACHE = 'iad-v7';
 const TYPE_BASES = ['class_a', 'class_b', 'class_c', 'diesel_pusher',
                     'fifth_wheel', 'super_c', 'toy_hauler', 'travel_trailer'];
 const VIEWS = ['passenger', 'driver', 'front', 'rear', 'roof'];
-const CORE = ['./', 'index.html', 'trade-eval.html', 'inventory.js', 'manifest.webmanifest',
+const CORE = ['./', 'index.html', 'trade-eval.html', 'loaner.html', 'inventory.js', 'manifest.webmanifest',
               'icons/icon-192.png', 'icons/icon-512.png',
               ...TYPE_BASES.map(t => `img/types/${t}.webp`),
               ...TYPE_BASES.flatMap(t => VIEWS.map(v => `img/types/views/${t}_${v}.webp`))];
