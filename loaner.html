@@ -91,9 +91,25 @@
     font:700 16px 'Barlow Semi Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em}
   .btn.primary{background:var(--navy);color:var(--gold)}
   .btn.primary:hover{background:var(--navy-deep)}
+  .btn.primary:disabled{opacity:.55;cursor:wait}
   .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
-  .btn.danger{background:#fff;border:1px solid var(--red);color:var(--red)}
-  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+
+  /* ---------- Email panel ---------- */
+  .email-wrap{background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-top:10px}
+  .email-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .email-row input{flex:1;min-width:220px;padding:9px 11px;font:inherit;font-size:15px;
+    border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink)}
+  .email-row input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+  .email-row button{padding:10px 20px;cursor:pointer;border-radius:4px;border:none;
+    font:700 14px 'Barlow Semi Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em;
+    background:var(--navy);color:var(--gold)}
+  .email-row button:disabled{opacity:.55;cursor:wait}
+  .email-status{font-size:13px;font-weight:600;margin-top:8px;min-height:16px}
+  .email-status.ok{color:var(--green)}
+  .email-status.err,.email-status.warn{color:var(--red)}
+  .email-status.busy{color:var(--muted)}
+  .email-note{font-size:11.5px;color:var(--muted);margin-top:6px}
 
   /* ---------- Home: record cards ---------- */
   .new-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
@@ -117,13 +133,19 @@
   .rec-btns button.check{border-color:var(--navy);background:var(--navy);color:var(--gold);font-weight:700}
   .rec-btns button.del{border-color:var(--red);color:var(--red)}
   .empty{font-size:14px;color:var(--muted);margin-top:10px;font-style:italic}
+  .sync-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .sync-line{font-size:12px;color:var(--muted);text-align:center}
+  .sync-line.ok{color:var(--green);font-weight:600}
+  .sync-line.warn{color:#8A6D2A;font-weight:600}
+  #syncRefresh{padding:4px 10px;cursor:pointer;background:#fff;border:1px solid var(--line);
+    border-radius:12px;font:600 11px 'Barlow',sans-serif;color:var(--muted)}
+  #syncRefresh:hover{border-color:var(--gold);color:var(--navy)}
 
-  /* ---------- Check-in summary ---------- */
-  .sumbox{background:var(--gold-soft);border-left:4px solid var(--gold);
-    padding:12px 14px;font-size:14px;line-height:1.7;border-radius:0 4px 4px 0;margin-bottom:18px}
+  .privacy-note{background:var(--gold-soft);border-left:4px solid var(--gold);
+    padding:12px 14px;font-size:13px;line-height:1.55;border-radius:0 4px 4px 0;margin-top:18px}
   .missing{font-size:14px;margin-top:14px;color:var(--red);font-weight:600}
 
-  /* ---------- Print sheet ---------- */
+  /* ---------- Print sheet (checkout-time only) ---------- */
   #printSheet{display:none}
   @media print{
     body{background:#fff;padding:0}
@@ -179,6 +201,10 @@
   <!-- ============ HOME ============ -->
   <section class="view on" id="homeView">
     <button type="button" class="new-btn" id="newBtn">&#43; New Check-Out</button>
+    <div class="sync-row">
+      <span class="sync-line" id="syncLine"></span>
+      <button type="button" id="syncRefresh" hidden>&#8635; Refresh</button>
+    </div>
     <h3 class="sub">Vehicles Out</h3>
     <div id="outList"></div>
     <h3 class="sub">Returned</h3>
@@ -191,8 +217,8 @@
 
     <h3 class="sub" style="margin-top:0">Vehicle</h3>
     <div class="fgrid">
-      <div class="field wide"><label for="vehicle">Vehicle Description</label>
-        <input type="text" id="vehicle" data-f="vehicle" placeholder="2011 Chevrolet Equinox LT" autocomplete="off"></div>
+      <div class="field wide"><label>Vehicle Description</label>
+        <div class="seg" id="vehicleSeg"></div></div>
       <div class="field"><label for="vin">VIN# or Car #</label>
         <input type="text" id="vin" data-f="vin" autocomplete="off"></div>
       <div class="field"><label for="milesOut">Miles Out</label>
@@ -209,8 +235,10 @@
 
     <h3 class="sub">Borrower</h3>
     <div class="fgrid">
-      <div class="field"><label for="borrower">Borrower Name</label>
-        <input type="text" id="borrower" data-f="borrower" autocomplete="off"></div>
+      <div class="field"><label for="borrowerFirst">First Name</label>
+        <input type="text" id="borrowerFirst" data-f="borrowerFirst" autocomplete="off"></div>
+      <div class="field"><label for="borrowerLast">Last Name</label>
+        <input type="text" id="borrowerLast" data-f="borrowerLast" autocomplete="off"></div>
       <div class="field"><label for="phone">Phone #</label>
         <input type="tel" id="phone" data-f="phone" autocomplete="off"></div>
       <div class="field wide"><label for="address">Address</label>
@@ -223,7 +251,7 @@
 
     <h3 class="sub">Driver&rsquo;s License &amp; Insurance</h3>
     <p class="hint" style="margin-bottom:8px">Borrower MUST present a current/valid driver&rsquo;s license and insurance.
-      A copy of both is kept for dealer records prior to use.</p>
+      The photos go on the emailed/printed agreement only &mdash; they are never stored in the app.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button type="button" class="photo-btn" data-photo="photoDL">&#128247; Driver&rsquo;s License Photo</button>
       <button type="button" class="photo-btn" data-photo="photoIns">&#128247; Insurance Photo</button>
@@ -267,36 +295,29 @@
       </div>
     </div>
 
+    <h3 class="sub">Email the Completed Agreement</h3>
+    <div class="email-wrap">
+      <label for="emailTo" style="font:700 11px 'Barlow',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--navy)">
+        Send the PDF to &mdash; one or more addresses, separated by commas</label>
+      <div class="email-row">
+        <input type="text" id="emailTo" placeholder="me@mhsrv.com, manager@mhsrv.com" autocomplete="off" inputmode="email">
+        <button type="button" id="emailSend">Send</button>
+      </div>
+      <div class="email-status" id="emailStatus" aria-live="polite"></div>
+      <p class="email-note">The full agreement PDF (license &amp; insurance photos and signatures included) is attached
+        automatically &mdash; sent from deal@mhsrv.app (replies go to Elisha).</p>
+    </div>
+
+    <div class="privacy-note">
+      <b>Heads up:</b> the full agreement &mdash; signatures, license &amp; insurance photos, address and phone &mdash;
+      exists <b>only on this screen</b>. Email or print it before saving. Saving keeps just the vehicle, VIN/Car&nbsp;#,
+      due-back date, and the borrower&rsquo;s name in the shared Vehicles Out list.
+    </div>
+
     <div id="outMissing" class="missing"></div>
     <div class="btn-row">
       <button type="button" class="btn primary" id="saveOut">&#10003; Save Check-Out</button>
       <button type="button" class="btn ghost" id="cancelOut">Cancel</button>
-    </div>
-  </section>
-
-  <!-- ============ CHECK-IN ============ -->
-  <section class="view" id="inView">
-    <h2 class="sec">Vehicle Check-In</h2>
-    <div class="sumbox" id="inSummary"></div>
-    <div class="fgrid">
-      <div class="field"><label for="dateIn">Date Returned</label>
-        <input type="date" id="dateIn"></div>
-      <div class="field"><label for="milesIn">Miles In</label>
-        <input type="text" id="milesIn" inputmode="numeric" autocomplete="off"></div>
-      <div class="field"><label for="initIn">Initials (Miles In)</label>
-        <input type="text" id="initIn" autocomplete="off"></div>
-      <div class="field"><label>Fuel Level In</label>
-        <div class="seg" id="fuelInSeg"></div>
-        <p class="hint">Reminder: any fuel used is to be replaced.</p></div>
-      <div class="field"><label for="receivedBy">Received By (Employee)</label>
-        <input type="text" id="receivedBy" autocomplete="off"></div>
-      <div class="field wide"><label for="condition">Returned Condition</label>
-        <textarea id="condition" placeholder="Condition of the vehicle on return — note any damage, cleanliness, smoking/pet evidence"></textarea></div>
-    </div>
-    <div class="btn-row">
-      <button type="button" class="btn primary" id="saveIn">&#10003; Save Check-In</button>
-      <button type="button" class="btn ghost" id="printIn">&#128424; Print Agreement</button>
-      <button type="button" class="btn ghost" id="cancelIn">&larr; Back</button>
     </div>
   </section>
 </div>
@@ -310,35 +331,121 @@
 var $ = function(id){ return document.getElementById(id); };
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 var FUEL = ['E','1/4','1/2','3/4','F'];
-var TEXT_FIELDS = ['vehicle','vin','milesOut','initOut','dateOut','byOut',
-                   'borrower','phone','address','salesman','salesmgr'];
+var VEHICLES = ['2011 Chevrolet Equinox LT','2018 Ford Expedition'];
+var TEXT_FIELDS = ['vin','milesOut','initOut','dateOut','byOut',
+                   'borrowerFirst','borrowerLast','phone','address','salesman','salesmgr'];
 
 /* ============================================================
-   Storage
+   Storage — records hold ONLY: id, status, vehicle, vin,
+   dateOut, borrower (first + last), dateIn. Everything else
+   (photos, signatures, address, phone) lives only in the
+   checkout draft and is discarded when the checkout is saved.
    ============================================================ */
 var RECS_KEY  = 'loanerRecords-v1';
-var DRAFT_KEY = 'loanerDraft-v1';
+var DRAFT_KEY = 'loanerDraft-v2';
+try{ localStorage.removeItem('loanerDraft-v1'); }catch(e){}
 var recs = [];
 try{ recs = JSON.parse(localStorage.getItem(RECS_KEY) || '[]') || []; }catch(e){ recs = []; }
 function saveRecs(){
   try{ localStorage.setItem(RECS_KEY, JSON.stringify(recs)); }
-  catch(e){ alert('Device storage is full — this record may not survive closing the tab. '+
-                  'Print the agreement now, then delete old returned records to free space.'); }
+  catch(e){ alert('Device storage is full — this record may not survive closing the tab.'); }
 }
-function blankDraft(){ return {v:{}, fuelOut:'', sigAck:null, sigMain:null, photoDL:null, photoIns:null}; }
+function blankDraft(){ return {v:{}, vehicle:'', fuelOut:'', sigAck:null, sigMain:null, photoDL:null, photoIns:null}; }
 var draft = blankDraft();
 try{
   var d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
   if(d && d.v) draft = d;
 }catch(e){}
 function saveDraft(){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); }catch(e){} }
+function minimalRec(r){
+  return {id:r.id, status:r.status, vehicle:r.vehicle||'', vin:r.vin||'',
+          dateOut:r.dateOut||'', borrower:r.borrower||'', dateIn:r.dateIn||''};
+}
+
+/* ============================================================
+   Cloud sync — shares the minimal records across devices via
+   a Cloudflare Worker + KV (see LOANER-SETUP.md). Until
+   SYNC_ENDPOINT is filled in, records stay on this device.
+   ============================================================ */
+var SYNC_ENDPOINT = 'PASTE-YOUR-LOANER-WORKER-URL-HERE';
+var SYNC_TOKEN = atob('bG9hbmVyU3luYzUxNTB1bmxvY2s=');
+var PEND_KEY = 'loanerPending-v1', SINCE_KEY = 'loanerSince-v1';
+var syncEnabled = SYNC_ENDPOINT.indexOf('https://') === 0;
+var pending = [];
+try{ pending = JSON.parse(localStorage.getItem(PEND_KEY) || '[]') || []; }catch(e){ pending = []; }
+function savePending(){ try{ localStorage.setItem(PEND_KEY, JSON.stringify(pending)); }catch(e){} }
+function setSync(msg, cls){
+  var el = $('syncLine');
+  el.textContent = msg;
+  el.className = 'sync-line' + (cls ? ' ' + cls : '');
+}
+function queueOp(op){
+  if(op.op==='put' && op.rec) op.rec = minimalRec(op.rec);
+  pending.push(op); savePending(); syncNow();
+}
+var syncing = false, syncAgain = false;
+function syncNow(){
+  if(!syncEnabled){
+    setSync('Records are stored on this device only — cloud sync is not set up yet (see LOANER-SETUP.md).');
+    return;
+  }
+  if(syncing){ syncAgain = true; return; }
+  syncing = true;
+  setSync('Syncing…');
+  var sending = pending.slice();
+  fetch(SYNC_ENDPOINT, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({token:SYNC_TOKEN, since:Number(localStorage.getItem(SINCE_KEY))||0, ops:sending})
+  })
+  .then(function(res){
+    return res.json().then(function(d){
+      if(!res.ok) throw new Error(d.error || ('HTTP '+res.status));
+      return d;
+    });
+  })
+  .then(function(data){
+    pending = pending.slice(sending.length);
+    savePending();
+    var pendPut = {};
+    pending.forEach(function(op){ if(op.op==='put' && op.rec) pendPut[String(op.rec.id)] = 1; });
+    var ids = (data.ids||[]).map(String);
+    /* drop records deleted elsewhere — but never one that is
+       unsynced or has a change still waiting to upload */
+    recs = recs.filter(function(r){
+      return ids.indexOf(String(r.id)) > -1 || pendPut[String(r.id)] || !r.synced;
+    });
+    /* merge in records changed on other devices */
+    (data.records||[]).forEach(function(sr){
+      sr.synced = true;
+      if(pendPut[String(sr.id)]) return;   /* local edit pending — keep ours */
+      for(var i=0;i<recs.length;i++){
+        if(String(recs[i].id) === String(sr.id)){ recs[i] = sr; return; }
+      }
+      recs.push(sr);
+    });
+    recs.forEach(function(r){ if(ids.indexOf(String(r.id)) > -1) r.synced = true; });
+    recs.sort(function(a,b){ return Number(a.id) - Number(b.id); });
+    saveRecs();
+    try{ localStorage.setItem(SINCE_KEY, String(data.now||0)); }catch(e){}
+    setSync('✓ Synced across devices', 'ok');
+    if($('homeView').classList.contains('on')) renderHome();
+    syncing = false;
+    if(syncAgain || pending.length){ syncAgain = false; syncNow(); }
+  })
+  .catch(function(){
+    syncing = false; syncAgain = false;
+    setSync(pending.length
+      ? '⚠ Offline — changes are saved here and will sync when reconnected'
+      : '⚠ Offline — showing the last records this device has seen', 'warn');
+  });
+}
 
 /* ============================================================
    Views
    ============================================================ */
-var activeRec = null;   /* record being checked in */
 function show(id){
-  ['homeView','outView','inView'].forEach(function(v){ $(v).classList.toggle('on', v===id); });
+  ['homeView','outView'].forEach(function(v){ $(v).classList.toggle('on', v===id); });
   window.scrollTo({top:0});
 }
 
@@ -363,14 +470,14 @@ function dueInfo(iso){
   var due;
   if(out.getDay()===6){ due = new Date(p[0], p[1]-1, p[2], 17, 0); }        /* Saturday: 5 PM same day */
   else{ due = new Date(p[0], p[1]-1, p[2]+1, 9, 0); }                       /* otherwise: 9 AM next day */
-  var lbl = (due.getDay()===6 && out.getDay()===6)
+  var lbl = (out.getDay()===6)
     ? 'Sat '+fmtDate(iso)+' 5:00 PM'
     : fmtDate(due.getFullYear()+'-'+(due.getMonth()+1)+'-'+due.getDate())+' 9:00 AM';
   return {due:due, label:lbl, overdue: new Date() > due};
 }
 
 /* ============================================================
-   Home lists
+   Home lists — show ONLY vehicle, VIN/Car #, due back, borrower
    ============================================================ */
 function recTitle(r){ return esc(r.vehicle || 'Vehicle'); }
 function renderHome(){
@@ -382,12 +489,10 @@ function renderHome(){
     h += '<div class="rec"><div class="rec-top"><b>'+recTitle(r)+'</b>'+
          (d && d.overdue ? '<span class="badge due">Overdue &mdash; due '+esc(d.label)+'</span>'
                          : '<span class="badge">Due back '+esc(d?d.label:'—')+'</span>')+'</div>'+
-         '<div class="rec-meta"><b>'+esc(r.borrower||'—')+'</b>'+(r.phone?' &middot; '+esc(r.phone):'')+
-         '<br>Out '+esc(fmtDate(r.dateOut)||'—')+' &middot; Miles out '+esc(r.milesOut||'—')+
-         ' &middot; Fuel '+esc(r.fuelOut||'—')+(r.vin?' &middot; '+esc(r.vin):'')+'</div>'+
+         '<div class="rec-meta"><b>'+esc(r.borrower||'—')+'</b><br>'+
+         'VIN / Car #: '+esc(r.vin||'—')+' &middot; Out '+esc(fmtDate(r.dateOut)||'—')+'</div>'+
          '<div class="rec-btns">'+
          '<button type="button" class="check" data-in="'+r.id+'">&#10003; Check In</button>'+
-         '<button type="button" data-print="'+r.id+'">&#128424; Print</button>'+
          '<button type="button" class="del" data-del="'+r.id+'">Delete</button></div></div>';
   });
   $('outList').innerHTML = h || '<p class="empty">No vehicles are currently out.</p>';
@@ -395,36 +500,35 @@ function renderHome(){
   back.slice().reverse().slice(0,25).forEach(function(r){
     h += '<div class="rec"><div class="rec-top"><b>'+recTitle(r)+'</b>'+
          '<span class="badge back">Returned '+esc(fmtDate(r.dateIn)||'')+'</span></div>'+
-         '<div class="rec-meta"><b>'+esc(r.borrower||'—')+'</b>'+
-         ' &middot; Out '+esc(fmtDate(r.dateOut)||'—')+' &middot; Miles '+esc(r.milesOut||'—')+' &rarr; '+esc(r.milesIn||'—')+
-         ' &middot; Fuel '+esc(r.fuelOut||'—')+' &rarr; '+esc(r.fuelIn||'—')+
-         (r.receivedBy?' &middot; Received by '+esc(r.receivedBy):'')+'</div>'+
+         '<div class="rec-meta"><b>'+esc(r.borrower||'—')+'</b><br>'+
+         'VIN / Car #: '+esc(r.vin||'—')+' &middot; Out '+esc(fmtDate(r.dateOut)||'—')+'</div>'+
          '<div class="rec-btns">'+
-         '<button type="button" data-print="'+r.id+'">&#128424; Print</button>'+
          '<button type="button" class="del" data-del="'+r.id+'">Delete</button></div></div>';
   });
   $('histList').innerHTML = h || '<p class="empty">No returned vehicles yet.</p>';
 }
 $('homeView').addEventListener('click', function(e){
-  var b = e.target.closest ? e.target.closest('button[data-in],button[data-print],button[data-del]') : null;
+  var b = e.target.closest ? e.target.closest('button[data-in],button[data-del]') : null;
   if(!b) return;
-  var id = b.dataset.in || b.dataset.print || b.dataset.del;
+  var id = b.dataset.in || b.dataset.del;
   var r = recs.filter(function(x){ return String(x.id)===String(id); })[0];
   if(!r) return;
-  if(b.dataset.print){ printRec(r); return; }
   if(b.dataset.del){
-    if(!confirm('Delete this record for '+(r.borrower||'this borrower')+'? This cannot be undone.')) return;
+    if(!confirm('Delete this record for '+(r.borrower||'this borrower')+'? This removes it on every device and cannot be undone.')) return;
     recs = recs.filter(function(x){ return x!==r; });
-    saveRecs(); renderHome(); return;
+    saveRecs(); queueOp({op:'del', id:r.id}); renderHome(); return;
   }
-  openCheckIn(r);
+  if(!confirm('Check in the '+(r.vehicle||'vehicle')+' from '+(r.borrower||'the borrower')+'? It will show as returned today on every device.')) return;
+  r.status = 'returned';
+  r.dateIn = todayISO();
+  saveRecs(); queueOp({op:'put', rec:r}); renderHome();
 });
 
 /* ============================================================
-   Fuel segments
+   Segments (vehicle + fuel)
    ============================================================ */
-function buildSeg(el, onPick){
-  FUEL.forEach(function(o){
+function buildSeg(el, options, onPick){
+  options.forEach(function(o){
     var b = document.createElement('button');
     b.type='button'; b.textContent=o; b.dataset.o=o;
     b.addEventListener('click', function(){
@@ -439,9 +543,8 @@ function buildSeg(el, onPick){
 function setSeg(el, val){
   Array.prototype.forEach.call(el.children, function(x){ x.classList.toggle('on', x.dataset.o===val); });
 }
-var fuelIn = '';
-buildSeg($('fuelOutSeg'), function(v){ draft.fuelOut=v; saveDraft(); });
-buildSeg($('fuelInSeg'),  function(v){ fuelIn=v; });
+buildSeg($('vehicleSeg'), VEHICLES, function(v){ draft.vehicle=v; saveDraft(); });
+buildSeg($('fuelOutSeg'), FUEL, function(v){ draft.fuelOut=v; saveDraft(); });
 
 /* ============================================================
    Signature pads
@@ -504,7 +607,7 @@ document.addEventListener('click', function(e){
 });
 
 /* ============================================================
-   Photos (same pipeline as the other tools: <=1400px JPEG 0.8)
+   Photos (<=1400px JPEG 0.8, stored with dimensions)
    ============================================================ */
 async function decodePhotoToCanvas(file, MAX){
   var src=null, w=0, h=0;
@@ -544,7 +647,7 @@ photoInput.addEventListener('change', async function(){
   Array.prototype.forEach.call(btns, function(b){ b.disabled=true; b.textContent='Processing…'; });
   try{
     var c = await decodePhotoToCanvas(file, 1400);
-    draft[key] = c.toDataURL('image/jpeg', 0.8);
+    draft[key] = {data: c.toDataURL('image/jpeg', 0.8), w: c.width, h: c.height};
     saveDraft();
   }catch(err){
     alert('Could not read that photo — please try again.');
@@ -567,25 +670,279 @@ function refreshPhotoBtns(){
    Check-out form wiring
    ============================================================ */
 TEXT_FIELDS.forEach(function(f){
-  $(f).addEventListener('input', function(){ draft.v[f]=$(f).value; saveDraft(); });
+  $(f).addEventListener('input', function(){ draft.v[f]=$(f).value; lastEmailOk=false; saveDraft(); });
 });
+function gv(f){ return ($(f).value||'').trim(); }
 function restoreDraft(){
   TEXT_FIELDS.forEach(function(f){ $(f).value = draft.v[f]||''; });
   if(!$('dateOut').value){ $('dateOut').value = todayISO(); draft.v.dateOut = $('dateOut').value; }
+  setSeg($('vehicleSeg'), draft.vehicle);
   setSeg($('fuelOutSeg'), draft.fuelOut);
   refreshPhotoBtns();
 }
+function fullData(){
+  return {
+    vehicle: draft.vehicle||'', vin: gv('vin'), milesOut: gv('milesOut'), initOut: gv('initOut'),
+    dateOut: $('dateOut').value || todayISO(), byOut: gv('byOut'), fuelOut: draft.fuelOut||'',
+    borrower: (gv('borrowerFirst')+' '+gv('borrowerLast')).trim(),
+    phone: gv('phone'), address: gv('address'), salesman: gv('salesman'), salesmgr: gv('salesmgr'),
+    sigAck: draft.sigAck, sigMain: draft.sigMain, photoDL: draft.photoDL, photoIns: draft.photoIns
+  };
+}
 $('newBtn').addEventListener('click', function(){
+  lastEmailOk = false;
+  setEmailStatus('','');
   show('outView');
   restoreDraft();
   pads.sigAck.resize(); pads.sigMain.resize();
 });
-$('cancelOut').addEventListener('click', function(){ show('homeView'); renderHome(); });
+$('cancelOut').addEventListener('click', function(){ show('homeView'); renderHome(); syncNow(); });
 
-$('saveOut').addEventListener('click', function(){
+/* ============================================================
+   Email PDF — same pipeline as the deal sheet: jsPDF builds
+   the agreement in the browser, the mhs-deal-mailer Worker
+   sends it with the PDF attached.
+   ============================================================ */
+var SEND_ENDPOINT = 'https://mhs-deal-mailer.ebendele.workers.dev';
+var lastEmailOk = false;
+function setEmailStatus(kind,msg){
+  var el = $('emailStatus');
+  el.className = 'email-status ' + kind;
+  el.textContent = msg;
+}
+function loadJsPDF(){
+  if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+  return new Promise(function(resolve,reject){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = resolve;
+    s.onerror = function(){ reject(new Error('could not load the PDF library')); };
+    document.head.appendChild(s);
+  });
+}
+function imgDims(src){
+  return new Promise(function(resolve,reject){
+    var i = new Image();
+    i.onload = function(){ resolve({w:i.naturalWidth, h:i.naturalHeight}); };
+    i.onerror = function(){ reject(new Error('unreadable image')); };
+    i.src = src;
+  });
+}
+async function makeLoanerPdfBlob(d){
+  await loadJsPDF();
+  var doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
+  var PW=8.5, PH=11, M=0.55, W=PW-2*M, y=0.72;
+  var GAP=0.3, colW=(W-GAP)/2, X0=M, X1=M+colW+GAP;
+
+  function ensure(h){ if(y+h > PH-0.6){ doc.addPage(); y=0.72; } }
+  function fit(text,w){
+    var t=String(text||'');
+    if(doc.getTextWidth(t)<=w-0.04) return t;
+    while(t.length>1 && doc.getTextWidth(t+'...')>w-0.04) t=t.slice(0,-1);
+    return t+'...';
+  }
+  function para(text, bold, center){
+    doc.setFont('helvetica', bold?'bold':'normal'); doc.setFontSize(8.4);
+    doc.setTextColor(25,25,25);
+    var lines = doc.splitTextToSize(text, W);
+    ensure(lines.length*0.135+0.1);
+    doc.text(lines, center?PW/2:M, y, center?{align:'center'}:undefined);
+    y += lines.length*0.135 + 0.08;
+  }
+  function section(title){
+    ensure(0.6);
+    y += 0.10;
+    doc.setFont('helvetica','bold'); doc.setFontSize(10);
+    doc.setTextColor(20,39,63);
+    doc.text(title.toUpperCase(), M, y);
+    doc.setDrawColor(0); doc.setLineWidth(0.014);
+    doc.line(M, y+0.05, PW-M, y+0.05);
+    y += 0.28;
+  }
+  function field(label, value, x, w){
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.4);
+    doc.setTextColor(107,116,128);
+    doc.text(String(label).toUpperCase(), x, y);
+    if(value){
+      doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+      doc.setTextColor(27,36,48);
+      doc.text(fit(value,w), x+0.02, y+0.20);
+    }
+    doc.setDrawColor(150,158,170); doc.setLineWidth(0.008);
+    doc.line(x, y+0.25, x+w, y+0.25);
+  }
+  function row2(l1,v1,l2,v2){ ensure(0.45); field(l1,v1,X0,colW); if(l2!=null) field(l2,v2,X1,colW); y+=0.40; }
+  async function sigImage(src, x, maxW, maxH){
+    if(!src) return 0;
+    try{
+      var dm = await imgDims(src);
+      var k = Math.min(maxW/dm.w, maxH/dm.h);
+      doc.addImage(src, 'PNG', x, y-maxH+0.06, dm.w*k, dm.h*k);
+      return dm.w*k;
+    }catch(e){ return 0; }
+  }
+
+  /* --- header --- */
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(0,0,0);
+  doc.text('BORROWED VEHICLE AGREEMENT', PW/2, y, {align:'center'}); y+=0.20;
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(90,90,90);
+  doc.text('MOTOR HOME SPECIALIST  ·  RV RETAILERS, LLC  ·  ALVARADO, TX', PW/2, y, {align:'center'}); y+=0.10;
+  doc.setDrawColor(0); doc.setLineWidth(0.02); doc.line(M,y,PW-M,y); y+=0.24;
+
+  /* --- agreement text --- */
+  para('This agreement hereby acknowledges that the below mentioned vehicle is solely owned by Motor Home Specialist, RV Retailers, LLC.');
+  para('The undersigned (borrower) agrees to return said vehicle to the dealer at the dealer’s address in the same condition in which it was received.');
+  para('VEHICLES ARE TO BE RETURNED NO LATER THAN 9:00 AM THE FOLLOWING DAY. VEHICLES MUST BE RETURNED NO LATER THAN 5 PM ON SATURDAY AND ANY DAY BEFORE A CLOSED DAY. PLEASE REPLACE ANY FUEL USED, THANK YOU.', true);
+  para('Borrower shall be liable for any and all damages or injuries caused to or by the use of the borrowed vehicle during the time the vehicle is borrowed. This includes any injury, damage, repair, or clean up (beyond normal make – ready) that occurs during Borrower’s use of the vehicle.');
+  para('Borrower agrees that should the vehicle not be promptly returned, as indicated, the borrower shall be responsible for all reasonable fees and court costs the dealer may incur while trying to reclaim the vehicle. A credit card will be kept on file for any charges associated with the above, and Motor Home Specialist, RV Retailers, LLC., may charge to the credit card any unpaid fees and expenses noted above that arise as a result of the Borrower’s use of the vehicle.');
+  y += 0.04;
+  para('WITH RESPECT TO OTHERS WITH ALLERGIES, ALL VEHICLES ARE NON-SMOKING / NO PETS!!', true, true);
+
+  /* --- $5,000 acknowledgment with signature --- */
+  ensure(0.6);
+  y += 0.30;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.4); doc.setTextColor(25,25,25);
+  var ackLbl = 'A $5,000 charge will be incurred for smoking OR having pets in vehicle   X ';
+  doc.text(ackLbl, M, y);
+  var ax = M + doc.getTextWidth(ackLbl) + 0.05;
+  var aw = await sigImage(d.sigAck, ax, 2.0, 0.42);
+  var lineEnd = ax + Math.max(aw, 1.8) + 0.1;
+  doc.setDrawColor(0); doc.setLineWidth(0.01);
+  doc.line(ax-0.03, y+0.04, lineEnd, y+0.04);
+  doc.text('Borrower', lineEnd+0.06, y);
+  y += 0.22;
+  para('Borrower MUST present Current/Valid Driver’s License and Insurance. Dealer will retain a copy of both for dealer records prior to use.');
+
+  /* --- borrower --- */
+  section('Borrower');
+  row2('Borrower (Name)', d.borrower, 'Salesman', d.salesman);
+  row2('Address', d.address, 'Sales Manager', d.salesmgr);
+  row2('Phone #', d.phone, null);
+  ensure(0.7);
+  y += 0.28;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.4); doc.setTextColor(25,25,25);
+  var sLbl = 'Signature of Borrower:  ';
+  doc.text(sLbl, M, y);
+  var sx = M + doc.getTextWidth(sLbl) + 0.03;
+  var sw = await sigImage(d.sigMain, sx, 2.4, 0.5);
+  doc.setDrawColor(0); doc.setLineWidth(0.01);
+  doc.line(sx-0.03, y+0.04, sx+Math.max(sw,2.2)+0.1, y+0.04);
+  doc.setFontSize(6.8); doc.setTextColor(90,90,90);
+  doc.text('(Must be over 21yo and is/are the only authorized driver(s))', sx+Math.max(sw,2.2)+0.2, y);
+  y += 0.18;
+
+  /* --- vehicle out --- */
+  section('Vehicle — Out');
+  row2('Vehicle Description', d.vehicle, 'VIN# or Car #', d.vin);
+  row2('Miles Out', d.milesOut, 'Initials', d.initOut);
+  row2('Date Loaned Out', fmtDate(d.dateOut), 'By', d.byOut);
+  row2('Fuel Level Out', d.fuelOut, 'Due Back', (dueInfo(d.dateOut)||{}).label||'');
+
+  /* --- return section (blank, filled in by pen) --- */
+  section('Vehicle — Return');
+  row2('Date Returned', '', 'Miles In', '');
+  row2('Initials', '', 'Fuel Level In', '');
+  row2('Received By (Employee)', '', 'Returned Condition', '');
+
+  /* --- photo pages --- */
+  async function photoPage(label, p){
+    if(!p) return;
+    var src = p.data || p, w = p.w, h = p.h;
+    if(!w || !h){
+      try{ var dm = await imgDims(src); w=dm.w; h=dm.h; }catch(e){ return; }
+    }
+    doc.addPage();
+    doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(0,0,0);
+    doc.text(label.toUpperCase(), PW/2, 0.7, {align:'center'});
+    doc.setDrawColor(0); doc.setLineWidth(0.014); doc.line(M,0.82,PW-M,0.82);
+    var k = Math.min(7.4/w, 9.2/h);
+    doc.addImage(src, 'JPEG', (PW-w*k)/2, 1.0, w*k, h*k);
+  }
+  await photoPage('Driver’s License', d.photoDL);
+  await photoPage('Insurance', d.photoIns);
+
+  /* --- footers --- */
+  var n = doc.getNumberOfPages();
+  for(var i=1;i<=n;i++){
+    doc.setPage(i);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(130,130,130);
+    doc.text('MHS Borrowed Vehicle Agreement · mhsrv.app · Page '+i+' of '+n, PW-M, PH-0.35, {align:'right'});
+  }
+  return doc.output('blob');
+}
+function blobToBase64(blob){
+  return new Promise(function(resolve,reject){
+    var r = new FileReader();
+    r.onload  = function(){ resolve(String(r.result).split(',')[1]); };
+    r.onerror = function(){ reject(new Error('could not encode the PDF')); };
+    r.readAsDataURL(blob);
+  });
+}
+async function sendLoanerEmail(){
+  var recipients = $('emailTo').value.split(/[,;\s]+/).map(function(s){ return s.trim(); }).filter(Boolean);
+  if(!recipients.length){ setEmailStatus('warn','Enter at least one email address first.'); return false; }
+  var bad = recipients.filter(function(r){ return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r); });
+  if(bad.length){ setEmailStatus('warn','This doesn’t look like a valid address: '+bad.join(', ')); return false; }
+  if(recipients.length > 8){ setEmailStatus('warn','Keep it to 8 or fewer recipients per send.'); return false; }
+
+  var d = fullData();
+  $('emailSend').disabled = true;
+  setEmailStatus('busy','Building the PDF…');
+  var blob;
+  try{
+    blob = await makeLoanerPdfBlob(d);
+  }catch(err){
+    setEmailStatus('err','Could not build the PDF ('+(err.message||'unknown error')+'). Use print instead.');
+    $('emailSend').disabled = false;
+    return false;
+  }
+  try{
+    setEmailStatus('busy','Sending to '+recipients.length+(recipients.length===1?' recipient…':' recipients…'));
+    var fname = ['MHS-Loaner',
+                 (d.vehicle||'').replace(/[^A-Za-z0-9]+/g,'-') || null,
+                 (d.borrower||'').replace(/[^A-Za-z0-9]+/g,'-') || null,
+                 d.dateOut].filter(Boolean).join('_')+'.pdf';
+    var res = await fetch(SEND_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: recipients,
+        subject: 'Loaner Vehicle — '+(d.borrower||'New check-out')+(d.vehicle?' — '+d.vehicle:''),
+        filename: fname,
+        pdf: await blobToBase64(blob),
+        summary: {
+          Borrower: d.borrower || '—',
+          Vehicle: d.vehicle || '—',
+          'VIN / Car #': d.vin || '—',
+          'Date out': fmtDate(d.dateOut) || '—',
+          'Due back': (dueInfo(d.dateOut)||{}).label || '—',
+          Salesman: d.salesman || '—'
+        }
+      })
+    });
+    var out = await res.json().catch(function(){ return {}; });
+    if(!res.ok || !out.sent) throw new Error(out.error || ('send service returned '+res.status));
+    setEmailStatus('ok','✓ Sent to '+recipients.join(', ')+' with the PDF attached.');
+    lastEmailOk = true;
+    return true;
+  }catch(err){
+    setEmailStatus('err','Sending failed ('+(err.message||'network error')+') — nothing was sent. Try again, or print instead.');
+    return false;
+  }finally{
+    $('emailSend').disabled = false;
+  }
+}
+$('emailSend').addEventListener('click', sendLoanerEmail);
+$('emailTo').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); sendLoanerEmail(); } });
+$('emailTo').addEventListener('input', function(){ lastEmailOk = false; });
+
+/* ============================================================
+   Save check-out — stores ONLY the minimal record
+   ============================================================ */
+$('saveOut').addEventListener('click', async function(){
   var need = [];
-  if(!($('vehicle').value.trim())) need.push('Vehicle Description');
-  if(!($('borrower').value.trim())) need.push('Borrower Name');
+  if(!draft.vehicle) need.push('Vehicle Description');
+  if(!gv('borrowerFirst') || !gv('borrowerLast')) need.push('Borrower First & Last Name');
   if(!draft.sigAck) need.push('$5,000 smoking/pets acknowledgment signature');
   if(!draft.sigMain) need.push('Signature of Borrower');
   if(need.length){
@@ -594,77 +951,51 @@ $('saveOut').addEventListener('click', function(){
   }
   $('outMissing').textContent = '';
   var soft = [];
-  if(!$('milesOut').value.trim()) soft.push('Miles Out');
+  if(!gv('milesOut')) soft.push('Miles Out');
   if(!draft.photoDL) soft.push('Driver’s License photo');
   if(!draft.photoIns) soft.push('Insurance photo');
   if(soft.length && !confirm('Still blank: '+soft.join(', ')+'.\n\nSave the check-out anyway?')) return;
 
-  var r = {id: Date.now(), status:'out', fuelOut: draft.fuelOut,
-           sigAck: draft.sigAck, sigMain: draft.sigMain,
-           photoDL: draft.photoDL, photoIns: draft.photoIns};
-  TEXT_FIELDS.forEach(function(f){ r[f] = $(f).value.trim(); });
+  var saveBtn = $('saveOut');
+  var emailsTyped = $('emailTo').value.trim();
+  if(emailsTyped && !lastEmailOk){
+    saveBtn.disabled = true;
+    var sent = await sendLoanerEmail();
+    saveBtn.disabled = false;
+    if(!sent && !confirm('The agreement email did NOT send. Once saved, the full agreement cannot be emailed or reprinted.\n\nSave anyway without the email?')) return;
+  } else if(!emailsTyped && !lastEmailOk){
+    if(!confirm('No email address entered. Once saved, the full agreement (photos & signatures) is discarded and can’t be emailed or reprinted — only printing right now will remain.\n\nContinue?')) return;
+  }
+
+  var d = fullData();                          /* full snapshot — used for print only */
+  var r = minimalRec({id: Date.now(), status:'out',
+                      vehicle:d.vehicle, vin:d.vin, dateOut:d.dateOut, borrower:d.borrower});
   recs.push(r);
   saveRecs();
+  queueOp({op:'put', rec:r});
+
   draft = blankDraft();
   saveDraft();
   TEXT_FIELDS.forEach(function(f){ $(f).value=''; });
-  setSeg($('fuelOutSeg'), '');
+  setSeg($('vehicleSeg'), ''); setSeg($('fuelOutSeg'), '');
   pads.sigAck.clear(); pads.sigMain.clear();
   refreshPhotoBtns();
+  $('emailTo').value = ''; lastEmailOk = false; setEmailStatus('','');
+
   show('homeView'); renderHome();
-  if(confirm('Check-out saved. Print the agreement for the paper file?')) printRec(r);
+  if(confirm('Check-out saved. Print the agreement for the paper file? (Last chance — it is not stored.)')) printFull(d);
 });
 
 /* ============================================================
-   Check-in
-   ============================================================ */
-function openCheckIn(r){
-  activeRec = r;
-  $('inSummary').innerHTML =
-    '<b>'+recTitle(r)+'</b>'+(r.vin?' &middot; '+esc(r.vin):'')+'<br>'+
-    'Borrower: <b>'+esc(r.borrower||'—')+'</b>'+(r.phone?' &middot; '+esc(r.phone):'')+'<br>'+
-    'Out '+esc(fmtDate(r.dateOut)||'—')+' &middot; Miles out '+esc(r.milesOut||'—')+
-    ' &middot; Fuel out '+esc(r.fuelOut||'—')+(r.byOut?' &middot; By '+esc(r.byOut):'');
-  $('dateIn').value = r.dateIn || todayISO();
-  $('milesIn').value = r.milesIn || '';
-  $('initIn').value = r.milesInInit || '';
-  $('receivedBy').value = r.receivedBy || '';
-  $('condition').value = r.condition || '';
-  fuelIn = r.fuelIn || '';
-  setSeg($('fuelInSeg'), fuelIn);
-  show('inView');
-}
-$('cancelIn').addEventListener('click', function(){ activeRec=null; show('homeView'); renderHome(); });
-$('printIn').addEventListener('click', function(){ if(activeRec) printRec(collectIn(activeRec)); });
-function collectIn(r){
-  r.dateIn = $('dateIn').value;
-  r.milesIn = $('milesIn').value.trim();
-  r.milesInInit = $('initIn').value.trim();
-  r.fuelIn = fuelIn;
-  r.receivedBy = $('receivedBy').value.trim();
-  r.condition = $('condition').value.trim();
-  return r;
-}
-$('saveIn').addEventListener('click', function(){
-  if(!activeRec) return;
-  collectIn(activeRec);
-  if(!activeRec.milesIn && !confirm('Miles In is blank. Save the check-in anyway?')) return;
-  activeRec.status = 'returned';
-  saveRecs();
-  activeRec = null;
-  show('homeView'); renderHome();
-});
-
-/* ============================================================
-   Print — reproduces the paper Borrowed Vehicle Agreement
+   Print — checkout-time only, from the in-memory snapshot
    ============================================================ */
 function pf(label, val, wide){
   return '<span class="pf'+(wide?' wide':'')+'"><b>'+label+':</b> '+(val?esc(val):'________________')+'</span>';
 }
-function sigImg(data){
+function sigImgHtml(data){
   return data ? '<img class="p-sigimg" src="'+data+'" alt="">' : '<span class="p-sigline"></span>';
 }
-function printRec(r){
+function printFull(d){
   var h = '<div class="p-head"><h1>Borrowed Vehicle Agreement</h1>'+
           '<span>Motor Home Specialist &middot; RV Retailers, LLC &middot; Alvarado, TX</span></div>';
   h += '<div class="p-agree">'+
@@ -678,33 +1009,35 @@ function printRec(r){
     'RV Retailers, LLC., may charge to the credit card any unpaid fees and expenses noted above that arise as a result of the Borrower&rsquo;s use of the vehicle.</p>'+
     '<p class="shout" style="text-align:center">With respect to others with allergies, all vehicles are non-smoking/no pets!!</p>'+
     '</div>';
-  h += '<div class="p-ack">A $5,000 charge will be incurred for smoking OR having pets in vehicle&nbsp; X '+sigImg(r.sigAck)+'&nbsp;Borrower</div>';
+  h += '<div class="p-ack">A $5,000 charge will be incurred for smoking OR having pets in vehicle&nbsp; X '+sigImgHtml(d.sigAck)+'&nbsp;Borrower</div>';
   h += '<div class="p-agree"><p>Borrower MUST present Current/Valid Driver&rsquo;s License and Insurance. Dealer will retain a copy of both for dealer records prior to use.</p></div>';
   h += '<h2>Borrower</h2><div class="p-grid">'+
-       pf('Borrower (Name)', r.borrower)+pf('Salesman', r.salesman)+
-       pf('Address', r.address)+pf('Sales Manager', r.salesmgr)+
-       pf('Phone #', r.phone)+'</div>';
-  h += '<div class="p-ack" style="margin-top:10px">Signature of Borrower: '+sigImg(r.sigMain)+
+       pf('Borrower (Name)', d.borrower)+pf('Salesman', d.salesman)+
+       pf('Address', d.address)+pf('Sales Manager', d.salesmgr)+
+       pf('Phone #', d.phone)+'</div>';
+  h += '<div class="p-ack" style="margin-top:10px">Signature of Borrower: '+sigImgHtml(d.sigMain)+
        '&nbsp;<span style="font-size:9px">(Must be over 21yo and is/are the only authorized driver(s))</span></div>';
   h += '<h2>Vehicle &mdash; Out</h2><div class="p-grid">'+
-       pf('Vehicle Description', r.vehicle)+pf('VIN# or Car #', r.vin)+
-       pf('Miles Out', r.milesOut)+pf('Initials', r.initOut)+
-       pf('Date Loaned Out', fmtDate(r.dateOut))+pf('By', r.byOut)+
-       pf('Fuel Level Out', r.fuelOut)+'</div>';
+       pf('Vehicle Description', d.vehicle)+pf('VIN# or Car #', d.vin)+
+       pf('Miles Out', d.milesOut)+pf('Initials', d.initOut)+
+       pf('Date Loaned Out', fmtDate(d.dateOut))+pf('By', d.byOut)+
+       pf('Fuel Level Out', d.fuelOut)+pf('Due Back', (dueInfo(d.dateOut)||{}).label||'')+'</div>';
   h += '<h2>Vehicle &mdash; Return</h2><div class="p-grid">'+
-       pf('Date Returned', fmtDate(r.dateIn))+pf('Miles In', r.milesIn)+
-       pf('Initials', r.milesInInit)+pf('Fuel Level In', r.fuelIn)+
-       pf('Received By (Employee)', r.receivedBy)+
-       pf('Returned Condition', r.condition, true)+'</div>';
-  if(r.photoDL || r.photoIns){
+       pf('Date Returned','')+pf('Miles In','')+
+       pf('Initials','')+pf('Fuel Level In','')+
+       pf('Received By (Employee)','')+pf('Returned Condition','',true)+'</div>';
+  var dl = d.photoDL && (d.photoDL.data || d.photoDL);
+  var ins = d.photoIns && (d.photoIns.data || d.photoIns);
+  if(dl || ins){
     h += '<div class="p-photos">';
-    if(r.photoDL)  h += '<div class="p-ph"><h4>Driver&rsquo;s License</h4><img src="'+r.photoDL+'"></div>';
-    if(r.photoIns) h += '<div class="p-ph"><h4>Insurance</h4><img src="'+r.photoIns+'"></div>';
+    if(dl)  h += '<div class="p-ph"><h4>Driver&rsquo;s License</h4><img src="'+dl+'"></div>';
+    if(ins) h += '<div class="p-ph"><h4>Insurance</h4><img src="'+ins+'"></div>';
     h += '</div>';
   }
   h += '<div class="p-foot">MHS Borrowed Vehicle Agreement &middot; mhsrv.app</div>';
   $('printSheet').innerHTML = h;
   window.print();
+  $('printSheet').innerHTML = '';
 }
 
 /* ============================================================
@@ -714,7 +1047,27 @@ $('signOut').addEventListener('click', function(){
   sessionStorage.removeItem('iadRole');
   location.href = './';
 });
+
+/* ---- Boot: upload any records saved before sync existed, then sync ---- */
+if(syncEnabled){
+  $('syncRefresh').hidden = false;
+  var queued = false;
+  recs.forEach(function(r){
+    var alreadyPending = pending.some(function(op){
+      return op.op==='put' && op.rec && String(op.rec.id)===String(r.id);
+    });
+    if(!r.synced && !alreadyPending){ pending.push({op:'put', rec:minimalRec(r)}); queued = true; }
+  });
+  if(queued) savePending();
+  window.addEventListener('online', syncNow);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) syncNow(); });
+  setInterval(function(){
+    if(!document.hidden && $('homeView').classList.contains('on')) syncNow();
+  }, 60000);
+}
+$('syncRefresh').addEventListener('click', syncNow);
 renderHome();
+syncNow();
 })();
 </script>
 </body>
