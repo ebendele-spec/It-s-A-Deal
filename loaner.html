@@ -367,7 +367,7 @@ function minimalRec(r){
    a Cloudflare Worker + KV (see LOANER-SETUP.md). Until
    SYNC_ENDPOINT is filled in, records stay on this device.
    ============================================================ */
-var SYNC_ENDPOINT = 'PASTE-YOUR-LOANER-WORKER-URL-HERE';
+var SYNC_ENDPOINT = 'https://mhs-loaner-sync.ebendele.workers.dev';
 var SYNC_TOKEN = atob('bG9hbmVyU3luYzUxNTB1bmxvY2s=');
 var PEND_KEY = 'loanerPending-v1', SINCE_KEY = 'loanerSince-v1';
 var syncEnabled = SYNC_ENDPOINT.indexOf('https://') === 0;
