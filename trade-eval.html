@@ -76,6 +76,8 @@
   .field input[type=date]{min-height:41px;-webkit-appearance:none;appearance:none}
   .fnote{font:600 12px 'Barlow',sans-serif;color:var(--muted);margin-top:4px}
   .fnote.warn{color:var(--red)}
+  .autonote{font:600 11px 'Barlow',sans-serif;color:var(--green);
+    text-transform:none;letter-spacing:0;margin-left:8px}
   .field input:focus,.field textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
   .field textarea{min-height:64px;resize:vertical}
   .field.wide{grid-column:1/-1}
@@ -639,6 +641,71 @@ function refreshUnitMissing(){
     if(f && unitFieldComplete(f)) el.classList.remove('missreq');
   });
 }
+
+/* ============================================================
+   VIN -> Class decode. Chassis WMI (first 3 chars) plus body
+   codes identify the platform; towables carry a body-type char
+   right after the WMI. Returns null rather than guessing — and
+   toy haulers can't be told apart from their donor body, so the
+   tech relabels those on visual inspection.
+   ============================================================ */
+function classFromVIN(vin){
+  if(!vin || vin.length < 8) return null;
+  var w = vin.slice(0,3), d = vin.charAt(3), vds = vin.slice(3,8);
+  var TT='Travel Trailer', FW='5th Wheel', A='Class A Gas',
+      C='Class C & B+', B='Class B / Van', DP='Diesel Pusher', SC='Super C';
+  if(w==='1F6') return A;                                   // Ford F-53 stripped chassis
+  if(w==='4VZ') return DP;                                  // Spartan
+  if(w==='1FV') return SC;                                  // Freightliner M2 / S2RV
+  if(w==='1HT') return SC;                                  // International
+  if(w==='3C7') return SC;                                  // Ram 4500/5500 chassis cab
+  if(w==='3C6') return B;                                   // Ram ProMaster
+  if(w==='4UZ'){                                            // Freightliner Custom Chassis
+    if(vds.indexOf('ADV')===0) return SC;                   // M2 106 conventional
+    if(vds.charAt(1)==='C') return DP;                      // XC pusher rail
+    return null;
+  }
+  if(w==='1FD'){                                            // Ford incomplete
+    if(vds.charAt(1)==='E') return C;                       // E-350/E-450 cutaway
+    if(vds.slice(0,3).indexOf('F6')>-1) return SC;          // F-650 ('FF6','PF6')
+    if(vds.indexOf('RU8')===0) return vin.charAt(6)==='U' ? B : C;  // Transit van vs cutaway
+    return null;
+  }
+  if(w==='1HA'||w==='1GB') return vin.charAt(4)==='G' ? C : null;   // GM Express cutaway
+  if(/^W1[VWXYZ]/.test(w)) return /\d/.test(vin.charAt(5)) ? C : B; // Sprinter: digit = cab-chassis
+  if(w==='WDA') return C;                                   // older Sprinter chassis
+  if(w==='WDB'||w==='WD3'||w==='WD4') return vds.indexOf('PF')===0 ? C : B;
+  if(w==='5KE') return FW;                                  // dealer-confirmed
+  if(w==='5RX') return TT;                                  // dealer-confirmed
+  var TOW = {'4X4':1,'4YD':1,'573':1,'7M5':1,'4V0':1,'47C':1,'4EZ':1,'5SF':1,'1UJ':1,'5ZT':1};
+  if(TOW[w]){
+    if(d==='T'||d==='B'||d==='2') return TT;
+    if(d==='F'||d==='C'||d==='3') return FW;
+    return null;
+  }
+  return null;
+}
+function classAutoNote(show){
+  var lbl = document.querySelector('[data-fw="unitClass"] label');
+  if(!lbl) return;
+  var n = lbl.querySelector('.autonote');
+  if(!show){ if(n) n.remove(); return; }
+  if(!n){ n = document.createElement('span'); n.className='autonote'; lbl.appendChild(n); }
+  n.textContent = '✨ selected automagically from the VIN — tap to change';
+}
+function maybeAutoClass(vin){
+  if(vin.length!==17) return;
+  var cls = classFromVIN(vin);
+  if(!cls || TYPE_NAMES.indexOf(cls)<0) return;
+  if(state.v.unitClass && !state.v.unitClassAuto) return;   // never fight a manual pick
+  state.v.unitClass = cls; state.v.unitClassAuto = 1; save();
+  var wrap = document.querySelector('[data-seg="unitClass"]');
+  if(wrap) Array.prototype.forEach.call(wrap.children, function(b){
+    b.classList.toggle('on', b.dataset.o===cls);
+  });
+  classAutoNote(true);
+  refreshUnitMissing();
+}
 $('backBtn').addEventListener('click', function(){ go(cur-1); });
 $('nextBtn').addEventListener('click', function(){
   if(cur===0 && flagUnitMissing()){
@@ -697,6 +764,7 @@ document.addEventListener('input', function(e){
     if(v.length>17) setFieldNote(e.target, 'That’s '+v.length+' characters — a VIN is 17, so double-check for a typo.', true);
     else if(v.length===17) setFieldNote(e.target, '✓ 17 characters', false);
     else setFieldNote(e.target, v.length ? v.length+' / 17' : '', false);
+    maybeAutoClass(v);
   }else if(fmt==='digits'){
     var n = e.target.value.replace(/\D/g,'');
     if(n!==e.target.value) e.target.value = n;
@@ -721,6 +789,7 @@ document.addEventListener('click', function(e){
       state.v[id]=b.dataset.o;
       Array.prototype.forEach.call(wrap.children, function(x){ x.classList.toggle('on', x===b); });
     }
+    if(id==='unitClass'){ state.v.unitClassAuto = 0; classAutoNote(false); }
     save(); updateConditionals(); refreshUnitMissing(); return;
   }
   if(wrap.dataset.multi){
@@ -959,6 +1028,7 @@ if(!(state.v.inspExp||'').trim()){
   save();
 }
 restoreInputs();
+if(state.v.unitClassAuto && state.v.unitClass) classAutoNote(true);
 renderDiagrams();
 go(0);
 })();
