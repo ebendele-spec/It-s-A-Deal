@@ -67,11 +67,15 @@
   .field label{display:block;font:700 11px 'Barlow',sans-serif;letter-spacing:.08em;
     text-transform:uppercase;color:var(--navy);margin-bottom:4px}
   .field label .req{color:var(--red)}
-  .field.missreq input,.field.missreq .seg,.field.missreq .tgrid{
+  .field.missreq input,.field.missreq .seg,.field.missreq .tgrid,
+  .field.missreq .photo-btn:not(.has-photo){
     outline:2px solid var(--red);outline-offset:1px;border-radius:4px}
-  .field input[type=text],.field textarea{
+  .field input[type=text],.field input[type=date],.field textarea{
     width:100%;padding:9px 11px;font:inherit;font-size:15px;background:#fff;
     border:1px solid var(--line);border-radius:4px;color:var(--ink)}
+  .field input[type=date]{min-height:41px;-webkit-appearance:none;appearance:none}
+  .fnote{font:600 12px 'Barlow',sans-serif;color:var(--muted);margin-top:4px}
+  .fnote.warn{color:var(--red)}
   .field input:focus,.field textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
   .field textarea{min-height:64px;resize:vertical}
   .field.wide{grid-column:1/-1}
@@ -251,6 +255,10 @@ var TYPES = [
 ];
 var TYPE_NAMES = TYPES.map(function(t){ return t.n; });
 
+/* Manufacturer & Brand suggestions — every Brand+Model line in the
+   MHSRV NetSource inventory export (see update-inventory.py) */
+var MFG_BRANDS = ["Airstream Atlas","Alliance RV Paradigm","American Coach American Dream","American Coach American Eagle","American Coach American Heritage","Axiom Imperium","Axiom Vendetta","Beaver Marquis","Brinkley RV Model G","Brinkley RV Model I","Brinkley RV Model Ix","Brinkley RV Model Z","Brinkley RV Model Z AIR","Coachmen Nova","Coachmen Sportscoach","Cruiser RV Radiance","DRV Mobile Suites","Dutchmen Astoria","Dutchmen Denali","Dynamax Corp DX3","Dynamax Corp Dynaquest XL","Dynamax Corp Europa","Dynamax Corp Europa S","Dynamax Corp Grand Sport","Dynamax Corp Isata 3 Series","Dynamax Corp Isata 5 Series","Dynamax Corp Isata 6 Series","East to West Alita","East to West Bravado","East to West Entrada","Entegra Coach Accolade","Entegra Coach Accolade XL","Entegra Coach Accolade XT","Entegra Coach Anthem","Entegra Coach Arc","Entegra Coach Aspire","Entegra Coach Centurion","Entegra Coach Condor","Entegra Coach Cornerstone","Entegra Coach Emblem","Entegra Coach Esteem","Entegra Coach Esteem XL","Entegra Coach Ethos","Entegra Coach Expanse","Entegra Coach Insignia","Entegra Coach Launch","Entegra Coach Odyssey","Entegra Coach Odyssey Esteem","Entegra Coach Odyssey SE","Entegra Coach Qwest","Entegra Coach Qwest SE","Entegra Coach Vision","Entegra Coach Vision SE","Entegra Coach Vision XL","Fleetwood Altitude","Fleetwood Bounder","Fleetwood Discovery","Fleetwood Discovery LXE","Fleetwood Flair","Fleetwood Fortis","Fleetwood Frontier","Fleetwood Frontier GTX","Fleetwood Palisade","Forest River Aurora","Forest River Aurora Light","Forest River Berkshire","Forest River Berkshire XL","Forest River Berkshire XLT","Forest River FR3","Forest River FR3 Plus","Forest River Forester","Forest River Forester LE","Forest River Forester MBS","Forest River Georgetown 5 Series GT5","Forest River Georgetown 7 Series GT7","Forest River OGV V-RV","Forest River R-Pod","Forest River Rockwood","Forest River Sunseeker","Forest River Wildwood FSX","Forest River Wolverine","Foretravel Realm FS605","Foretravel Realm Limited","Foretravel Realm Presidential","Grand Design Imagine","Grand Design Lineage Series E","Grand Design Lineage Series F","Grand Design Lineage Series M","Grand Design Lineage Series VP","Grand Design Lineage Series VT","Grand Design Momentum M-Class","Grand Design Reflection","Grand Design Reflection 150 Series","Gulf Stream BTouring Cruiser","Gulf Stream Conquest Class C","Heartland Big Country","Heartland Cyclone","Holiday Rambler Admiral","Holiday Rambler Armada","Holiday Rambler Endeavor","Holiday Rambler Imperial","Holiday Rambler Invicta","Holiday Rambler Vacationer","Itasca Sunstar","Jayco Embark","Jayco Seismic","Jayco Seismic Luxury Series","Jayco Swift","K-Z Connect SE","Keystone Cougar","Keystone Fuzion","Keystone Passport","Keystone Raptor","Leisure Travel Unity","Leisure Travel Wonder","Midwest Heritage","Midwest Luxe Cruiser","Midwest Patriot","Midwest Patriot Cruiser","Monaco RV Diplomat","Newmar Bay Star","Newmar Bay Star Sport","Newmar Canyon Star","Newmar Dutch Star","Newmar Essex","Newmar Grand Star","Newmar King Aire","Newmar London Aire","Newmar New Aire","Newmar Northern Star","Newmar Supreme Aire","Newmar Ventana","Nexus Ghost","Nexus Maximus","Nexus Phantom","Nexus Phantom Sport","Nexus Rebel","Nexus Viper","Nexus Wraith","OGV Luxury Coach V-RV","Palomino Solaire","Pleasure-Way Ontour 2.2","Pleasure-Way Plateau TS","Renegade RV Vienna","Thor Motor Coach A.C.E.","Thor Motor Coach Aria","Thor Motor Coach Axis","Thor Motor Coach Challenger","Thor Motor Coach Chateau","Thor Motor Coach Citation Sprinter","Thor Motor Coach Compass","Thor Motor Coach Compass Go","Thor Motor Coach Delano","Thor Motor Coach Four Winds","Thor Motor Coach Freedom Traveler","Thor Motor Coach Gemini","Thor Motor Coach Gemini Trip","Thor Motor Coach Geneva","Thor Motor Coach Hurricane","Thor Motor Coach Inception","Thor Motor Coach Inception HD","Thor Motor Coach Indigo","Thor Motor Coach Luminate","Thor Motor Coach Magnitude Grand","Thor Motor Coach Majestic","Thor Motor Coach Miramar","Thor Motor Coach Omni Trail","Thor Motor Coach Outlaw","Thor Motor Coach Outlaw Wild West Edition","Thor Motor Coach Palazzo","Thor Motor Coach Palazzo GT","Thor Motor Coach Pasadena","Thor Motor Coach Pasadena SV","Thor Motor Coach Quantum","Thor Motor Coach Quantum Sprinter","Thor Motor Coach Resonate","Thor Motor Coach Riviera","Thor Motor Coach Rize","Thor Motor Coach Talavera","Thor Motor Coach Tellaro","Thor Motor Coach Tellaro Sport","Thor Motor Coach Tiburon","Thor Motor Coach Tranquility","Thor Motor Coach Tuscany","Thor Motor Coach Vegas","Thor Motor Coach Venetian","Thor Motor Coach Windsport","Tiffin Allegro","Tiffin Allegro Bay","Tiffin Allegro Breeze","Tiffin Allegro Bus","Tiffin Allegro Red","Tiffin Byway","Tiffin GT1","Tiffin GT2","Tiffin Open Road Allegro","Tiffin Phaeton","Tiffin Wayfarer","Tiffin Zephyr","Venture Sonic","Winnebago Adventurer","Winnebago Micro Minnie","Winnebago Minnie Winnie","Winnebago Navion","Winnebago Travato","Winnebago View"];
+
 /* ---- The 5 orthographic views per type, all normalized to a
         180-unit-tall viewBox so marker size stays consistent ---- */
 function viewsFor(t){
@@ -278,15 +286,15 @@ var VIEW_LABELS = {front:'Front', driver:'Driver Side', passenger:'Passenger Sid
 var SECTIONS = [
  { key:'unit', title:'Unit Info', groups:[
    { fields:[
-     {id:'stock',    l:'Stock #',        t:'text'},
-     {id:'vin',      l:'VIN',            t:'text', w:1, p:1, req:1},
+     {id:'stock',    l:'Stock #',        t:'text', ph:'(Leave Blank)'},
+     {id:'inspExp',  l:'Inspection Date', t:'date', req:1},
+     {id:'vin',      l:'VIN',            t:'text', w:1, p:1, preq:1, req:1, fmt:'vin', ph:'17 characters'},
      {id:'yr',       l:'Year',           t:'text', im:'numeric', req:1},
-     {id:'make',     l:'Make',           t:'text', req:1},
-     {id:'model',    l:'Model',          t:'text', req:1},
-     {id:'length',   l:'Length',         t:'text', req:1},
-     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1, req:1},
-     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric', p:1, req:1},
-     {id:'inspExp',  l:'Inspection Date', t:'text', ph:'MM/YY', im:'numeric', fmt:'mmyy', req:1},
+     {id:'make',     l:'Manufacturer & Brand', t:'text', req:1, ph:'e.g. ENTEGRA ODYSSEY', list:'mfgBrands'},
+     {id:'model',    l:'Model',          t:'text', req:1, ph:'e.g. 31F'},
+     {id:'length',   l:'Length (in feet)', t:'text', req:1, ph:'e.g. 31 feet', im:'numeric', fmt:'digits'},
+     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1, preq:1, req:1},
+     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric', p:1, preq:1, req:1},
      {id:'fourX4',   l:'4x4',            t:'seg', o:YN, req:1},
      {id:'unitClass',l:'Class',          t:'icons', w:1, req:1},
    ]},
@@ -299,7 +307,7 @@ var SECTIONS = [
      {id:'transMfg',  l:'Transmission Manufacturer', t:'text'},
      {id:'transSpeed',l:'Transmission Speed',    t:'text'},
      {id:'chassisMfg',l:'Chassis Manufacturer', t:'seg', w:1,
-      o:['Ford','Chevrolet','Mercedes','RAM','Freightliner','Spartan','Tiffin PowerGlide','Newell','Prevost','Other']},
+      o:['Ford','Chevrolet','Mercedes','RAM','Freightliner','Spartan','International','Tiffin PowerGlide','Newell','Prevost','Other']},
      {id:'chassisMfgOther', l:'Chassis Manufacturer (Other)', t:'text', ph:'Type the chassis manufacturer'},
    ]},
    { sub:'Coach Systems', fields:[
@@ -314,7 +322,6 @@ var SECTIONS = [
      {id:'genRuns',    l:'Generator Runs',t:'seg', o:YN},
      {id:'genLoads',   l:'Generator Loads',t:'seg', o:YN},
      {id:'genAgs',     l:'AGS',           t:'seg', o:YN},
-     {id:'satDish',    l:'Sat Dish',      t:'text'},
      {id:'dashAc',     l:'Dash A/C',      t:'seg', o:['Good','Bad']},
    ]},
    { sub:'Wheels / Tires / Body', fields:[
@@ -513,7 +520,9 @@ function fieldHTML(f){
   var wide = (f.w || f.t==='area') ? ' wide' : '';
   var h = '<div class="field'+wide+'" data-fw="'+f.id+'"><label>'+f.l+(f.req?' <span class="req">*</span>':'')+'</label>';
   if(f.t==='text'){
-    h += '<input type="text" data-f="'+f.id+'"'+(f.ph?' placeholder="'+f.ph+'"':'')+(f.im?' inputmode="'+f.im+'"':'')+(f.fmt?' data-fmt="'+f.fmt+'"':'')+' autocomplete="off">';
+    h += '<input type="text" data-f="'+f.id+'"'+(f.ph?' placeholder="'+f.ph+'"':'')+(f.im?' inputmode="'+f.im+'"':'')+(f.fmt?' data-fmt="'+f.fmt+'"':'')+(f.list?' list="'+f.list+'"':'')+' autocomplete="off">';
+  }else if(f.t==='date'){
+    h += '<input type="date" data-f="'+f.id+'">';
   }else if(f.t==='area'){
     h += '<textarea data-f="'+f.id+'"></textarea>';
   }else if(f.t==='icons'){
@@ -524,7 +533,7 @@ function fieldHTML(f){
     h += '</div>';
   }
   if(f.p){
-    h += '<br><button type="button" class="photo-btn" data-photo="'+f.id+'">&#128247; Photo</button>';
+    h += '<br><button type="button" class="photo-btn" data-photo="'+f.id+'"'+(f.preq?' data-preq="1"':'')+'>&#128247; Photo'+(f.preq?' <span class="req">*</span>':'')+'</button>';
   }
   return h+'</div>';
 }
@@ -601,21 +610,30 @@ function go(i){
   if(cur===5) updateMissing();
   window.scrollTo({top:0});
 }
-/* Unit Info required fields (*) — flag on Next, clear as they're filled */
+/* Unit Info required fields (*) — flag on Next, clear as they're filled.
+   preq fields also need their photo attached to count as complete. */
+var UNIT_FIELDS = SECTIONS[0].groups[0].fields;
+function unitFieldComplete(f){
+  if(f.req && !(state.v[f.id]||'').trim()) return false;
+  if(f.preq && !photos[f.id]) return false;
+  return true;
+}
 function flagUnitMissing(){
   var any = false;
-  SECTIONS[0].groups[0].fields.forEach(function(f){
-    if(!f.req) return;
+  UNIT_FIELDS.forEach(function(f){
+    if(!f.req && !f.preq) return;
     var el = document.querySelector('[data-fw="'+f.id+'"]');
-    var empty = !(state.v[f.id]||'').trim();
-    if(el) el.classList.toggle('missreq', empty);
-    if(empty) any = true;
+    var bad = !unitFieldComplete(f);
+    if(el) el.classList.toggle('missreq', bad);
+    if(bad) any = true;
   });
   return any;
 }
 function refreshUnitMissing(){
   Array.prototype.forEach.call(document.querySelectorAll('.field.missreq'), function(el){
-    if((state.v[el.dataset.fw]||'').trim()) el.classList.remove('missreq');
+    var f = null;
+    UNIT_FIELDS.forEach(function(x){ if(x.id===el.dataset.fw) f = x; });
+    if(f && unitFieldComplete(f)) el.classList.remove('missreq');
   });
 }
 $('backBtn').addEventListener('click', function(){ go(cur-1); });
@@ -657,17 +675,28 @@ function restoreInputs(){
   updateConditionals();
   refreshPhotoBtns();
 }
+function setFieldNote(input, msg, isWarn){
+  var wrap = input.closest('.field');
+  if(!wrap) return;
+  var note = wrap.querySelector('.fnote');
+  if(!msg){ if(note) note.remove(); return; }
+  if(!note){ note = document.createElement('div'); note.className='fnote'; wrap.appendChild(note); }
+  note.textContent = msg;
+  note.classList.toggle('warn', !!isWarn);
+}
 document.addEventListener('input', function(e){
   var f = e.target.dataset && e.target.dataset.f;
   if(!f) return;
-  if(e.target.dataset.fmt==='mmyy'){
-    var deleting = e.inputType && e.inputType.indexOf('delete')===0;
-    var d = e.target.value.replace(/\D/g,'').slice(0,4);
-    if(d.length===1 && d>'1') d = '0'+d;
-    var out = d.length>2 ? d.slice(0,2)+'/'+d.slice(2)
-            : (d.length===2 && !deleting) ? d+'/'
-            : d;
-    if(out!==e.target.value) e.target.value = out;
+  var fmt = e.target.dataset.fmt;
+  if(fmt==='vin'){
+    var v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(v!==e.target.value) e.target.value = v;
+    if(v.length>17) setFieldNote(e.target, 'That’s '+v.length+' characters — a VIN is 17, so double-check for a typo.', true);
+    else if(v.length===17) setFieldNote(e.target, '✓ 17 characters', false);
+    else setFieldNote(e.target, v.length ? v.length+' / 17' : '', false);
+  }else if(fmt==='digits'){
+    var n = e.target.value.replace(/\D/g,'');
+    if(n!==e.target.value) e.target.value = n;
   }
   state.v[f] = e.target.value; save();
   refreshUnitMissing();
@@ -751,8 +780,10 @@ function refreshPhotoBtns(){
   Array.prototype.forEach.call(document.querySelectorAll('button[data-photo]'), function(b){
     var has = !!photos[b.dataset.photo];
     b.classList.toggle('has-photo', has);
-    b.innerHTML = has ? '&#10003; Photo (tap to retake)' : '&#128247; Photo';
+    b.innerHTML = has ? '&#10003; Photo (tap to retake)'
+                      : '&#128247; Photo'+(b.dataset.preq?' <span class="req">*</span>':'');
   });
+  refreshUnitMissing();
 }
 
 /* ============================================================
@@ -826,6 +857,7 @@ function updateMissing(){
   var miss = [];
   SECTIONS[0].groups[0].fields.forEach(function(f){
     if(f.req && !(state.v[f.id]||'').trim()) miss.push(f.l);
+    if(f.preq && !photos[f.id]) miss.push(f.l+' photo');
   });
   $('missingBox').textContent = miss.length ? 'Still blank: '+miss.join(', ') : '';
 }
@@ -837,6 +869,11 @@ document.addEventListener('input', function(){ if(cur===5) updateMissing(); });
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 function pv(id){ var x=(state.v[id]||'').trim(); return x?esc(x):'________'; }
 function pm(id){ var a=state.m[id]||[]; return a.length?esc(a.join(', ')):'________'; }
+function pdate(id){
+  var x=(state.v[id]||'').trim();
+  var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(x);
+  return m ? m[2]+'/'+m[3]+'/'+m[1] : (x?esc(x):'________');
+}
 function buildPrint(){
   var h = '<div class="p-head"><h1>MHS Trade-In Sheet</h1>'+
           '<span>Motor Home Specialist &middot; Alvarado, TX &middot; Stock # '+pv('stock')+'</span></div>';
@@ -844,7 +881,7 @@ function buildPrint(){
     h += '<h2>'+sec.title+'</h2><div class="cols">';
     sec.groups.forEach(function(g){
       g.fields.forEach(function(f){
-        var val = f.t==='multi' ? pm(f.id) : pv(f.id);
+        var val = f.t==='multi' ? pm(f.id) : f.t==='date' ? pdate(f.id) : pv(f.id);
         h += '<span class="pf"><b>'+f.l+':</b> '+val+'</span>';
       });
     });
@@ -904,6 +941,20 @@ $('signOut').addEventListener('click', function(){
   location.href = './';
 });
 
+/* Manufacturer & Brand autocomplete list */
+var _dl = document.createElement('datalist');
+_dl.id = 'mfgBrands';
+MFG_BRANDS.forEach(function(n){
+  var o = document.createElement('option'); o.value = n; _dl.appendChild(o);
+});
+document.body.appendChild(_dl);
+
+/* Inspection Date defaults to today (tap it to pick another day) */
+if(!(state.v.inspExp||'').trim()){
+  var _t = new Date();
+  state.v.inspExp = _t.getFullYear()+'-'+('0'+(_t.getMonth()+1)).slice(-2)+'-'+('0'+_t.getDate()).slice(-2);
+  save();
+}
 restoreInputs();
 renderDiagrams();
 go(0);
