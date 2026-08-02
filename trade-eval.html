@@ -38,6 +38,9 @@
   .signout{background:none;border:1px solid #3A5578;color:#B8C4D4;font:600 11px 'Barlow',sans-serif;
     letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:4px;cursor:pointer;margin-top:8px}
   .signout:hover{color:#fff;border-color:var(--gold)}
+  .signout + .signout{margin-left:8px}
+  .signout.armed{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+  .signout.armed:hover{border-color:var(--red)}
 
   /* ---------- Stepper ---------- */
   .stepper{display:flex;gap:6px;padding:14px 22px;background:var(--gold-soft);
@@ -208,6 +211,7 @@
       <div style="text-align:right">
         <h1>Trade-In <span>Evaluation</span></h1>
         <small>Motor Home Specialist &middot; Alvarado, TX</small>
+        <button type="button" class="signout" id="clearStart">&#8635; Clear &amp; Start Over</button>
         <button type="button" class="signout" id="signOut">Sign Out</button>
       </div>
     </div>
@@ -1012,6 +1016,32 @@ $('signOut').addEventListener('click', function(){
   sessionStorage.removeItem('iadRole');
   location.href = './';
 });
+
+/* Clear & Start Over — two taps: first arms it ("Are you sure? — YES"),
+   second wipes the draft. Disarms after 5s or on any tap elsewhere. */
+(function(){
+  var btn = $('clearStart'), timer = null;
+  function disarm(){
+    btn.classList.remove('armed');
+    btn.innerHTML = '&#8635; Clear &amp; Start Over';
+    if(timer){ clearTimeout(timer); timer = null; }
+  }
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    if(!btn.classList.contains('armed')){
+      btn.classList.add('armed');
+      btn.textContent = 'Are you sure? — YES';
+      timer = setTimeout(disarm, 5000);
+      return;
+    }
+    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(PHOTO_KEY);
+    location.reload();
+  });
+  document.addEventListener('click', function(){
+    if(btn.classList.contains('armed')) disarm();
+  });
+})();
 
 /* Manufacturer & Brand autocomplete list */
 var _dl = document.createElement('datalist');
