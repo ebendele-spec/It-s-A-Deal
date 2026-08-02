@@ -66,6 +66,9 @@
   .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:13px 20px}
   .field label{display:block;font:700 11px 'Barlow',sans-serif;letter-spacing:.08em;
     text-transform:uppercase;color:var(--navy);margin-bottom:4px}
+  .field label .req{color:var(--red)}
+  .field.missreq input,.field.missreq .seg,.field.missreq .tgrid{
+    outline:2px solid var(--red);outline-offset:1px;border-radius:4px}
   .field input[type=text],.field textarea{
     width:100%;padding:9px 11px;font:inherit;font-size:15px;background:#fff;
     border:1px solid var(--line);border-radius:4px;color:var(--ink)}
@@ -276,17 +279,16 @@ var SECTIONS = [
  { key:'unit', title:'Unit Info', groups:[
    { fields:[
      {id:'stock',    l:'Stock #',        t:'text'},
-     {id:'vin',      l:'VIN',            t:'text', w:1, p:1},
-     {id:'yr',       l:'Year',           t:'text', im:'numeric'},
-     {id:'make',     l:'Make',           t:'text'},
-     {id:'model',    l:'Model',          t:'text'},
-     {id:'length',   l:'Length',         t:'text'},
-     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1},
-     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric', p:1},
-     {id:'regExp',   l:'Reg Exp Date',   t:'text', ph:'MM/YY'},
-     {id:'inspExp',  l:'Inspection Exp', t:'text', ph:'MM/YY'},
-     {id:'fourX4',   l:'4x4',            t:'seg', o:YN},
-     {id:'unitClass',l:'Class',          t:'icons', w:1},
+     {id:'vin',      l:'VIN',            t:'text', w:1, p:1, req:1},
+     {id:'yr',       l:'Year',           t:'text', im:'numeric', req:1},
+     {id:'make',     l:'Make',           t:'text', req:1},
+     {id:'model',    l:'Model',          t:'text', req:1},
+     {id:'length',   l:'Length',         t:'text', req:1},
+     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1, req:1},
+     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric', p:1, req:1},
+     {id:'inspExp',  l:'Inspection Date', t:'text', ph:'MM/YY', im:'numeric', fmt:'mmyy', req:1},
+     {id:'fourX4',   l:'4x4',            t:'seg', o:YN, req:1},
+     {id:'unitClass',l:'Class',          t:'icons', w:1, req:1},
    ]},
  ]},
  { key:'chassis', title:'Chassis & Systems', groups:[
@@ -509,9 +511,9 @@ function typeGridHTML(segId){
 }
 function fieldHTML(f){
   var wide = (f.w || f.t==='area') ? ' wide' : '';
-  var h = '<div class="field'+wide+'" data-fw="'+f.id+'"><label>'+f.l+'</label>';
+  var h = '<div class="field'+wide+'" data-fw="'+f.id+'"><label>'+f.l+(f.req?' <span class="req">*</span>':'')+'</label>';
   if(f.t==='text'){
-    h += '<input type="text" data-f="'+f.id+'"'+(f.ph?' placeholder="'+f.ph+'"':'')+(f.im?' inputmode="'+f.im+'"':'')+' autocomplete="off">';
+    h += '<input type="text" data-f="'+f.id+'"'+(f.ph?' placeholder="'+f.ph+'"':'')+(f.im?' inputmode="'+f.im+'"':'')+(f.fmt?' data-fmt="'+f.fmt+'"':'')+' autocomplete="off">';
   }else if(f.t==='area'){
     h += '<textarea data-f="'+f.id+'"></textarea>';
   }else if(f.t==='icons'){
@@ -599,8 +601,32 @@ function go(i){
   if(cur===5) updateMissing();
   window.scrollTo({top:0});
 }
+/* Unit Info required fields (*) — flag on Next, clear as they're filled */
+function flagUnitMissing(){
+  var any = false;
+  SECTIONS[0].groups[0].fields.forEach(function(f){
+    if(!f.req) return;
+    var el = document.querySelector('[data-fw="'+f.id+'"]');
+    var empty = !(state.v[f.id]||'').trim();
+    if(el) el.classList.toggle('missreq', empty);
+    if(empty) any = true;
+  });
+  return any;
+}
+function refreshUnitMissing(){
+  Array.prototype.forEach.call(document.querySelectorAll('.field.missreq'), function(el){
+    if((state.v[el.dataset.fw]||'').trim()) el.classList.remove('missreq');
+  });
+}
 $('backBtn').addEventListener('click', function(){ go(cur-1); });
-$('nextBtn').addEventListener('click', function(){ go(cur+1); });
+$('nextBtn').addEventListener('click', function(){
+  if(cur===0 && flagUnitMissing()){
+    var first = document.querySelector('.field.missreq');
+    if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  go(cur+1);
+});
 
 /* ============================================================
    Wire inputs to state
@@ -633,7 +659,18 @@ function restoreInputs(){
 }
 document.addEventListener('input', function(e){
   var f = e.target.dataset && e.target.dataset.f;
-  if(f){ state.v[f] = e.target.value; save(); }
+  if(!f) return;
+  if(e.target.dataset.fmt==='mmyy'){
+    var deleting = e.inputType && e.inputType.indexOf('delete')===0;
+    var d = e.target.value.replace(/\D/g,'').slice(0,4);
+    if(d.length===1 && d>'1') d = '0'+d;
+    var out = d.length>2 ? d.slice(0,2)+'/'+d.slice(2)
+            : (d.length===2 && !deleting) ? d+'/'
+            : d;
+    if(out!==e.target.value) e.target.value = out;
+  }
+  state.v[f] = e.target.value; save();
+  refreshUnitMissing();
 });
 document.addEventListener('click', function(e){
   var pb = e.target.closest ? e.target.closest('button[data-photo]') : null;
@@ -652,7 +689,7 @@ document.addEventListener('click', function(e){
       state.v[id]=b.dataset.o;
       Array.prototype.forEach.call(wrap.children, function(x){ x.classList.toggle('on', x===b); });
     }
-    save(); updateConditionals(); return;
+    save(); updateConditionals(); refreshUnitMissing(); return;
   }
   if(wrap.dataset.multi){
     var mid = wrap.dataset.multi;
@@ -786,9 +823,10 @@ $('clearMarks').addEventListener('click', function(){
    Review: missing-field nudge
    ============================================================ */
 function updateMissing(){
-  var need = [['stock','Stock #'],['vin','VIN'],['yr','Year'],['make','Make'],['model','Model'],['mileage','Mileage']];
-  var miss = need.filter(function(n){ return !(state.v[n[0]]||'').trim(); }).map(function(n){ return n[1]; });
-  if(!(state.v.unitClass||'').trim()) miss.push('Class');
+  var miss = [];
+  SECTIONS[0].groups[0].fields.forEach(function(f){
+    if(f.req && !(state.v[f.id]||'').trim()) miss.push(f.l);
+  });
   $('missingBox').textContent = miss.length ? 'Still blank: '+miss.join(', ') : '';
 }
 document.addEventListener('input', function(){ if(cur===5) updateMissing(); });
