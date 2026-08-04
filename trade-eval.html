@@ -100,6 +100,8 @@
   .tbody{position:relative;background:#E2E4E6;border:1px solid #BFC3C7;border-top:none;border-bottom:none;min-height:104px}
   .tbody.tfirst{border-top:1px solid #BFC3C7;border-radius:44px 44px 0 0;min-height:130px}
   .tbody.tlast{border-bottom:1px solid #BFC3C7;border-radius:0 0 16px 16px}
+  .tbody.tspacer{min-height:150px}
+  .tbody.tax{min-height:84px}
   .tfront{position:absolute;top:14px;left:0;right:0;text-align:center;
     font:700 10px 'Barlow',sans-serif;letter-spacing:.12em;color:var(--muted)}
   .tire{position:absolute;top:50%;transform:translateY(-50%);width:16px;height:36px;
@@ -441,12 +443,12 @@ var SECTIONS = [
    ]},
    { sub:'Wheels / Tires / Body', fields:[
      {id:'alumWheels', l:'Aluminum Wheels',      t:'seg', o:YN},
-     {id:'tireAge',    l:'Age of Tires (enter date codes for each tire)', t:'tires', w:1},
      {id:'tireDryRot', l:'Tires: Dry Rot / Crack', t:'seg', o:YN},
-     {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
+     {id:'tireAge',    l:'Age of Tires (enter date codes for each tire)', t:'tires', w:1},
      {id:'hitchWeight',l:'Hitch Weight',     t:'text', p:1},
    ]},
    { sub:'Exterior Condition', fields:[
+     {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
      {id:'extCond',    l:'Exterior Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
      {id:'extRepairs', l:'Exterior Repairs Needed', t:'area', w:1, bullets:1},
    ]},
@@ -1170,16 +1172,25 @@ var TIRE_LABELS = {
   A1L:'Axle 1 Left', A1R:'Axle 1 Right', A2L:'Axle 2 Left', A2R:'Axle 2 Right',
   A3L:'Axle 3 Left', A3R:'Axle 3 Right'
 };
-var EXTRA_AXLE_OK = {'Travel Trailer':1, '5th Wheel':1, 'Super C':1, 'Diesel Pusher':1};
+var EXTRA_AXLE_OK = {'Super C':1, 'Diesel Pusher':1};
+/* Towables (TT / 5th Wheel) start with a single rear axle; extra axles
+   are added in FRONT of the rear axle, up to 3 total. */
+function towAxleCt(){
+  var n = parseInt(state.v.tireAxleCt, 10);
+  if(n>=1 && n<=3) return n;
+  if(state.v.tireExtraAxle==='Y') return 3;
+  if((state.v.tireDC_A2L||'') || (state.v.tireDC_A2R||'') || photos['tire|A2L'] || photos['tire|A2R']) return 2;
+  return 1;
+}
 function tireLayout(){
   var cls = (state.v.unitClass||'').trim();
   if(TYPE_NAMES.indexOf(cls)<0) return null;
   var extra = state.v.tireExtraAxle==='Y' && EXTRA_AXLE_OK[cls];
   if(cls==='Class B / Van') return {cls:cls, towable:false, pos:['LF','RF','LR','RR']};
   if(cls==='Travel Trailer' || cls==='5th Wheel'){
-    var p = ['A1L','A1R','A2L','A2R'];
-    if(extra) p.push('A3L','A3R');
-    return {cls:cls, towable:true, pos:p};
+    var n = towAxleCt(), p = [];
+    for(var i=1;i<=n;i++){ p.push('A'+i+'L','A'+i+'R'); }
+    return {cls:cls, towable:true, axleCt:n, pos:p};
   }
   var p2 = ['LF','RF','LRO','LRI','RRI','RRO'];
   if(extra) p2.push('LT','RT');
@@ -1193,8 +1204,8 @@ function tireSummary(lay){
 }
 function tireAxles(lay){
   if(lay.towable){
-    var ax = [{l:['A1L'], r:['A1R']}, {l:['A2L'], r:['A2R']}];
-    if(lay.pos.indexOf('A3L')>-1) ax.push({l:['A3L'], r:['A3R']});
+    var ax = [];
+    for(var i=1;i<=lay.axleCt;i++) ax.push({l:['A'+i+'L'], r:['A'+i+'R']});
     return ax;
   }
   if(lay.cls==='Class B / Van') return [{l:['LF'], r:['RF']}, {l:['LR'], r:['RR']}];
@@ -1228,17 +1239,30 @@ function renderTireWidget(){
   }
   var axles = tireAxles(lay);
   var h = '<div class="tgraph">';
+  if(lay.towable){
+    /* long front body section — trailers have no front axle */
+    h += '<div class="tcell tleft"></div>'+
+         '<div class="tbody tfirst tspacer"><span class="tfront">FRONT</span></div>'+
+         '<div class="tcell tright"></div>';
+  }
   axles.forEach(function(ax, i){
-    var bodyCls = 'tbody' + (i===0 ? ' tfirst' : '') + (i===axles.length-1 ? ' tlast' : '');
+    var bodyCls = 'tbody' + (lay.towable ? ' tax' : (i===0 ? ' tfirst' : '')) + (i===axles.length-1 ? ' tlast' : '');
     h += '<div class="tcell tleft">' + ax.l.map(tireInputHTML).join('') + '</div>';
-    h += '<div class="'+bodyCls+'">' + (i===0 ? '<span class="tfront">FRONT</span>' : '');
+    h += '<div class="'+bodyCls+'">' + (!lay.towable && i===0 ? '<span class="tfront">FRONT</span>' : '');
     ax.l.forEach(function(p, j){ h += tireMarkHTML(p, 'tl', j); });
     ax.r.forEach(function(p, j){ h += tireMarkHTML(p, 'tr', j); });
     h += '</div>';
     h += '<div class="tcell tright">' + ax.r.map(tireInputHTML).join('') + '</div>';
   });
   h += '</div>';
-  if(EXTRA_AXLE_OK[lay.cls]){
+  if(lay.towable){
+    h += '<div style="text-align:center">';
+    if(lay.axleCt<3)
+      h += '<button type="button" class="photo-btn" id="towAxleAdd" style="margin-top:10px">&#65291; Add Axle</button>';
+    if(lay.axleCt>1)
+      h += ' <button type="button" class="photo-btn" id="towAxleRem" style="margin-top:10px">&#8722; Remove Axle</button>';
+    h += '</div>';
+  } else if(EXTRA_AXLE_OK[lay.cls]){
     var on = state.v.tireExtraAxle==='Y';
     h += '<div style="text-align:center"><button type="button" class="photo-btn" id="tireAxleBtn" style="margin-top:10px">'+
          (on ? '&#8722; Remove Added Axle' : '&#65291; Add Rear Axle') + '</button></div>';
@@ -1247,10 +1271,40 @@ function renderTireWidget(){
   var ab = $('tireAxleBtn');
   if(ab) ab.addEventListener('click', function(){
     state.v.tireExtraAxle = state.v.tireExtraAxle==='Y' ? '' : 'Y';
-    var l2 = tireLayout();
-    state.v.tireAge = tireSummary(l2 || lay); save();
-    renderTireWidget();
+    tireRefresh();
   });
+  var addB = $('towAxleAdd'), remB = $('towAxleRem');
+  if(addB) addB.addEventListener('click', function(){ towAxleChange(1); });
+  if(remB) remB.addEventListener('click', function(){ towAxleChange(-1); });
+}
+function tireRefresh(){
+  var l2 = tireLayout();
+  state.v.tireAge = l2 ? tireSummary(l2) : '';
+  save(); savePhotos();
+  renderTireWidget();
+}
+/* Shift one tire position's date code + photo to another slot. */
+function tireMove(from, to){
+  state.v['tireDC_'+to] = state.v['tireDC_'+from] || '';
+  delete state.v['tireDC_'+from];
+  if(photos['tire|'+from]){ photos['tire|'+to] = photos['tire|'+from]; delete photos['tire|'+from]; }
+  else delete photos['tire|'+to];
+}
+/* Add (+1) inserts a fresh axle in FRONT of the rear axle — existing
+   codes/photos slide back so they stay with the same physical tires.
+   Remove (-1) drops the front-most added axle. */
+function towAxleChange(d){
+  var n = towAxleCt(), i;
+  if(d>0 && n<3){
+    for(i=n;i>=1;i--){ tireMove('A'+i+'L','A'+(i+1)+'L'); tireMove('A'+i+'R','A'+(i+1)+'R'); }
+    state.v.tireAxleCt = n+1;
+  } else if(d<0 && n>1){
+    for(i=2;i<=n;i++){ tireMove('A'+i+'L','A'+(i-1)+'L'); tireMove('A'+i+'R','A'+(i-1)+'R'); }
+    delete state.v['tireDC_A'+n+'L']; delete state.v['tireDC_A'+n+'R'];
+    delete photos['tire|A'+n+'L']; delete photos['tire|A'+n+'R'];
+    state.v.tireAxleCt = n-1;
+  } else return;
+  tireRefresh();
 }
 document.addEventListener('input', function(e){
   var pos = e.target.dataset && e.target.dataset.tire;
