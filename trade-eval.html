@@ -724,9 +724,7 @@ function classAutoNote(show){
   if(!n){ n = document.createElement('span'); n.className='autonote'; lbl.appendChild(n); }
   n.textContent = '✨ selected automagically from the VIN — tap to change';
 }
-function maybeAutoClass(vin){
-  if(vin.length!==17) return;
-  var cls = classFromVIN(vin);
+function setAutoClass(cls){
   if(!cls || TYPE_NAMES.indexOf(cls)<0) return;
   if(state.v.unitClass && !state.v.unitClassAuto) return;   // never fight a manual pick
   state.v.unitClass = cls; state.v.unitClassAuto = 1; save();
@@ -736,6 +734,175 @@ function maybeAutoClass(vin){
   });
   classAutoNote(true);
   refreshUnitMissing();
+}
+function maybeAutoClass(vin){
+  if(vin.length!==17) return;
+  setAutoClass(classFromVIN(vin));
+}
+
+/* ============================================================
+   NHTSA vPIC auto-fill. Free CORS API; on a full 17-char VIN we
+   fill fields we're CERTAIN about, and only when the field is
+   empty or was auto-filled before — a tech's entry always wins.
+   Towables get Year too; motorized never does (chassis year can
+   differ from the coach's model year).
+   ============================================================ */
+function markAuto(id){
+  var lbl = document.querySelector('[data-fw="'+id+'"] label');
+  if(!lbl || lbl.querySelector('.autonote')) return;
+  var n = document.createElement('span');
+  n.className = 'autonote'; n.textContent = '✨ automagic';
+  lbl.appendChild(n);
+}
+function unmarkAuto(id){
+  var n = document.querySelector('[data-fw="'+id+'"] label .autonote');
+  if(n) n.remove();
+}
+function clearAutoFlag(id){
+  if(state.autoFill && state.autoFill[id]){ delete state.autoFill[id]; unmarkAuto(id); }
+}
+/* Transmission knowledge base, keyed by the decoded chassis. Only
+   combos that ship one way — when in doubt, we fill nothing. */
+function transFor(make, model, disp){
+  var m = model.toUpperCase();
+  if(make==='FORD'){
+    if(disp===7.3 && (m.indexOf('MOTORHOME')>-1 || m==='E-350' || m==='E-450')) return {m:'Ford', s:'6 Speed'};
+    if(m==='TRANSIT') return {m:'Ford', s:'10 Speed'};
+    if(m==='F-600') return {m:'Ford', s:'10 Speed'};
+    if(m==='F-650' || m==='F-750') return {m:'Ford', s:'6 Speed'};
+    return null;
+  }
+  if(make==='CHEVROLET' && m==='EXPRESS' && disp===6.6) return {m:'Chevy', s:'6 Speed'};
+  if(make==='MERCEDES-BENZ' && m==='SPRINTER' && disp===2) return {m:'Other', mo:'Mercedes-Benz', s:'Other', so:'9 Speed'};
+  if(make==='RAM'){
+    if(m.indexOf('PROMASTER')===0) return {m:'Other', mo:'ZF', s:'Other', so:'9 Speed'};
+    if((m==='4500'||m==='5500') && disp===6.7) return {m:'Other', mo:'Aisin', s:'6 Speed'};
+    return null;
+  }
+  if(make==='FREIGHTLINER'){
+    if(m.indexOf('CASCADIA')>-1) return null;   // DT12 vs Allison varies
+    return {m:'Allison', s:'6 Speed'};          // XC / S2RV / M2: Allison only
+  }
+  if(make.indexOf('SPARTAN')===0) return {m:'Allison', s:'6 Speed'};
+  if(make==='INTERNATIONAL') return {m:'Allison', s:'6 Speed'};
+  return null;
+}
+var BRAND_NOISE = {recreational:1, vehicles:1, vehicle:1, rv:1, towable:1, towables:1,
+                   inc:1, llc:1, corp:1, industries:1, motorhomes:1};
+function sigWords(s){
+  return s.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/)
+          .filter(function(w){ return w && !BRAND_NOISE[w]; });
+}
+function matchBrand(combined){
+  var comb = sigWords(combined);
+  var best = null, bestLen = 0, reverse = [];
+  MFG_BRANDS.forEach(function(n){
+    var w = sigWords(n);
+    var fwd = w.every(function(t){ return comb.indexOf(t)>-1; });
+    if(fwd && w.length > bestLen){ best = n; bestLen = w.length; return; }
+    var rev = comb.every(function(t){ return w.indexOf(t)>-1; });
+    if(rev) reverse.push(n);
+  });
+  if(best) return best;
+  return reverse.length===1 ? reverse[0] : null;
+}
+function titleCase(s){
+  return s.toLowerCase().replace(/\b[a-z]/g, function(c){ return c.toUpperCase(); });
+}
+function applyVpic(res){
+  state.autoFill = state.autoFill || {};
+  var filled = [];
+  function g(k){ return (res[k]||'').trim(); }
+  function put(id, val){
+    if(!val) return;
+    var cur = (state.v[id]||'').trim();
+    if(cur && !state.autoFill[id]) return;
+    if(cur!==val){ state.v[id] = val; filled.push(id); }
+    state.autoFill[id] = 1;
+  }
+  var make = g('Make').toUpperCase();
+  var model = g('Model');
+  var disp = parseFloat(g('DisplacementL')) || 0;
+  var isTrailer = g('BodyClass')==='Trailer' || g('VehicleType').indexOf('TRAILER')===0;
+  /* a corrected VIN can flip towable <-> motorized: drop auto-fills that
+     only the other branch writes, so nothing stale lingers */
+  var wiped = false;
+  (isTrailer ? ['fuelType','engineMfg','engineHp','chassisMfg','transMfg','transMfgOther','transSpeed','transSpeedOther','fourX4']
+             : ['yr','make','length']).forEach(function(id){
+    if(state.autoFill[id]){
+      delete state.autoFill[id];
+      if(state.v[id]){ state.v[id] = ''; wiped = true; }
+      unmarkAuto(id);
+    }
+  });
+  if(isTrailer){
+    if(/^\d{4}$/.test(g('ModelYear'))) put('yr', g('ModelYear'));
+    var L = parseFloat(g('TrailerLength'));
+    if(L) put('length', String(Math.round(L)));
+    var comb = make.replace(/\//g,' ');
+    var mdl = model.replace(/\s*Towables?$/i,'').trim();
+    if(mdl && comb.toLowerCase().indexOf(mdl.toLowerCase())<0) comb += ' ' + mdl;
+    put('make', matchBrand(comb) || titleCase(sigWords(comb).join(' ')));
+    var tt = g('TrailerType').toLowerCase();
+    if(/fifth|gooseneck/.test(tt)) setAutoClass('5th Wheel');
+    else if(/ball|bumper|pull/.test(tt)) setAutoClass('Travel Trailer');
+  }else{
+    var fuel = g('FuelTypePrimary');
+    if(fuel==='Gasoline') put('fuelType','Gas');
+    else if(fuel==='Diesel') put('fuelType','Diesel');
+    else if(fuel==='Electric') put('fuelType','Electric');
+    var em = g('EngineManufacturer'), emL = em.toLowerCase();
+    if(emL.indexOf('cummins')>-1) em = 'Cummins';
+    else if(emL==='gm') em = 'GM';
+    else if(emL.indexOf('detroit')>-1) em = 'Detroit Diesel';
+    else if(emL==='fca' || emL==='stla') em = 'Stellantis';
+    else if(emL==='ford') em = 'Ford';
+    if(!em && make==='MERCEDES-BENZ') em = 'Mercedes-Benz';
+    put('engineMfg', em);
+    if(disp){
+      var dispStr = (disp % 1 === 0 ? disp.toFixed(1) : String(disp)) + 'L';
+      put('engineHp', dispStr + (g('EngineHP') ? ' · '+g('EngineHP')+' HP' : ''));
+    }
+    var CM = {FORD:'Ford', CHEVROLET:'Chevrolet', 'MERCEDES-BENZ':'Mercedes', RAM:'RAM',
+              FREIGHTLINER:'Freightliner', INTERNATIONAL:'International',
+              PREVOST:'Prevost', NEWELL:'Newell'};
+    var cm = CM[make] || (make.indexOf('SPARTAN')===0 ? 'Spartan'
+             : make.indexOf('TIFFIN')===0 ? 'Tiffin PowerGlide' : '');
+    put('chassisMfg', cm);
+    var dt = g('DriveType').toLowerCase();
+    if(/4wd|4x4/.test(dt)) put('fourX4','Y');
+    else if(/4x2|6x2|6x4|rwd|fwd/.test(dt)) put('fourX4','N');
+    var tr = transFor(make, model, disp);
+    if(tr){
+      put('transMfg', tr.m);
+      if(tr.mo) put('transMfgOther', tr.mo);
+      put('transSpeed', tr.s);
+      if(tr.so) put('transSpeedOther', tr.so);
+    }
+  }
+  if(filled.length || wiped){
+    save(); restoreInputs();
+    filled.forEach(markAuto);
+    refreshUnitMissing();
+    var vinEl = document.querySelector('[data-f="vin"]');
+    if(vinEl) setFieldNote(vinEl, '✓ 17 characters · ✨ '+filled.length+' field'+(filled.length>1?'s':'')+' filled automagically (NHTSA)', false);
+  }
+}
+var vpicLast = '';
+function vinAutoFill(vin){
+  if(vin.length!==17 || vin===vpicLast || !window.fetch) return;
+  vpicLast = vin;
+  var ctrl = window.AbortController ? new AbortController() : null;
+  var to = ctrl ? setTimeout(function(){ ctrl.abort(); }, 8000) : null;
+  fetch('https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/'+encodeURIComponent(vin)+'?format=json',
+        ctrl ? {signal: ctrl.signal} : {})
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(to) clearTimeout(to);
+      var res = j && j.Results && j.Results[0];
+      if(res && vin===(state.v.vin||'').trim()) applyVpic(res);
+    })
+    .catch(function(){ if(to) clearTimeout(to); });
 }
 $('backBtn').addEventListener('click', function(){ go(cur-1); });
 $('nextBtn').addEventListener('click', function(){
@@ -798,11 +965,13 @@ document.addEventListener('input', function(e){
     else if(v.length===17) setFieldNote(e.target, '✓ 17 characters', false);
     else setFieldNote(e.target, v.length ? v.length+' / 17' : '', false);
     maybeAutoClass(v);
+    vinAutoFill(v);
   }else if(fmt==='digits'){
     var n = e.target.value.replace(/\D/g,'');
     if(n!==e.target.value) e.target.value = n;
   }
   state.v[f] = e.target.value; save();
+  clearAutoFlag(f);
   refreshUnitMissing();
 });
 document.addEventListener('click', function(e){
@@ -819,6 +988,7 @@ document.addEventListener('click', function(e){
       Array.prototype.forEach.call(wrap.children, function(x){ x.classList.toggle('on', x===b); });
     }
     if(id==='unitClass'){ state.v.unitClassAuto = 0; classAutoNote(false); }
+    clearAutoFlag(id);
     save(); updateConditionals(); refreshUnitMissing(); return;
   }
   if(wrap.dataset.multi){
@@ -1187,8 +1357,10 @@ if(!(state.v.inspExp||'').trim()){
 }
 restoreInputs();
 if(state.v.unitClassAuto && state.v.unitClass) classAutoNote(true);
+Object.keys(state.autoFill || {}).forEach(markAuto);
 renderDiagrams();
 renderPhotoGroupSlots();
+if((state.v.vin||'').trim().length===17) vinAutoFill(state.v.vin.trim());
 go(0);
 })();
 </script>
