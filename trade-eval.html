@@ -92,6 +92,17 @@
   .pgroup{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:9px}
   .diag .pgroup{justify-content:center}
   .pgslot .pgroup{justify-content:flex-start}
+  .field textarea{overflow:hidden}
+  .tirewrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+  .tirediag{width:130px;flex:0 0 auto}
+  .tirediag [data-tirepos]{cursor:pointer}
+  .tirerows{flex:1 1 260px;display:flex;flex-direction:column;gap:6px}
+  .tirerow{display:flex;align-items:center;gap:8px}
+  .tirerow .tlabel{flex:0 0 118px;font:600 12px 'Barlow',sans-serif;color:var(--navy)}
+  .tirerow input{width:86px;padding:8px 10px;font:inherit;font-size:15px;background:#fff;
+    border:1px solid var(--line);border-radius:4px}
+  .tirerow input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+  .tirerow .photo-btn{margin-top:0}
   .field input:focus,.field textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
   .field textarea{min-height:64px;resize:vertical}
   .field.wide{grid-column:1/-1}
@@ -398,14 +409,14 @@ var SECTIONS = [
    ]},
    { sub:'Wheels / Tires / Body', fields:[
      {id:'alumWheels', l:'Aluminum Wheels',      t:'seg', o:YN},
-     {id:'tireAge',    l:'Tires: Age',       t:'text', p:1},
+     {id:'tireAge',    l:'Age of Tires (enter date codes for each tire)', t:'tires', w:1},
      {id:'tireDryRot', l:'Tires: Dry Rot / Crack', t:'seg', o:YN},
      {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
      {id:'hitchWeight',l:'Hitch Weight',     t:'text', p:1},
    ]},
    { sub:'Exterior Condition', fields:[
      {id:'extCond',    l:'Exterior Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
-     {id:'extRepairs', l:'Exterior Repairs Needed', t:'area', w:1},
+     {id:'extRepairs', l:'Exterior Repairs Needed', t:'area', w:1, bullets:1},
    ]},
  ]},
  { key:'int', title:'Interior', groups:[
@@ -459,7 +470,7 @@ var SECTIONS = [
      {id:'smoker',     l:'Signs of Smoking', t:'seg', o:YN},
      {id:'pets',       l:'Pets',             t:'seg', o:YN},
      {id:'intCond',    l:'Int Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
-     {id:'intRepairs', l:'Int Repairs Needed', t:'area', w:1},
+     {id:'intRepairs', l:'Int Repairs Needed', t:'area', w:1, bullets:1},
    ]},
  ]},
 ];
@@ -556,7 +567,9 @@ function fieldHTML(f){
   }else if(f.t==='date'){
     h += '<input type="date" data-f="'+f.id+'">';
   }else if(f.t==='area'){
-    h += '<textarea data-f="'+f.id+'"></textarea>';
+    h += '<textarea data-f="'+f.id+'"'+(f.bullets?' data-bullets="1" placeholder="Each line becomes a bullet — press return for the next item"':'')+'></textarea>';
+  }else if(f.t==='tires'){
+    h += '<div id="tireWidget"></div>';
   }else if(f.t==='icons'){
     h += typeGridHTML(f.id);
   }else{
@@ -642,6 +655,7 @@ function go(i){
   });
   $('backBtn').style.visibility = cur===0 ? 'hidden' : 'visible';
   $('nextBtn').style.display = cur===5 ? 'none' : '';
+  if(cur===2) renderTireWidget();
   if(cur===4) renderDiagrams();
   if(cur===5) updateMissing();
   window.scrollTo({top:0});
@@ -734,6 +748,7 @@ function setAutoClass(cls){
   });
   classAutoNote(true);
   refreshUnitMissing();
+  renderTireWidget();
 }
 function maybeAutoClass(vin){
   if(vin.length!==17) return;
@@ -970,9 +985,31 @@ document.addEventListener('input', function(e){
     var n = e.target.value.replace(/\D/g,'');
     if(n!==e.target.value) e.target.value = n;
   }
+  if(e.target.dataset.bullets && e.target.value.trim() && !/^•/.test(e.target.value)){
+    e.target.value = '• ' + e.target.value;
+  }
+  if(e.target.tagName==='TEXTAREA') autogrow(e.target);
   state.v[f] = e.target.value; save();
   clearAutoFlag(f);
   refreshUnitMissing();
+});
+function autogrow(el){
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight + 2) + 'px';
+}
+/* bulleted textareas: return starts the next bullet */
+document.addEventListener('keydown', function(e){
+  var el = e.target;
+  if(!(el.dataset && el.dataset.bullets) || e.key!=='Enter') return;
+  e.preventDefault();
+  var ins = '\n• ';
+  if(typeof el.setRangeText==='function'){
+    el.setRangeText(ins, el.selectionStart, el.selectionEnd, 'end');
+  }else{
+    el.value += ins;
+  }
+  state.v[el.dataset.f] = el.value; save();
+  autogrow(el);
 });
 document.addEventListener('click', function(e){
   var pb = e.target.closest ? e.target.closest('button[data-photo]') : null;
@@ -987,7 +1024,7 @@ document.addEventListener('click', function(e){
       state.v[id]=b.dataset.o;
       Array.prototype.forEach.call(wrap.children, function(x){ x.classList.toggle('on', x===b); });
     }
-    if(id==='unitClass'){ state.v.unitClassAuto = 0; classAutoNote(false); }
+    if(id==='unitClass'){ state.v.unitClassAuto = 0; classAutoNote(false); renderTireWidget(); }
     clearAutoFlag(id);
     save(); updateConditionals(); refreshUnitMissing(); return;
   }
@@ -1045,6 +1082,7 @@ photoInput.addEventListener('change', async function(){
   }finally{
     Array.prototype.forEach.call(btns, function(b){ b.disabled=false; });
     if(key.indexOf('dmg|')===0) renderDiagrams();
+    if(key.indexOf('tire|')===0) renderTireWidget();
     renderPhotoGroupSlots();
     refreshPhotoBtns();
   }
@@ -1086,6 +1124,109 @@ function renderPhotoGroupSlots(){
     el.innerHTML = photoGroupHTML(el.dataset.pg, el.dataset.pglabel);
   });
 }
+
+/* ============================================================
+   Tire date-code widget: top-down diagram of the Class picked on
+   Unit Info, one row per tire (date code + photo). TT / 5th
+   Wheel / Super C / Diesel Pusher can add a rear axle.
+   ============================================================ */
+var TIRE_LABELS = {
+  LF:'Left Front', RF:'Right Front', LR:'Left Rear', RR:'Right Rear',
+  LRO:'Left Rear Outer', LRI:'Left Rear Inner', RRI:'Right Rear Inner', RRO:'Right Rear Outer',
+  LT:'Left Tag', RT:'Right Tag',
+  A1L:'Axle 1 Left', A1R:'Axle 1 Right', A2L:'Axle 2 Left', A2R:'Axle 2 Right',
+  A3L:'Axle 3 Left', A3R:'Axle 3 Right'
+};
+var EXTRA_AXLE_OK = {'Travel Trailer':1, '5th Wheel':1, 'Super C':1, 'Diesel Pusher':1};
+function tireLayout(){
+  var cls = (state.v.unitClass||'').trim();
+  if(TYPE_NAMES.indexOf(cls)<0) return null;
+  var extra = state.v.tireExtraAxle==='Y' && EXTRA_AXLE_OK[cls];
+  if(cls==='Class B / Van') return {cls:cls, towable:false, pos:['LF','RF','LR','RR']};
+  if(cls==='Travel Trailer' || cls==='5th Wheel'){
+    var p = ['A1L','A1R','A2L','A2R'];
+    if(extra) p.push('A3L','A3R');
+    return {cls:cls, towable:true, pos:p};
+  }
+  var p2 = ['LF','RF','LRO','LRI','RRI','RRO'];
+  if(extra) p2.push('LT','RT');
+  return {cls:cls, towable:false, pos:p2};
+}
+function tireCode(pos){ return (state.v['tireDC_'+pos]||'').trim(); }
+function tireDiagramSVG(lay){
+  var s = '<svg viewBox="0 0 140 216" class="tirediag" xmlns="http://www.w3.org/2000/svg">';
+  function tire(pos, x, y){
+    var code = tireCode(pos), ph = !!photos['tire|'+pos];
+    s += '<rect data-tirepos="'+pos+'" id="tw_'+pos+'" x="'+x+'" y="'+y+'" width="13" height="26" rx="4" '+
+         'fill="'+(code ? '#2E7D4F' : '#9EA3A8')+'"'+(ph ? ' stroke="#C6A24E" stroke-width="2.5"' : '')+'/>';
+  }
+  if(lay.towable){
+    s += '<path d="M70,4 L58,26 L82,26 Z" fill="#C9CDD4"/>';
+    s += '<rect x="44" y="24" width="52" height="184" rx="10" fill="#E2E4E6" stroke="#BFC3C7"/>';
+    var ys = {A1L:96, A1R:96, A2L:136, A2R:136, A3L:176, A3R:176};
+    lay.pos.forEach(function(p){ tire(p, p.charAt(2)==='L' ? 27 : 100, ys[p]); });
+  }else{
+    s += '<rect x="44" y="8" width="52" height="200" rx="16" fill="#E2E4E6" stroke="#BFC3C7"/>';
+    var Y = {LF:40, RF:40, LR:150, RR:150, LRO:150, LRI:150, RRI:150, RRO:150, LT:184, RT:184};
+    var X = {LF:27, RF:100, LR:27, RR:100, LRO:13, LRI:28, RRI:99, RRO:114, LT:27, RT:100};
+    lay.pos.forEach(function(p){ tire(p, X[p], Y[p]); });
+  }
+  return s+'</svg>';
+}
+function tireSummary(lay){
+  var parts = [];
+  lay.pos.forEach(function(p){ if(tireCode(p)) parts.push(p+' '+tireCode(p)); });
+  return parts.join(' · ');
+}
+function renderTireWidget(){
+  var el = $('tireWidget');
+  if(!el) return;
+  var lay = tireLayout();
+  if(!lay){
+    el.innerHTML = '<p class="hint">&#9888; Pick the <b>Class</b> on Step 1 &mdash; Unit Info and the tire layout will load here.</p>';
+    return;
+  }
+  var h = '<div class="tirewrap">'+tireDiagramSVG(lay)+'<div class="tirerows">';
+  lay.pos.forEach(function(p){
+    var ph = !!photos['tire|'+p];
+    h += '<div class="tirerow" data-tirerow="'+p+'">'+
+      '<span class="tlabel">'+TIRE_LABELS[p]+'</span>'+
+      '<input type="text" inputmode="numeric" data-tire="'+p+'" placeholder="WWYY" maxlength="4" value="'+tireCode(p).replace(/"/g,'&quot;')+'" autocomplete="off">'+
+      '<button type="button" class="photo-btn'+(ph?' has-photo':'')+'" data-photo="tire|'+p+'">'+(ph?'&#10003; Photo':'&#128247; Photo')+'</button></div>';
+  });
+  h += '</div></div>';
+  if(EXTRA_AXLE_OK[lay.cls]){
+    var on = state.v.tireExtraAxle==='Y';
+    h += '<button type="button" class="photo-btn" id="tireAxleBtn" style="margin-top:8px">'+
+         (on ? '&#8722; Remove Added Axle' : '&#65291; Add Rear Axle') + '</button>';
+  }
+  el.innerHTML = h;
+  var ab = $('tireAxleBtn');
+  if(ab) ab.addEventListener('click', function(){
+    state.v.tireExtraAxle = state.v.tireExtraAxle==='Y' ? '' : 'Y';
+    var l2 = tireLayout();
+    state.v.tireAge = tireSummary(l2 || lay); save();
+    renderTireWidget();
+  });
+}
+document.addEventListener('input', function(e){
+  var pos = e.target.dataset && e.target.dataset.tire;
+  if(!pos) return;
+  var d = e.target.value.replace(/\D/g,'').slice(0,4);
+  if(d!==e.target.value) e.target.value = d;
+  state.v['tireDC_'+pos] = d;
+  var lay = tireLayout();
+  if(lay) state.v.tireAge = tireSummary(lay);
+  save();
+  var t = document.getElementById('tw_'+pos);
+  if(t) t.setAttribute('fill', d ? '#2E7D4F' : '#9EA3A8');
+});
+document.addEventListener('click', function(e){
+  var t = e.target.closest ? e.target.closest('[data-tirepos]') : null;
+  if(!t) return;
+  var row = document.querySelector('[data-tirerow="'+t.dataset.tirepos+'"] input');
+  if(row){ row.focus(); row.scrollIntoView({behavior:'smooth', block:'center'}); }
+});
 
 /* ============================================================
    Damage diagrams
@@ -1221,6 +1362,10 @@ function buildPrint(){
   });
   groupKeys('wsGood').forEach(function(k,i){
     entries.push({label:'Windshield Photo '+(i+1), data:photos[k].data});
+  });
+  Object.keys(photos).filter(function(k){ return k.indexOf('tire|')===0; }).sort().forEach(function(k){
+    var p = k.slice(5);
+    entries.push({label:'Tire — '+(TIRE_LABELS[p]||p)+' Photo', data:photos[k].data});
   });
   TYPE_NAMES.forEach(function(typeName){
     VIEW_IDS.forEach(function(v){
@@ -1360,6 +1505,8 @@ if(state.v.unitClassAuto && state.v.unitClass) classAutoNote(true);
 Object.keys(state.autoFill || {}).forEach(markAuto);
 renderDiagrams();
 renderPhotoGroupSlots();
+renderTireWidget();
+Array.prototype.forEach.call(document.querySelectorAll('.field textarea'), autogrow);
 if((state.v.vin||'').trim().length===17) vinAutoFill(state.v.vin.trim());
 go(0);
 })();
