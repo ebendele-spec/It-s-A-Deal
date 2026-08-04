@@ -89,6 +89,9 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sugitem:last-child{border-bottom:none}
   .sugitem:hover,.sugitem.sel{background:var(--gold-soft)}
+  .pgroup{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:9px}
+  .diag .pgroup{justify-content:center}
+  .pgslot .pgroup{justify-content:flex-start}
   .field input:focus,.field textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
   .field textarea{min-height:64px;resize:vertical}
   .field.wide{grid-column:1/-1}
@@ -348,8 +351,6 @@ var SECTIONS = [
      {id:'tireAge',    l:'Tires: Age',       t:'text', p:1},
      {id:'tireDryRot', l:'Tires: Dry Rot / Crack', t:'seg', o:YN},
      {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
-     {id:'wsGood',     l:'Windshield Good',  t:'seg', o:YN, p:1},
-     {id:'wsDmg',      l:'Windshield Cracks / Stars', t:'multi', o:['Cracks','Stars']},
      {id:'hitchWeight',l:'Hitch Weight',     t:'text', p:1},
      {id:'smoker',     l:'Smoker',           t:'seg', o:YN},
      {id:'pets',       l:'Pets',             t:'seg', o:YN},
@@ -463,6 +464,10 @@ var SECTIONS = [
  ]},
 ];
 
+var WS_FIELDS = [
+  {id:'wsGood',     l:'Windshield Good',  t:'seg', o:YN, pg:'Windshield'},
+  {id:'wsDmg',      l:'Windshield Cracks / Stars', t:'multi', o:['Cracks','Stars']},
+];
 var DMG_FIELDS = [
   {id:'dmgDate',    l:'Date',            t:'text', ph:'MM/DD/YY'},
   {id:'claimMark',  l:'Claim Mark',      t:'seg', o:['Yes','No']},
@@ -485,7 +490,7 @@ var LEGEND = [
 
 var PHOTO_LABELS = {
   vin:'VIN Photo', mileage:'Mileage Photo', ecmMiles:'ECM Mileage Photo',
-  tireAge:'Tires Photo', wsGood:'Windshield Photo', hitchWeight:'Hitch Weight Photo'
+  tireAge:'Tires Photo', hitchWeight:'Hitch Weight Photo'
 };
 
 /* ============================================================
@@ -511,6 +516,12 @@ try{
 }catch(e){}
 var photos = {};
 try{ photos = JSON.parse(localStorage.getItem(PHOTO_KEY) || '{}') || {}; }catch(e){ photos = {}; }
+/* migrate pre-multi-photo keys to "<base>|0" */
+Object.keys(photos).forEach(function(k){
+  if(/^dmg\|[^|]+\|[^|]+$/.test(k) || k==='wsGood'){
+    photos[k+'|0'] = photos[k]; delete photos[k];
+  }
+});
 function save(){ try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(state)); }catch(e){} }
 var photoWarned = false;
 function savePhotos(){
@@ -556,6 +567,9 @@ function fieldHTML(f){
   if(f.p){
     h += '<br><button type="button" class="photo-btn" data-photo="'+f.id+'"'+(f.preq?' data-preq="1"':'')+'>&#128247; Photo'+(f.preq?' <span class="req">*</span>':'')+'</button>';
   }
+  if(f.pg){
+    h += '<div class="pgslot" data-pg="'+f.id+'" data-pglabel="'+f.pg+'"></div>';
+  }
   return h+'</div>';
 }
 function groupHTML(g){
@@ -587,6 +601,7 @@ SECTIONS.forEach(function(sec,i){
   h += '<div class="diag-grid" id="diagGrid"></div>';
   h += '<div class="dmg-tools"><button type="button" id="undoMark">&#8630; Undo Last Mark</button>'+
        '<button type="button" id="clearMarks">Clear All Marks</button></div>';
+  h += '<h3 class="sub">Windshield</h3><div class="fgrid">'+WS_FIELDS.map(fieldHTML).join('')+'</div>';
   h += '<h3 class="sub">Claim Info</h3><div class="fgrid">'+DMG_FIELDS.map(fieldHTML).join('')+'</div>';
   d.innerHTML = h;
   stepsEl.appendChild(d);
@@ -864,17 +879,47 @@ photoInput.addEventListener('change', async function(){
     alert('Could not read that photo — please try again.');
   }finally{
     Array.prototype.forEach.call(btns, function(b){ b.disabled=false; });
+    if(key.indexOf('dmg|')===0) renderDiagrams();
+    renderPhotoGroupSlots();
     refreshPhotoBtns();
   }
 });
 function refreshPhotoBtns(){
   Array.prototype.forEach.call(document.querySelectorAll('button[data-photo]'), function(b){
+    if(b.dataset.photo.indexOf('|')>-1) return;   /* group buttons render their own labels */
     var has = !!photos[b.dataset.photo];
     b.classList.toggle('has-photo', has);
     b.innerHTML = has ? '&#10003; Photo (tap to retake)'
                       : '&#128247; Photo'+(b.dataset.preq?' <span class="req">*</span>':'');
   });
   refreshUnitMissing();
+}
+
+/* ---- Multi-photo groups: photos stored as "<base>|0", "<base>|1", …
+       First button reads "Take Photo of <label>"; once one exists, each
+       becomes "✓ <label> n (tap to retake)" plus a "+ Add Photo". ---- */
+function groupKeys(base){
+  return Object.keys(photos).filter(function(k){ return k.indexOf(base+'|')===0; })
+    .sort(function(a,b){ return (+a.slice(base.length+1)) - (+b.slice(base.length+1)); });
+}
+function photoGroupHTML(base, label){
+  var keys = groupKeys(base);
+  var h = '<div class="pgroup">';
+  keys.forEach(function(k,i){
+    h += '<button type="button" class="photo-btn has-photo" data-photo="'+k+'">&#10003; '+label+' '+(i+1)+'</button>';
+  });
+  if(keys.length){
+    var next = 1 + (+keys[keys.length-1].slice(base.length+1));
+    h += '<button type="button" class="photo-btn" data-photo="'+base+'|'+next+'">&#65291; Add Photo</button>';
+  }else{
+    h += '<button type="button" class="photo-btn" data-photo="'+base+'|0">&#128247; Take Photo of '+label+'</button>';
+  }
+  return h+'</div>';
+}
+function renderPhotoGroupSlots(){
+  Array.prototype.forEach.call(document.querySelectorAll('.pgslot'), function(el){
+    el.innerHTML = photoGroupHTML(el.dataset.pg, el.dataset.pglabel);
+  });
 }
 
 /* ============================================================
@@ -913,7 +958,7 @@ function renderDiagrams(){
     card.className = 'diag'+(spec.roof?' roofcard':'');
     var pk = 'dmg|'+state.dmgType+'|'+spec.v;
     card.innerHTML = '<h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[state.dmgType][spec.v], true)+
-      '<button type="button" class="photo-btn" data-photo="'+pk+'">&#128247; Photo</button>';
+      photoGroupHTML(pk, VIEW_LABELS[spec.v]);
     grid.appendChild(card);
   });
   refreshPhotoBtns();
@@ -988,6 +1033,8 @@ function buildPrint(){
     h += '<div class="p-diag'+(spec.roof?' roofcard':'')+'"><h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[tn][spec.v], false)+'</div>';
   });
   h += '</div>';
+  h += '<div class="pline"><b>Windshield Good:</b> '+pv('wsGood')+
+       ' &nbsp;&nbsp; <b>Windshield Cracks / Stars:</b> '+pm('wsDmg')+'</div>';
   h += '<div class="pline"><b>Notes:</b> '+pv('dmgNotes')+'</div>';
   h += '<div class="pline"><b>Claim Mark:</b> '+pv('claimMark')+
        ' &nbsp;&nbsp; <b>Insurance Claim To Place:</b> '+pv('insClaim')+
@@ -1000,10 +1047,14 @@ function buildPrint(){
   Object.keys(PHOTO_LABELS).forEach(function(k){
     if(photos[k]) entries.push({label:PHOTO_LABELS[k], data:photos[k].data});
   });
+  groupKeys('wsGood').forEach(function(k,i){
+    entries.push({label:'Windshield Photo '+(i+1), data:photos[k].data});
+  });
   TYPE_NAMES.forEach(function(typeName){
     VIEW_IDS.forEach(function(v){
-      var p = photos['dmg|'+typeName+'|'+v];
-      if(p) entries.push({label:typeName+' — '+VIEW_LABELS[v]+' Photo', data:p.data});
+      groupKeys('dmg|'+typeName+'|'+v).forEach(function(k,i){
+        entries.push({label:typeName+' — '+VIEW_LABELS[v]+' Photo '+(i+1), data:photos[k].data});
+      });
     });
   });
   if(entries.length){
@@ -1065,17 +1116,29 @@ $('signOut').addEventListener('click', function(){
   if(!input) return;
   var list = input.parentElement.querySelector('.suglist');
   var sel = -1, items = [];
+  /* pre-split every entry into lowercase words so partial-name queries
+     like "thor aria" or "entegra anthem" match "Thor Motor Coach Aria" /
+     "Entegra Coach Anthem" — each typed word only has to prefix-match
+     SOME word of the entry */
+  var INDEX = MFG_BRANDS.map(function(n){
+    return {n:n, l:n.toLowerCase(), w:n.toLowerCase().split(/[\s\-\/]+/)};
+  });
   function hide(){ list.hidden = true; sel = -1; }
   function render(){
     var q = input.value.trim().toLowerCase();
     if(!q){ hide(); return; }
-    var starts = [], contains = [];
-    MFG_BRANDS.forEach(function(n){
-      var ix = n.toLowerCase().indexOf(q);
-      if(ix===0) starts.push(n);
-      else if(ix>0) contains.push(n);
+    var toks = q.split(/[\s\-\/]+/).filter(Boolean);
+    var starts = [], contains = [], wordy = [];
+    INDEX.forEach(function(e){
+      var ix = e.l.indexOf(q);
+      if(ix===0){ starts.push(e.n); return; }
+      if(ix>0){ contains.push(e.n); return; }
+      var ok = toks.every(function(t){
+        return e.w.some(function(w){ return w.indexOf(t)===0; });
+      });
+      if(ok) wordy.push(e.n);
     });
-    items = starts.concat(contains).slice(0,12);
+    items = starts.concat(contains, wordy).slice(0,12);
     if(!items.length || (items.length===1 && items[0]===input.value)){ hide(); return; }
     list.innerHTML = items.map(function(n,i){
       return '<div class="sugitem" data-i="'+i+'">'+n.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div>';
@@ -1090,7 +1153,7 @@ $('signOut').addEventListener('click', function(){
   }
   input.addEventListener('input', render);
   input.addEventListener('focus', render);
-  input.addEventListener('blur', function(){ setTimeout(hide, 150); });
+  input.addEventListener('blur', function(){ setTimeout(hide, 250); });
   input.addEventListener('keydown', function(e){
     if(list.hidden) return;
     if(e.key==='ArrowDown' || e.key==='ArrowUp'){
@@ -1102,10 +1165,14 @@ $('signOut').addEventListener('click', function(){
       if(sel>-1){ e.preventDefault(); choose(sel); }
     }else if(e.key==='Escape'){ hide(); }
   });
-  list.addEventListener('pointerdown', function(e){
+  /* select on click, not pointerdown — a scroll gesture that starts on a
+     row must scroll the list, not pick the row (click never fires after
+     a drag). The 250ms blur delay keeps the panel alive until the tap
+     lands. Desktop mousedown is prevented so the input keeps focus. */
+  list.addEventListener('mousedown', function(e){ e.preventDefault(); });
+  list.addEventListener('click', function(e){
     var it = e.target.closest('.sugitem');
     if(!it) return;
-    e.preventDefault();          /* keep the input focused; beat blur */
     choose(+it.dataset.i);
   });
 })();
@@ -1119,6 +1186,7 @@ if(!(state.v.inspExp||'').trim()){
 restoreInputs();
 if(state.v.unitClassAuto && state.v.unitClass) classAutoNote(true);
 renderDiagrams();
+renderPhotoGroupSlots();
 go(0);
 })();
 </script>
