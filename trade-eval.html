@@ -346,15 +346,6 @@ var SECTIONS = [
      {id:'genAgs',     l:'AGS',           t:'seg', o:YN},
      {id:'dashAc',     l:'Dash A/C',      t:'seg', o:['Good','Bad']},
    ]},
-   { sub:'Wheels / Tires / Body', fields:[
-     {id:'alumWheels', l:'Aluminum Wheels',      t:'seg', o:YN},
-     {id:'tireAge',    l:'Tires: Age',       t:'text', p:1},
-     {id:'tireDryRot', l:'Tires: Dry Rot / Crack', t:'seg', o:YN},
-     {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
-     {id:'hitchWeight',l:'Hitch Weight',     t:'text', p:1},
-     {id:'smoker',     l:'Smoker',           t:'seg', o:YN},
-     {id:'pets',       l:'Pets',             t:'seg', o:YN},
-   ]},
  ]},
  { key:'ext', title:'Exterior', groups:[
    { sub:'Cockpit / Driving', fields:[
@@ -404,6 +395,13 @@ var SECTIONS = [
      {id:'airRide',    l:'Air Ride',        t:'seg', o:YN},
      {id:'liquidSpr',  l:'Liquid Springs',  t:'seg', o:YN},
      {id:'lithium',    l:'Lithium Batteries', t:'seg', o:YN},
+   ]},
+   { sub:'Wheels / Tires / Body', fields:[
+     {id:'alumWheels', l:'Aluminum Wheels',      t:'seg', o:YN},
+     {id:'tireAge',    l:'Tires: Age',       t:'text', p:1},
+     {id:'tireDryRot', l:'Tires: Dry Rot / Crack', t:'seg', o:YN},
+     {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
+     {id:'hitchWeight',l:'Hitch Weight',     t:'text', p:1},
    ]},
    { sub:'Exterior Condition', fields:[
      {id:'extCond',    l:'Exterior Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
@@ -458,6 +456,8 @@ var SECTIONS = [
      {id:'brTv',       l:'Bedroom TV',       t:'seg', o:['N/A','Box','Flat Panel']},
    ]},
    { sub:'Interior Condition', fields:[
+     {id:'smoker',     l:'Signs of Smoking', t:'seg', o:YN},
+     {id:'pets',       l:'Pets',             t:'seg', o:YN},
      {id:'intCond',    l:'Int Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
      {id:'intRepairs', l:'Int Repairs Needed', t:'area', w:1},
    ]},
