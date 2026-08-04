@@ -93,16 +93,44 @@
   .diag .pgroup{justify-content:center}
   .pgslot .pgroup{justify-content:flex-start}
   .field textarea{overflow:hidden}
-  .tirewrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
-  .tirediag{width:130px;flex:0 0 auto}
-  .tirediag [data-tirepos]{cursor:pointer}
-  .tirerows{flex:1 1 260px;display:flex;flex-direction:column;gap:6px}
-  .tirerow{display:flex;align-items:center;gap:8px}
-  .tirerow .tlabel{flex:0 0 118px;font:600 12px 'Barlow',sans-serif;color:var(--navy)}
-  .tirerow input{width:86px;padding:8px 10px;font:inherit;font-size:15px;background:#fff;
+  .tgraph{display:grid;grid-template-columns:1fr 108px 1fr;max-width:560px;margin:8px auto 0}
+  .tcell{display:flex;flex-direction:column;justify-content:center;gap:10px;padding:16px 0}
+  .tleft{align-items:flex-end;padding-right:22px}
+  .tright{align-items:flex-start;padding-left:22px}
+  .tbody{position:relative;background:#E2E4E6;border:1px solid #BFC3C7;border-top:none;border-bottom:none;min-height:104px}
+  .tbody.tfirst{border-top:1px solid #BFC3C7;border-radius:44px 44px 0 0;min-height:130px}
+  .tbody.tlast{border-bottom:1px solid #BFC3C7;border-radius:0 0 16px 16px}
+  .tfront{position:absolute;top:14px;left:0;right:0;text-align:center;
+    font:700 10px 'Barlow',sans-serif;letter-spacing:.12em;color:var(--muted)}
+  .tire{position:absolute;top:50%;transform:translateY(-50%);width:16px;height:36px;
+    background:#9EA3A8;border-radius:5px}
+  .tire.tl{left:-9px}   .tire.tl.inner{left:11px}
+  .tire.tr{right:-9px}  .tire.tr.inner{right:11px}
+  .tire.has{background:var(--green)}
+  .tire.ph{box-shadow:0 0 0 3px var(--gold)}
+  .tin{display:flex;flex-direction:column;gap:3px}
+  .tleft .tin{align-items:flex-end}
+  .tright .tin{align-items:flex-start}
+  .tcap{font:700 10px 'Barlow',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--navy)}
+  .tinrow{display:flex;gap:6px;align-items:center}
+  .tgraph .tinrow input{width:76px;padding:8px 9px;font:inherit;font-size:15px;background:#fff;
     border:1px solid var(--line);border-radius:4px}
-  .tirerow input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
-  .tirerow .photo-btn{margin-top:0}
+  .tgraph .tinrow input:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+  .tinrow .photo-btn{margin-top:0;padding:7px 9px}
+  @media (max-width:560px){
+    .tgraph{grid-template-columns:1fr 78px 1fr}
+    .tleft{padding-right:10px}
+    .tright{padding-left:10px}
+    .tinrow{gap:4px}
+    .tgraph .tinrow input{width:60px;font-size:14px;padding:7px 6px}
+    .tinrow .photo-btn{padding:6px 6px}
+    .tire{width:13px;height:30px}
+    .tire.tl{left:-7px}  .tire.tl.inner{left:9px}
+    .tire.tr{right:-7px} .tire.tr.inner{right:9px}
+  }
+  .wsblock{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .wsblock .wsseg{justify-content:center;margin-bottom:4px}
+  .wsblock .wsdmg{margin-top:8px}
   .field input:focus,.field textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
   .field textarea{min-height:64px;resize:vertical}
   .field.wide{grid-column:1/-1}
@@ -344,9 +372,9 @@ var SECTIONS = [
      {id:'chassisMfgOther', l:'Chassis Manufacturer (Other)', t:'text', ph:'Type the chassis manufacturer'},
    ]},
    { sub:'Coach Systems', fields:[
-     {id:'slides',     l:'Slides',        t:'seg', o:['0','1','2','3','4','5']},
      {id:'levelMfg',   l:'Leveling Manufacturer',  t:'text'},
      {id:'levelType',  l:'Leveling Type', t:'seg', o:['Air','Hydraulic','4pt. Stabilizers']},
+     {id:'slides',     l:'Slides',        t:'seg', o:['0','1','2','3','4','5']},
      {id:'cameras',    l:'Cameras',       t:'seg', o:['N/A','1','2','3','4']},
      {id:'acUnits',    l:'A/C Units',     t:'seg', o:['1','2','3','4']},
      {id:'acDucted',   l:'A/C Ducted',    t:'seg', o:YN},
@@ -354,7 +382,7 @@ var SECTIONS = [
      {id:'genType',    l:'Generator',     t:'seg', o:['Gas','Diesel','LP']},
      {id:'genRuns',    l:'Generator Runs',t:'seg', o:YN},
      {id:'genLoads',   l:'Generator Loads',t:'seg', o:YN},
-     {id:'genAgs',     l:'AGS',           t:'seg', o:YN},
+     {id:'genAgs',     l:'Auto-Gen Start', t:'seg', o:YN},
      {id:'dashAc',     l:'Dash A/C',      t:'seg', o:['Good','Bad']},
    ]},
  ]},
@@ -475,10 +503,6 @@ var SECTIONS = [
  ]},
 ];
 
-var WS_FIELDS = [
-  {id:'wsGood',     l:'Windshield Good',  t:'seg', o:YN, pg:'Windshield'},
-  {id:'wsDmg',      l:'Windshield Cracks / Stars', t:'multi', o:['Cracks','Stars']},
-];
 var DMG_FIELDS = [
   {id:'dmgDate',    l:'Date',            t:'text', ph:'MM/DD/YY'},
   {id:'claimMark',  l:'Claim Mark',      t:'seg', o:['Yes','No']},
@@ -614,7 +638,6 @@ SECTIONS.forEach(function(sec,i){
   h += '<div class="diag-grid" id="diagGrid"></div>';
   h += '<div class="dmg-tools"><button type="button" id="undoMark">&#8630; Undo Last Mark</button>'+
        '<button type="button" id="clearMarks">Clear All Marks</button></div>';
-  h += '<h3 class="sub">Windshield</h3><div class="fgrid">'+WS_FIELDS.map(fieldHTML).join('')+'</div>';
   h += '<h3 class="sub">Claim Info</h3><div class="fgrid">'+DMG_FIELDS.map(fieldHTML).join('')+'</div>';
   d.innerHTML = h;
   stepsEl.appendChild(d);
@@ -736,7 +759,7 @@ function classAutoNote(show){
   var n = lbl.querySelector('.autonote');
   if(!show){ if(n) n.remove(); return; }
   if(!n){ n = document.createElement('span'); n.className='autonote'; lbl.appendChild(n); }
-  n.textContent = '✨ selected automagically from the VIN — tap to change';
+  n.textContent = '✨ inputted automagically from the VIN — tap to change';
 }
 function setAutoClass(cls){
   if(!cls || TYPE_NAMES.indexOf(cls)<0) return;
@@ -766,7 +789,7 @@ function markAuto(id){
   var lbl = document.querySelector('[data-fw="'+id+'"] label');
   if(!lbl || lbl.querySelector('.autonote')) return;
   var n = document.createElement('span');
-  n.className = 'autonote'; n.textContent = '✨ automagic';
+  n.className = 'autonote'; n.textContent = '✨ inputted automagically';
   lbl.appendChild(n);
 }
 function unmarkAuto(id){
@@ -900,7 +923,7 @@ function applyVpic(res){
     filled.forEach(markAuto);
     refreshUnitMissing();
     var vinEl = document.querySelector('[data-f="vin"]');
-    if(vinEl) setFieldNote(vinEl, '✓ 17 characters · ✨ '+filled.length+' field'+(filled.length>1?'s':'')+' filled automagically (NHTSA)', false);
+    if(vinEl) setFieldNote(vinEl, '✓ 17 characters · ✨ '+filled.length+' field'+(filled.length>1?'s':'')+' inputted automagically (NHTSA)', false);
   }
 }
 var vpicLast = '';
@@ -1081,7 +1104,7 @@ photoInput.addEventListener('change', async function(){
     alert('Could not read that photo — please try again.');
   }finally{
     Array.prototype.forEach.call(btns, function(b){ b.disabled=false; });
-    if(key.indexOf('dmg|')===0) renderDiagrams();
+    if(key.indexOf('dmg|')===0 || key.indexOf('wsGood|')===0) renderDiagrams();
     if(key.indexOf('tire|')===0) renderTireWidget();
     renderPhotoGroupSlots();
     refreshPhotoBtns();
@@ -1153,30 +1176,37 @@ function tireLayout(){
   return {cls:cls, towable:false, pos:p2};
 }
 function tireCode(pos){ return (state.v['tireDC_'+pos]||'').trim(); }
-function tireDiagramSVG(lay){
-  var s = '<svg viewBox="0 0 140 216" class="tirediag" xmlns="http://www.w3.org/2000/svg">';
-  function tire(pos, x, y){
-    var code = tireCode(pos), ph = !!photos['tire|'+pos];
-    s += '<rect data-tirepos="'+pos+'" id="tw_'+pos+'" x="'+x+'" y="'+y+'" width="13" height="26" rx="4" '+
-         'fill="'+(code ? '#2E7D4F' : '#9EA3A8')+'"'+(ph ? ' stroke="#C6A24E" stroke-width="2.5"' : '')+'/>';
-  }
-  if(lay.towable){
-    s += '<path d="M70,4 L58,26 L82,26 Z" fill="#C9CDD4"/>';
-    s += '<rect x="44" y="24" width="52" height="184" rx="10" fill="#E2E4E6" stroke="#BFC3C7"/>';
-    var ys = {A1L:96, A1R:96, A2L:136, A2R:136, A3L:176, A3R:176};
-    lay.pos.forEach(function(p){ tire(p, p.charAt(2)==='L' ? 27 : 100, ys[p]); });
-  }else{
-    s += '<rect x="44" y="8" width="52" height="200" rx="16" fill="#E2E4E6" stroke="#BFC3C7"/>';
-    var Y = {LF:40, RF:40, LR:150, RR:150, LRO:150, LRI:150, RRI:150, RRO:150, LT:184, RT:184};
-    var X = {LF:27, RF:100, LR:27, RR:100, LRO:13, LRI:28, RRI:99, RRO:114, LT:27, RT:100};
-    lay.pos.forEach(function(p){ tire(p, X[p], Y[p]); });
-  }
-  return s+'</svg>';
-}
 function tireSummary(lay){
   var parts = [];
   lay.pos.forEach(function(p){ if(tireCode(p)) parts.push(p+' '+tireCode(p)); });
   return parts.join(' · ');
+}
+function tireAxles(lay){
+  if(lay.towable){
+    var ax = [{l:['A1L'], r:['A1R']}, {l:['A2L'], r:['A2R']}];
+    if(lay.pos.indexOf('A3L')>-1) ax.push({l:['A3L'], r:['A3R']});
+    return ax;
+  }
+  if(lay.cls==='Class B / Van') return [{l:['LF'], r:['RF']}, {l:['LR'], r:['RR']}];
+  var ax2 = [{l:['LF'], r:['RF']}, {l:['LRO','LRI'], r:['RRI','RRO']}];
+  if(lay.pos.indexOf('LT')>-1) ax2.push({l:['LT'], r:['RT']});
+  return ax2;
+}
+function tireShortLabel(p){
+  return TIRE_LABELS[p].replace(/^Left |^Right /,'').replace(/ Left$| Right$/,'');
+}
+function tireInputHTML(p){
+  var ph = !!photos['tire|'+p];
+  return '<div class="tin">'+
+    '<span class="tcap">'+tireShortLabel(p)+'</span>'+
+    '<div class="tinrow">'+
+    '<input type="text" inputmode="numeric" data-tire="'+p+'" placeholder="WWYY" maxlength="4" value="'+tireCode(p).replace(/"/g,'&quot;')+'" autocomplete="off" aria-label="'+TIRE_LABELS[p]+' date code">'+
+    '<button type="button" class="photo-btn'+(ph?' has-photo':'')+'" data-photo="tire|'+p+'" title="'+TIRE_LABELS[p]+' photo">'+(ph?'&#10003;':'&#128247;')+'</button>'+
+    '</div></div>';
+}
+function tireMarkHTML(p, side, idx){
+  var code = tireCode(p), ph = !!photos['tire|'+p];
+  return '<span class="tire '+side+(idx===1?' inner':'')+(code?' has':'')+(ph?' ph':'')+'" id="tw_'+p+'"></span>';
 }
 function renderTireWidget(){
   var el = $('tireWidget');
@@ -1186,19 +1216,22 @@ function renderTireWidget(){
     el.innerHTML = '<p class="hint">&#9888; Pick the <b>Class</b> on Step 1 &mdash; Unit Info and the tire layout will load here.</p>';
     return;
   }
-  var h = '<div class="tirewrap">'+tireDiagramSVG(lay)+'<div class="tirerows">';
-  lay.pos.forEach(function(p){
-    var ph = !!photos['tire|'+p];
-    h += '<div class="tirerow" data-tirerow="'+p+'">'+
-      '<span class="tlabel">'+TIRE_LABELS[p]+'</span>'+
-      '<input type="text" inputmode="numeric" data-tire="'+p+'" placeholder="WWYY" maxlength="4" value="'+tireCode(p).replace(/"/g,'&quot;')+'" autocomplete="off">'+
-      '<button type="button" class="photo-btn'+(ph?' has-photo':'')+'" data-photo="tire|'+p+'">'+(ph?'&#10003; Photo':'&#128247; Photo')+'</button></div>';
+  var axles = tireAxles(lay);
+  var h = '<div class="tgraph">';
+  axles.forEach(function(ax, i){
+    var bodyCls = 'tbody' + (i===0 ? ' tfirst' : '') + (i===axles.length-1 ? ' tlast' : '');
+    h += '<div class="tcell tleft">' + ax.l.map(tireInputHTML).join('') + '</div>';
+    h += '<div class="'+bodyCls+'">' + (i===0 ? '<span class="tfront">FRONT</span>' : '');
+    ax.l.forEach(function(p, j){ h += tireMarkHTML(p, 'tl', j); });
+    ax.r.forEach(function(p, j){ h += tireMarkHTML(p, 'tr', j); });
+    h += '</div>';
+    h += '<div class="tcell tright">' + ax.r.map(tireInputHTML).join('') + '</div>';
   });
-  h += '</div></div>';
+  h += '</div>';
   if(EXTRA_AXLE_OK[lay.cls]){
     var on = state.v.tireExtraAxle==='Y';
-    h += '<button type="button" class="photo-btn" id="tireAxleBtn" style="margin-top:8px">'+
-         (on ? '&#8722; Remove Added Axle' : '&#65291; Add Rear Axle') + '</button>';
+    h += '<div style="text-align:center"><button type="button" class="photo-btn" id="tireAxleBtn" style="margin-top:10px">'+
+         (on ? '&#8722; Remove Added Axle' : '&#65291; Add Rear Axle') + '</button></div>';
   }
   el.innerHTML = h;
   var ab = $('tireAxleBtn');
@@ -1219,13 +1252,7 @@ document.addEventListener('input', function(e){
   if(lay) state.v.tireAge = tireSummary(lay);
   save();
   var t = document.getElementById('tw_'+pos);
-  if(t) t.setAttribute('fill', d ? '#2E7D4F' : '#9EA3A8');
-});
-document.addEventListener('click', function(e){
-  var t = e.target.closest ? e.target.closest('[data-tirepos]') : null;
-  if(!t) return;
-  var row = document.querySelector('[data-tirerow="'+t.dataset.tirepos+'"] input');
-  if(row){ row.focus(); row.scrollIntoView({behavior:'smooth', block:'center'}); }
+  if(t) t.classList.toggle('has', !!d);
 });
 
 /* ============================================================
@@ -1270,10 +1297,24 @@ function renderDiagrams(){
     var card = document.createElement('div');
     card.className = 'diag'+(spec.roof?' roofcard':'');
     var pk = 'dmg|'+state.dmgType+'|'+spec.v;
-    card.innerHTML = '<h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[state.dmgType][spec.v], true)+
+    var inner = '<h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[state.dmgType][spec.v], true)+
       photoGroupHTML(pk, VIEW_LABELS[spec.v]);
+    /* windshield lives with the Front view on motorized classes */
+    if(spec.v==='front' && cls!=='5th Wheel' && cls!=='Travel Trailer'){
+      inner += '<div class="wsblock"><h4>Windshield Good</h4>'+
+        '<div class="seg wsseg" data-seg="wsGood">'+
+        YN.map(function(o){ return '<button type="button" data-o="'+o+'"'+(state.v.wsGood===o?' class="on"':'')+'>'+o+'</button>'; }).join('')+
+        '</div>'+
+        '<div data-fw="wsDmg" class="wsdmg"><h4>Windshield Cracks / Stars</h4>'+
+        '<div class="seg wsseg" data-multi="wsDmg">'+
+        ['Cracks','Stars'].map(function(o){ return '<button type="button" data-o="'+o+'"'+((state.m.wsDmg||[]).indexOf(o)>-1?' class="on"':'')+'>'+o+'</button>'; }).join('')+
+        '</div></div>'+
+        photoGroupHTML('wsGood', 'Windshield')+'</div>';
+    }
+    card.innerHTML = inner;
     grid.appendChild(card);
   });
+  updateConditionals();
   refreshPhotoBtns();
 }
 $('diagGrid').addEventListener('click', function(e){
