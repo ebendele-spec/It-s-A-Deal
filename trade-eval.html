@@ -81,6 +81,14 @@
   .fnote.warn{color:var(--red)}
   .autonote{font:600 11px 'Barlow',sans-serif;color:var(--green);
     text-transform:none;letter-spacing:0;margin-left:8px}
+  .sugwrap{position:relative}
+  .suglist{position:absolute;left:0;right:0;top:calc(100% + 3px);z-index:40;background:#fff;
+    border:1px solid var(--line);border-radius:4px;box-shadow:0 12px 28px rgba(0,0,0,.18);
+    max-height:232px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .sugitem{padding:12px;font-size:15px;cursor:pointer;border-bottom:1px solid #EFF1F4;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sugitem:last-child{border-bottom:none}
+  .sugitem:hover,.sugitem.sel{background:var(--gold-soft)}
   .field input:focus,.field textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
   .field textarea{min-height:64px;resize:vertical}
   .field.wide{grid-column:1/-1}
@@ -299,7 +307,7 @@ var SECTIONS = [
      {id:'inspExp',  l:'Inspection Date', t:'date', req:1},
      {id:'vin',      l:'VIN',            t:'text', w:1, p:1, preq:1, req:1, fmt:'vin', ph:'17 characters'},
      {id:'yr',       l:'Year',           t:'text', im:'numeric', req:1},
-     {id:'make',     l:'Manufacturer & Brand', t:'text', req:1, ph:'e.g. ENTEGRA ODYSSEY', list:'mfgBrands'},
+     {id:'make',     l:'Manufacturer & Brand', t:'text', req:1, ph:'e.g. ENTEGRA ODYSSEY', suggest:1},
      {id:'model',    l:'Model',          t:'text', req:1, ph:'e.g. 31F'},
      {id:'length',   l:'Length (in feet)', t:'text', req:1, ph:'e.g. 31 feet', im:'numeric', fmt:'digits'},
      {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1, preq:1, req:1},
@@ -529,7 +537,9 @@ function fieldHTML(f){
   var wide = (f.w || f.t==='area') ? ' wide' : '';
   var h = '<div class="field'+wide+'" data-fw="'+f.id+'"><label>'+f.l+(f.req?' <span class="req">*</span>':'')+'</label>';
   if(f.t==='text'){
-    h += '<input type="text" data-f="'+f.id+'"'+(f.ph?' placeholder="'+f.ph+'"':'')+(f.im?' inputmode="'+f.im+'"':'')+(f.fmt?' data-fmt="'+f.fmt+'"':'')+(f.list?' list="'+f.list+'"':'')+' autocomplete="off">';
+    var inp = '<input type="text" data-f="'+f.id+'"'+(f.ph?' placeholder="'+f.ph+'"':'')+(f.im?' inputmode="'+f.im+'"':'')+(f.fmt?' data-fmt="'+f.fmt+'"':'')+
+              (f.suggest?' data-suggest="1" autocorrect="off" spellcheck="false"':'')+' autocomplete="off">';
+    h += f.suggest ? '<div class="sugwrap">'+inp+'<div class="suglist" hidden></div></div>' : inp;
   }else if(f.t==='date'){
     h += '<input type="date" data-f="'+f.id+'">';
   }else if(f.t==='area'){
@@ -1043,13 +1053,57 @@ $('signOut').addEventListener('click', function(){
   });
 })();
 
-/* Manufacturer & Brand autocomplete list */
-var _dl = document.createElement('datalist');
-_dl.id = 'mfgBrands';
-MFG_BRANDS.forEach(function(n){
-  var o = document.createElement('option'); o.value = n; _dl.appendChild(o);
-});
-document.body.appendChild(_dl);
+/* Manufacturer & Brand autocomplete — custom dropdown (native datalist
+   on iOS only surfaces 3 picks above the keyboard) */
+(function(){
+  var input = document.querySelector('input[data-suggest]');
+  if(!input) return;
+  var list = input.parentElement.querySelector('.suglist');
+  var sel = -1, items = [];
+  function hide(){ list.hidden = true; sel = -1; }
+  function render(){
+    var q = input.value.trim().toLowerCase();
+    if(!q){ hide(); return; }
+    var starts = [], contains = [];
+    MFG_BRANDS.forEach(function(n){
+      var ix = n.toLowerCase().indexOf(q);
+      if(ix===0) starts.push(n);
+      else if(ix>0) contains.push(n);
+    });
+    items = starts.concat(contains).slice(0,12);
+    if(!items.length || (items.length===1 && items[0]===input.value)){ hide(); return; }
+    list.innerHTML = items.map(function(n,i){
+      return '<div class="sugitem" data-i="'+i+'">'+n.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div>';
+    }).join('');
+    list.hidden = false; sel = -1;
+  }
+  function choose(i){
+    if(i<0 || i>=items.length) return;
+    input.value = items[i];
+    state.v[input.dataset.f] = items[i]; save(); refreshUnitMissing();
+    hide();
+  }
+  input.addEventListener('input', render);
+  input.addEventListener('focus', render);
+  input.addEventListener('blur', function(){ setTimeout(hide, 150); });
+  input.addEventListener('keydown', function(e){
+    if(list.hidden) return;
+    if(e.key==='ArrowDown' || e.key==='ArrowUp'){
+      e.preventDefault();
+      sel = e.key==='ArrowDown' ? Math.min(sel+1, items.length-1) : Math.max(sel-1, 0);
+      Array.prototype.forEach.call(list.children, function(c,i){ c.classList.toggle('sel', i===sel); });
+      list.children[sel].scrollIntoView({block:'nearest'});
+    }else if(e.key==='Enter'){
+      if(sel>-1){ e.preventDefault(); choose(sel); }
+    }else if(e.key==='Escape'){ hide(); }
+  });
+  list.addEventListener('pointerdown', function(e){
+    var it = e.target.closest('.sugitem');
+    if(!it) return;
+    e.preventDefault();          /* keep the input focused; beat blur */
+    choose(+it.dataset.i);
+  });
+})();
 
 /* Inspection Date defaults to today (tap it to pick another day) */
 if(!(state.v.inspExp||'').trim()){
