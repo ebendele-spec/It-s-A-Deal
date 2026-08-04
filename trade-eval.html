@@ -128,6 +128,8 @@
     .tire.tl{left:-7px}  .tire.tl.inner{left:9px}
     .tire.tr{right:-7px} .tire.tr.inner{right:9px}
   }
+  .sigpad{background:#fff;border:1px solid var(--line);border-radius:4px;max-width:600px}
+  .sigpad canvas{width:100%;height:160px;display:block;touch-action:none;cursor:crosshair}
   .wsblock{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
   .wsblock .wsseg{justify-content:center;margin-bottom:4px}
   .wsblock .wsdmg{margin-top:8px}
@@ -234,8 +236,10 @@
     #printSheet .p-ph{border:1px solid #000;padding:4px;text-align:center;break-inside:avoid}
     #printSheet .p-ph h4{font:700 9px 'Barlow',sans-serif;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
     #printSheet .p-ph img{max-width:100%;max-height:3.1in}
-    #printSheet .sig-row{display:flex;gap:24px;margin-top:22px}
-    #printSheet .sig{flex:1;border-top:1px solid #000;font:700 10px 'Barlow',sans-serif;
+    #printSheet .sig-row{display:flex;gap:24px;margin-top:22px;align-items:flex-end}
+    #printSheet .sigcell{flex:1}
+    #printSheet .sigcell .sigimg{display:block;max-height:0.55in;margin:0 auto 2px}
+    #printSheet .sig{border-top:1px solid #000;font:700 10px 'Barlow',sans-serif;
       text-transform:uppercase;padding-top:3px}
     #printSheet .p-foot{font-size:8px;text-align:right;margin-top:10px;color:#555}
   }
@@ -512,8 +516,8 @@ var DMG_FIELDS = [
 ];
 var REV_FIELDS = [
   {id:'comments',  l:'Additional Comments', t:'area', w:1},
-  {id:'custDate',  l:'Customer Signature Date', t:'text', ph:'MM/DD/YY'},
-  {id:'salesDate', l:'Sales Signature Date',    t:'text', ph:'MM/DD/YY'},
+  {id:'inspectedBy', l:'Inspected By', t:'text', ph:'(Tech First & Last Name)'},
+  {id:'salesDate', l:'Sales Signature Date', t:'text', ph:'(leave blank)'},
 ];
 
 var LEGEND = [
@@ -651,6 +655,9 @@ SECTIONS.forEach(function(sec,i){
   h += '<div class="rev-note">Printing produces the full MHS Trade-In Sheet (all fields, the body-damage '+
        'diagrams, and every attached photo) for the deal jacket. Signature lines print blank for pen signatures.</div>';
   h += '<div class="fgrid">'+REV_FIELDS.map(fieldHTML).join('')+'</div>';
+  h += '<div class="field wide" style="margin-top:14px"><label>Technician Signature — sign with your finger</label>'+
+       '<div class="sigpad"><canvas id="sigCanvas" width="600" height="160"></canvas></div>'+
+       '<div class="dmg-tools"><button type="button" id="sigClear">&#10005; Clear Signature</button></div></div>';
   h += '<div id="missingBox" class="missing"></div>';
   h += '<div class="dmg-tools" style="margin-top:18px">'+
        '<button type="button" class="btn primary" id="printBtn">&#128424; Print / Save PDF</button>'+
@@ -1394,8 +1401,11 @@ function buildPrint(){
        ' &nbsp;&nbsp; <b>Insurance Claim To Place:</b> '+pv('insClaim')+
        ' &nbsp;&nbsp; <b>Deductible Amount:</b> '+pv('deductible')+'</div>';
   h += '<h2>Additional Comments</h2><div class="pline">'+pv('comments')+'</div>';
-  h += '<div class="sig-row"><div class="sig">Customer Signature &nbsp;&nbsp; Date: '+pv('custDate')+'</div>'+
-       '<div class="sig">Sales Signature &nbsp;&nbsp; Date: '+pv('salesDate')+'</div></div>';
+  h += '<div class="sig-row">'+
+       '<div class="sigcell">'+(photos.techSig ? '<img class="sigimg" src="'+photos.techSig.data+'">' : '')+
+       '<div class="sig">Inspected By: '+pv('inspectedBy')+' &mdash; Technician Signature</div></div>'+
+       '<div class="sigcell"><div class="sig">Sales Manager Signature &nbsp;&nbsp; Date: '+pv('salesDate')+'</div></div>'+
+       '</div>';
   /* photos */
   var entries = [];
   Object.keys(PHOTO_LABELS).forEach(function(k){
@@ -1426,6 +1436,50 @@ function buildPrint(){
   $('printSheet').innerHTML = h;
 }
 $('printBtn').addEventListener('click', function(){ buildPrint(); window.print(); });
+
+/* Technician finger-signature pad */
+(function(){
+  var c = $('sigCanvas');
+  if(!c) return;
+  var ctx = c.getContext('2d');
+  ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#14273F';
+  var drawing = false, last = null;
+  function pt(e){
+    var r = c.getBoundingClientRect();
+    return {x:(e.clientX - r.left) * (c.width / r.width),
+            y:(e.clientY - r.top) * (c.height / r.height)};
+  }
+  c.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    if(c.setPointerCapture) c.setPointerCapture(e.pointerId);
+    drawing = true; last = pt(e);
+  });
+  c.addEventListener('pointermove', function(e){
+    if(!drawing) return;
+    e.preventDefault();
+    var p = pt(e);
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+    last = p;
+  });
+  function done(){
+    if(!drawing) return;
+    drawing = false;
+    photos.techSig = {data: c.toDataURL('image/png'), w: c.width, h: c.height};
+    savePhotos();
+  }
+  c.addEventListener('pointerup', done);
+  c.addEventListener('pointercancel', done);
+  $('sigClear').addEventListener('click', function(){
+    ctx.clearRect(0, 0, c.width, c.height);
+    delete photos.techSig;
+    savePhotos();
+  });
+  if(photos.techSig){
+    var img = new Image();
+    img.onload = function(){ ctx.drawImage(img, 0, 0); };
+    img.src = photos.techSig.data;
+  }
+})();
 
 /* ============================================================
    Clear + sign out
