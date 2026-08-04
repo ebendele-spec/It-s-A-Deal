@@ -593,7 +593,7 @@ SECTIONS.forEach(function(sec,i){
   var d = document.createElement('section');
   d.className = 'step'; d.dataset.step = 4;
   var h = '<h2 class="sec">Body Damage Notations</h2>';
-  h += '<div class="field wide"><label>Vehicle Type</label><div id="vehTypeWrap">'+typeGridHTML('__vehType')+'</div></div>';
+  h += '<p class="hint" id="dmgTypeNote"></p>';
   h += '<p class="hint" style="margin-top:12px">Pick a damage type below, then tap the diagram where the damage is. Tap a marker to remove it.</p>';
   h += '<div class="legend" id="legend">';
   LEGEND.forEach(function(x){ h += '<button type="button" data-c="'+x.c+'"><b>'+x.c+'</b>'+x.n+'</button>'; });
@@ -765,7 +765,6 @@ function restoreInputs(){
   });
   Array.prototype.forEach.call(document.querySelectorAll('[data-seg]'), function(segEl){
     var id = segEl.dataset.seg;
-    if(id==='__vehType') return;
     Array.prototype.forEach.call(segEl.children, function(b){
       b.classList.toggle('on', state.v[id]===b.dataset.o);
     });
@@ -812,10 +811,6 @@ document.addEventListener('click', function(e){
   var b = e.target.closest ? e.target.closest('button[data-o]') : null;
   if(!b) return;
   var wrap = b.parentElement;
-  if(wrap.dataset.seg==='__vehType'){
-    state.dmgType = b.dataset.o; save();
-    renderDiagrams(); return;
-  }
   if(wrap.dataset.seg){
     var id = wrap.dataset.seg;
     if(state.v[id]===b.dataset.o){ state.v[id]=''; b.classList.remove('on'); }
@@ -947,12 +942,19 @@ function svgFor(spec, markers, interactive){
   return s;
 }
 function renderDiagrams(){
-  var wrap = $('vehTypeWrap');
-  Array.prototype.forEach.call(wrap.querySelectorAll('button[data-o]'), function(x){
-    x.classList.toggle('on', x.dataset.o===state.dmgType);
-  });
+  /* the diagrams follow the Class picked on Unit Info */
+  var note = $('dmgTypeNote');
+  var grid = $('diagGrid');
+  var cls = (state.v.unitClass||'').trim();
+  if(!cls || TYPE_NAMES.indexOf(cls)<0){
+    if(note) note.innerHTML = '&#9888; Pick the <b>Class</b> on Step 1 &mdash; Unit Info (or type the VIN and let it decode) and the damage diagrams will match it.';
+    grid.innerHTML = '';
+    return;
+  }
+  if(state.dmgType!==cls){ state.dmgType = cls; save(); }
+  if(note) note.innerHTML = 'Diagrams for <b>'+cls.replace(/&/g,'&amp;')+'</b> &mdash; set by the Class on Unit Info.';
   var t = TYPES[TYPE_NAMES.indexOf(state.dmgType)];
-  var grid = $('diagGrid'); grid.innerHTML='';
+  grid.innerHTML='';
   viewsFor(t).forEach(function(spec){
     var card = document.createElement('div');
     card.className = 'diag'+(spec.roof?' roofcard':'');
@@ -1023,7 +1025,7 @@ function buildPrint(){
     });
     h += '</div>';
   });
-  var tn = state.dmgType;
+  var tn = TYPE_NAMES.indexOf(state.v.unitClass)>-1 ? state.v.unitClass : state.dmgType;
   var t = TYPES[TYPE_NAMES.indexOf(tn)];
   h += '<div class="p-dmg"><div class="p-head"><h1>'+esc(tn)+' Body Damage Notations</h1>'+
        '<span>Stock # '+pv('stock')+' &middot; Date: '+pv('dmgDate')+'</span></div>';
