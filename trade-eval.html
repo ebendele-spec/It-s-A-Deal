@@ -320,9 +320,11 @@ var SECTIONS = [
    { sub:'Drivetrain / Chassis', fields:[
      {id:'engineMfg', l:'Engine Manufacturer', t:'text'},
      {id:'engineHp',  l:'Engine HP/Size', t:'text'},
-     {id:'fuelType',  l:'Fuel Type',      t:'text'},
-     {id:'transMfg',  l:'Transmission Manufacturer', t:'text'},
-     {id:'transSpeed',l:'Transmission Speed',    t:'text'},
+     {id:'fuelType',  l:'Fuel Type',      t:'seg', o:['Gas','Diesel','Electric','Hybrid']},
+     {id:'transMfg',  l:'Transmission Manufacturer', t:'seg', o:['Allison','Ford','Chevy','Other']},
+     {id:'transMfgOther', l:'Transmission Manufacturer (Other)', t:'text', ph:'Type the transmission manufacturer'},
+     {id:'transSpeed',l:'Transmission Speed', t:'seg', o:['3 Speed','4 Speed','6 Speed','8 Speed','10 Speed','Other']},
+     {id:'transSpeedOther', l:'Transmission Speed (Other)', t:'text', ph:'Type the transmission speed'},
      {id:'chassisMfg',l:'Chassis Manufacturer', t:'seg', w:1,
       o:['Ford','Chevrolet','Mercedes','RAM','Freightliner','Spartan','International','Tiffin PowerGlide','Newell','Prevost','Other']},
      {id:'chassisMfgOther', l:'Chassis Manufacturer (Other)', t:'text', ph:'Type the chassis manufacturer'},
@@ -736,8 +738,11 @@ $('nextBtn').addEventListener('click', function(){
 function updateConditionals(){
   var el = document.querySelector('[data-fw="wsDmg"]');
   if(el) el.style.display = state.v.wsGood==='N' ? '' : 'none';
-  var co = document.querySelector('[data-fw="chassisMfgOther"]');
-  if(co) co.style.display = state.v.chassisMfg==='Other' ? '' : 'none';
+  [['chassisMfg','chassisMfgOther'],['transMfg','transMfgOther'],['transSpeed','transSpeedOther']]
+  .forEach(function(p){
+    var o = document.querySelector('[data-fw="'+p[1]+'"]');
+    if(o) o.style.display = state.v[p[0]]==='Other' ? '' : 'none';
+  });
 }
 function restoreInputs(){
   Array.prototype.forEach.call(document.querySelectorAll('[data-f]'), function(el){
