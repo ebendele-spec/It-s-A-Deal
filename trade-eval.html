@@ -356,8 +356,8 @@ var SECTIONS = [
      {id:'make',     l:'Manufacturer & Brand', t:'text', w:1, req:1, ph:'e.g. ENTEGRA ODYSSEY', suggest:1},
      {id:'model',    l:'Model',          t:'text', req:1, ph:'e.g. 31F'},
      {id:'length',   l:'Length (in feet)', t:'text', req:1, ph:'e.g. 31 feet', im:'numeric', fmt:'digits'},
-     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1, preq:1, req:1},
-     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric', p:1, preq:1, req:1},
+     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1, preq:1, req:1, fmt:'commas'},
+     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric', p:1, preq:1, req:1, fmt:'commas'},
      {id:'fourX4',   l:'4x4',            t:'seg', o:YN, req:1},
      {id:'unitClass',l:'Class',          t:'icons', w:1, req:1},
    ]},
@@ -365,7 +365,7 @@ var SECTIONS = [
  { key:'chassis', title:'Chassis & Systems', groups:[
    { sub:'Drivetrain / Chassis', fields:[
      {id:'engineMfg', l:'Engine Manufacturer', t:'text'},
-     {id:'engineHp',  l:'Engine HP/Size', t:'text'},
+     {id:'engineHp',  l:'Engine HP', t:'text'},
      {id:'fuelType',  l:'Fuel Type',      t:'seg', o:['Gas','Diesel','Electric','Hybrid']},
      {id:'transMfg',  l:'Transmission Manufacturer', t:'seg', o:['Allison','Ford','Chevy','Other']},
      {id:'transMfgOther', l:'Transmission Manufacturer (Other)', t:'text', ph:'Type the transmission manufacturer'},
@@ -501,8 +501,8 @@ var SECTIONS = [
    { sub:'Interior Condition', fields:[
      {id:'smoker',     l:'Signs of Smoking', t:'seg', o:YN},
      {id:'pets',       l:'Pets',             t:'seg', o:YN},
-     {id:'intCond',    l:'Int Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
-     {id:'intRepairs', l:'Int Repairs Needed', t:'area', w:1, bullets:1},
+     {id:'intCond',    l:'Interior Condition', t:'seg', o:['Excellent','Good','Fair','Bad']},
+     {id:'intRepairs', l:'Interior Repairs Needed', t:'area', w:1, bullets:1},
    ]},
  ]},
 ];
@@ -903,11 +903,10 @@ function applyVpic(res){
     else if(emL==='fca' || emL==='stla') em = 'Stellantis';
     else if(emL==='ford') em = 'Ford';
     if(!em && make==='MERCEDES-BENZ') em = 'Mercedes-Benz';
-    put('engineMfg', em);
-    if(disp){
-      var dispStr = (disp % 1 === 0 ? disp.toFixed(1) : String(disp)) + 'L';
-      put('engineHp', dispStr + (g('EngineHP') ? ' · '+g('EngineHP')+' HP' : ''));
-    }
+    /* engine size folds into the manufacturer field: "6.7L Cummins" */
+    var dispStr = disp ? ((disp % 1 === 0 ? disp.toFixed(1) : String(disp)) + 'L') : '';
+    put('engineMfg', (dispStr && em) ? dispStr+' '+em : (em || dispStr));
+    if(g('EngineHP')) put('engineHp', g('EngineHP')+' HP');
     var CM = {FORD:'Ford', CHEVROLET:'Chevrolet', 'MERCEDES-BENZ':'Mercedes', RAM:'RAM',
               FREIGHTLINER:'Freightliner', INTERNATIONAL:'International',
               PREVOST:'Prevost', NEWELL:'Newell'};
@@ -1014,6 +1013,10 @@ document.addEventListener('input', function(e){
   }else if(fmt==='digits'){
     var n = e.target.value.replace(/\D/g,'');
     if(n!==e.target.value) e.target.value = n;
+  }else if(fmt==='commas'){
+    var m = e.target.value.replace(/\D/g,'').replace(/^0+(?=\d)/,'');
+    var withCommas = m.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if(withCommas!==e.target.value) e.target.value = withCommas;
   }
   if(e.target.dataset.bullets && e.target.value.trim() && !/^•/.test(e.target.value)){
     e.target.value = '• ' + e.target.value;
