@@ -415,14 +415,14 @@ var SECTIONS = [
      {id:'make',     l:'Manufacturer & Brand', t:'text', w:1, req:1, ph:'e.g. ENTEGRA ODYSSEY', suggest:1},
      {id:'model',    l:'Model',          t:'text', req:1, ph:'e.g. 31F'},
      {id:'length',   l:'Length (in feet)', t:'text', req:1, ph:'e.g. 31 feet', im:'numeric', fmt:'digits'},
-     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1, preq:1, req:1, fmt:'commas'},
-     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric', p:1, preq:1, req:1, fmt:'commas'},
-     {id:'fourX4',   l:'4x4',            t:'seg', o:YN, req:1},
      {id:'unitClass',l:'Class',          t:'icons', w:1, req:1},
+     {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1, preq:1, req:1, fmt:'commas', mo:1},
+     {id:'ecmMiles', l:'ECM Mileage',    t:'text', im:'numeric', p:1, preq:1, req:1, fmt:'commas', mo:1},
+     {id:'fourX4',   l:'4x4',            t:'seg', o:YN, req:1, mo:1},
    ]},
  ]},
  { key:'chassis', title:'Chassis & Systems', groups:[
-   { sub:'Drivetrain / Chassis', fields:[
+   { sub:'Drivetrain / Chassis', mo:1, fields:[
      {id:'engineMfg', l:'Engine Manufacturer', t:'text'},
      {id:'engineHp',  l:'Engine HP', t:'text'},
      {id:'fuelType',  l:'Fuel Type',      t:'seg', o:['Gas','Diesel','Electric','Hybrid']},
@@ -433,6 +433,7 @@ var SECTIONS = [
      {id:'chassisMfg',l:'Chassis Manufacturer', t:'seg', w:1,
       o:['Ford','Chevrolet','Mercedes','RAM','Freightliner','Spartan','International','Tiffin PowerGlide','Newell','Prevost','Other']},
      {id:'chassisMfgOther', l:'Chassis Manufacturer (Other)', t:'text', ph:'Type the chassis manufacturer'},
+     {id:'dashAc',     l:'Dash A/C',      t:'seg', o:['Good','Bad']},
    ]},
    { sub:'Coach Systems', fields:[
      {id:'levelMfg',   l:'Leveling Manufacturer',  t:'text'},
@@ -446,11 +447,10 @@ var SECTIONS = [
      {id:'genRuns',    l:'Generator Runs',t:'seg', o:YN},
      {id:'genLoads',   l:'Generator Loads',t:'seg', o:YN},
      {id:'genAgs',     l:'Auto-Gen Start', t:'seg', o:YN},
-     {id:'dashAc',     l:'Dash A/C',      t:'seg', o:['Good','Bad']},
    ]},
  ]},
  { key:'ext', title:'Exterior', groups:[
-   { sub:'Cockpit / Driving', fields:[
+   { sub:'Cockpit / Driving', mo:1, fields:[
      {id:'steerWheel', l:'Steering Wheel',  t:'multi', o:['Tilt','Telescoping']},
      {id:'smartWheel', l:'Smart Wheel',     t:'seg', o:YN},
      {id:'secBrake',   l:'Secondary Brake', t:'seg', o:['Aux','Engine','Exhaust']},
@@ -468,15 +468,15 @@ var SECTIONS = [
      {id:'cruise',     l:'Cruise Control',  t:'seg', o:YN},
    ]},
    { sub:'Exterior Equipment', fields:[
-     {id:'aquaHot',    l:'Aqua-Hot',    t:'seg', o:YN},
-     {id:'hydroHot',   l:'Hydro-Hot',   t:'seg', o:YN},
+     {id:'aquaHot',    l:'Aqua-Hot',    t:'seg', o:YN, mo:1},
+     {id:'hydroHot',   l:'Hydro-Hot',   t:'seg', o:YN, mo:1},
      {id:'waterMan',   l:'Water Manifold', t:'seg', o:YN},
      {id:'patioAwn',   l:'Patio Awning',   t:'seg', o:YN},
-     {id:'doorAwn',    l:'Door Awning',    t:'seg', o:YN},
-     {id:'winAwn',     l:'Window Awning',  t:'seg', o:YN},
+     {id:'doorAwn',    l:'Door Awning',    t:'seg', o:YN, mo:1},
+     {id:'winAwn',     l:'Window Awning',  t:'seg', o:YN, mo:1},
      {id:'cargoTray',  l:'Cargo Tray',     t:'seg', o:YN},
      {id:'passThru',   l:'Pass-Thru',      t:'seg', o:YN},
-     {id:'bagSwing',   l:'Baggage Door Side Swing', t:'seg', o:YN},
+     {id:'bagSwing',   l:'Baggage Door Side Swing', t:'seg', o:YN, mo:1},
      {id:'ledLights',  l:'LED Running Lights', t:'seg', o:YN},
      {id:'dockLights', l:'Docking Lights', t:'seg', o:YN},
      {id:'tankFlush',  l:'Black Tank Flush', t:'seg', o:YN},
@@ -488,21 +488,21 @@ var SECTIONS = [
      {id:'extFreezer', l:'Exterior Freezer',t:'seg', o:YN},
      {id:'extKitchen', l:'Exterior Kitchen',     t:'seg', o:YN},
      {id:'extTv',      l:'Exterior TV',     t:'seg', o:YN},
-     {id:'clearMask',  l:'Clear Paint Mask',t:'seg', o:YN},
+     {id:'clearMask',  l:'Clear Paint Mask',t:'seg', o:YN, mo:1},
      {id:'fgRoof',     l:'Fiberglass Roof', t:'seg', o:YN},
      {id:'ladder',     l:'Ladder',          t:'seg', o:YN},
      {id:'solar',      l:'Solar',           t:'seg', o:YN},
      {id:'solarNum',   l:'Solar #',         t:'text', im:'numeric'},
      {id:'inverter',   l:'Inverter',        t:'seg', o:YN},
-     {id:'airRide',    l:'Air Ride',        t:'seg', o:YN},
-     {id:'liquidSpr',  l:'Liquid Springs',  t:'seg', o:YN},
+     {id:'airRide',    l:'Air Ride',        t:'seg', o:YN, mo:1},
+     {id:'liquidSpr',  l:'Liquid Springs',  t:'seg', o:YN, mo:1},
      {id:'lithium',    l:'Lithium Batteries', t:'seg', o:YN},
    ]},
    { sub:'Wheels / Tires / Body', fields:[
      {id:'alumWheels', l:'Aluminum Wheels',      t:'seg', o:YN},
      {id:'tireDryRot', l:'Tires: Dry Rot / Crack', t:'seg', o:YN},
      {id:'tireAge',    l:'Age of Tires (enter date codes for each tire)', t:'tires', w:1},
-     {id:'hitchWeight',l:'Hitch Weight',     t:'text', p:1},
+     {id:'hitchWeight',l:'Hitch Weight',     t:'text', p:1, mo:1},
    ]},
    { sub:'Exterior Condition', fields:[
      {id:'fullBodyPaint',l:'Full Body Paint',t:'seg', o:YN},
@@ -519,8 +519,8 @@ var SECTIONS = [
      {id:'washerDryer',l:'Washer/Dryer',     t:'seg', o:YN},
      {id:'wdType',     l:'Washer/Dryer Type',t:'seg', o:['Stackable','Combo','Side By Side']},
      {id:'centralVac', l:'Central Vacuum',   t:'seg', o:YN},
-     {id:'heatedFloors',l:'Heated Floors',   t:'seg', o:YN},
-     {id:'sevenFt',    l:'7 Foot Ceilings',  t:'seg', o:YN},
+     {id:'heatedFloors',l:'Heated Floors',   t:'seg', o:YN, mo:1},
+     {id:'sevenFt',    l:'7 Foot Ceilings',  t:'seg', o:YN, mo:1},
      {id:'dualPane',   l:'Windows Dual Pane',t:'seg', o:YN},
      {id:'fireplace',  l:'Fireplace',        t:'seg', o:YN},
      {id:'multiplex',  l:'Multi-Plex',       t:'seg', o:YN},
@@ -549,8 +549,8 @@ var SECTIONS = [
      {id:'bedType',    l:'Bed Type',         t:'seg', o:['Sleep Number','Pillow Top','Memory Foam','N/A']},
      {id:'bunkBeds',   l:'Bunk Beds',        t:'seg', o:YN},
      {id:'bunkTv',     l:'Bunk TV',          t:'text'},
-     {id:'cabOver',    l:'Cab Over Bunk',    t:'seg', o:YN},
-     {id:'cabOverPwr', l:'Cab Over Bunk Power', t:'seg', o:YN},
+     {id:'cabOver',    l:'Cab Over Bunk',    t:'seg', o:YN, mo:1},
+     {id:'cabOverPwr', l:'Cab Over Bunk Power', t:'seg', o:YN, mo:1},
    ]},
    { sub:'TVs', fields:[
      {id:'lrTvNum',    l:'Livingroom TV #',  t:'text', im:'numeric'},
@@ -654,7 +654,7 @@ function typeGridHTML(segId){
 }
 function fieldHTML(f){
   var wide = (f.w || f.t==='area') ? ' wide' : '';
-  var h = '<div class="field'+wide+'" data-fw="'+f.id+'"><label>'+f.l+(f.req?' <span class="req">*</span>':'')+'</label>';
+  var h = '<div class="field'+wide+'" data-fw="'+f.id+'"'+(f.mo?' data-mo="1"':'')+'><label>'+f.l+(f.req?' <span class="req">*</span>':'')+'</label>';
   if(f.t==='text'){
     var inp = '<input type="text" data-f="'+f.id+'"'+(f.ph?' placeholder="'+f.ph+'"':'')+(f.im?' inputmode="'+f.im+'"':'')+(f.fmt?' data-fmt="'+f.fmt+'"':'')+
               (f.suggest?' data-suggest="1" autocorrect="off" spellcheck="false"':'')+' autocomplete="off">';
@@ -681,10 +681,15 @@ function fieldHTML(f){
   return h+'</div>';
 }
 function groupHTML(g){
-  var h = g.sub ? '<h3 class="sub">'+g.sub+'</h3>' : '';
+  var h = g.sub ? '<h3 class="sub"'+(g.mo?' data-mo="1"':'')+'>'+g.sub+'</h3>' : '';
   h += '<div class="fgrid">'+g.fields.map(fieldHTML).join('')+'</div>';
   return h;
 }
+
+/* motorized-only: group flag cascades to its fields */
+SECTIONS.forEach(function(sec){ sec.groups.forEach(function(g){
+  if(g.mo) g.fields.forEach(function(f){ f.mo = 1; });
+}); });
 
 var stepsEl = $('steps');
 var STEP_TITLES = ['Unit Info','Chassis & Systems','Exterior','Interior','Body Damage','Review & Print'];
@@ -761,6 +766,7 @@ function go(i){
    preq fields also need their photo attached to count as complete. */
 var UNIT_FIELDS = SECTIONS[0].groups[0].fields;
 function unitFieldComplete(f){
+  if(f.mo && isTowable()) return true;
   if(f.req && !(state.v[f.id]||'').trim()) return false;
   if(f.preq && !photos[f.id]) return false;
   return true;
@@ -846,6 +852,7 @@ function setAutoClass(cls){
   classAutoNote(true);
   refreshUnitMissing();
   renderTireWidget();
+  updateConditionals();
 }
 function maybeAutoClass(vin){
   if(vin.length!==17) return;
@@ -1028,6 +1035,8 @@ $('nextBtn').addEventListener('click', function(){
 /* ============================================================
    Wire inputs to state
    ============================================================ */
+var TOWABLES = {'Travel Trailer':1, '5th Wheel':1, 'Toy Hauler':1};
+function isTowable(){ return !!TOWABLES[(state.v.unitClass||'').trim()]; }
 function updateConditionals(){
   var el = document.querySelector('[data-fw="wsDmg"]');
   if(el) el.style.display = state.v.wsGood==='N' ? '' : 'none';
@@ -1035,6 +1044,12 @@ function updateConditionals(){
   .forEach(function(p){
     var o = document.querySelector('[data-fw="'+p[1]+'"]');
     if(o) o.style.display = state.v[p[0]]==='Other' ? '' : 'none';
+  });
+  /* towables have no motorized questions — hide them wholesale (runs last so it wins) */
+  var tow = isTowable();
+  Array.prototype.forEach.call(document.querySelectorAll('[data-mo]'), function(m){
+    m.style.display = tow ? 'none' : (m.style.display==='none' && m.dataset.fw &&
+      /Other$/.test(m.dataset.fw) ? m.style.display : '');
   });
 }
 function restoreInputs(){
@@ -1252,7 +1267,7 @@ function tireLayout(){
   if(TYPE_NAMES.indexOf(cls)<0) return null;
   var extra = state.v.tireExtraAxle==='Y' && EXTRA_AXLE_OK[cls];
   if(cls==='Class B / Van') return {cls:cls, towable:false, pos:['LF','RF','LR','RR']};
-  if(cls==='Travel Trailer' || cls==='5th Wheel'){
+  if(TOWABLES[cls]){
     var n = towAxleCt(), p = [];
     for(var i=1;i<=n;i++){ p.push('A'+i+'L','A'+i+'R'); }
     return {cls:cls, towable:true, axleCt:n, pos:p};
@@ -1430,7 +1445,7 @@ function renderDiagrams(){
     var inner = '<h4>'+spec.l+'</h4>'+svgFor(spec, state.mk[state.dmgType][spec.v], true)+
       photoGroupHTML(pk, VIEW_LABELS[spec.v]);
     /* windshield lives with the Front view on motorized classes */
-    if(spec.v==='front' && cls!=='5th Wheel' && cls!=='Travel Trailer'){
+    if(spec.v==='front' && !TOWABLES[cls]){
       inner += '<div class="wsblock"><h4>Windshield Good</h4>'+
         '<div class="seg wsseg" data-seg="wsGood">'+
         YN.map(function(o){ return '<button type="button" data-o="'+o+'"'+(state.v.wsGood===o?' class="on"':'')+'>'+o+'</button>'; }).join('')+
@@ -1476,6 +1491,7 @@ $('clearMarks').addEventListener('click', function(){
 function updateMissing(){
   var miss = [];
   SECTIONS[0].groups[0].fields.forEach(function(f){
+    if(f.mo && isTowable()) return;
     if(f.req && !(state.v[f.id]||'').trim()) miss.push(f.l);
     if(f.preq && !photos[f.id]) miss.push(f.l+' photo');
   });
