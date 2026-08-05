@@ -733,7 +733,17 @@ SECTIONS.forEach(function(sec,i){
   h += '<div id="missingBox" class="missing"></div>';
   h += '<div class="dmg-tools" style="margin-top:18px">'+
        '<button type="button" class="btn primary" id="printBtn">&#128424; Print / Save PDF</button>'+
+       '<button type="button" class="btn primary" id="sendBtn">&#9993; Send Form</button>'+
        '<button type="button" class="btn danger" id="clearAll">&#8635; Clear Form</button></div>';
+  h += '<div id="sendPanel" hidden style="margin-top:14px;max-width:430px">'+
+       '<div class="hint" style="margin-bottom:6px">Sends the completed PDF to <b>ABBY@mhsrv.com</b>.</div>'+
+       '<input type="text" id="sendExtra" inputmode="email" autocomplete="email" autocapitalize="off" '+
+         'placeholder="Additional email (optional)" '+
+         'style="width:100%;padding:11px 12px;font:inherit;font-size:15px;background:var(--panel);color:var(--ink);border:1.5px solid var(--line);border-radius:9px">'+
+       '<div class="dmg-tools" style="margin-top:10px">'+
+       '<button type="button" class="btn primary" id="sendGo">Send</button>'+
+       '<button type="button" class="btn ghost" id="sendCancel">Cancel</button></div>'+
+       '<div id="sendStatus" class="hint" style="margin-top:8px"></div></div>';
   d.innerHTML = h;
   stepsEl.appendChild(d);
 })();
@@ -1510,6 +1520,27 @@ function pdate(id){
   var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(x);
   return m ? m[2]+'/'+m[3]+'/'+m[1] : (x?esc(x):'________');
 }
+function photoEntries(){
+  var entries = [];
+  Object.keys(PHOTO_LABELS).forEach(function(k){
+    if(photos[k]) entries.push({label:PHOTO_LABELS[k], data:photos[k].data});
+  });
+  groupKeys('wsGood').forEach(function(k,i){
+    entries.push({label:'Windshield Photo '+(i+1), data:photos[k].data});
+  });
+  Object.keys(photos).filter(function(k){ return k.indexOf('tire|')===0; }).sort().forEach(function(k){
+    var p = k.slice(5);
+    entries.push({label:'Tire — '+(TIRE_LABELS[p]||p)+' Photo', data:photos[k].data});
+  });
+  TYPE_NAMES.forEach(function(typeName){
+    VIEW_IDS.forEach(function(v){
+      groupKeys('dmg|'+typeName+'|'+v).forEach(function(k,i){
+        entries.push({label:typeName+' — '+VIEW_LABELS[v]+' Photo '+(i+1), data:photos[k].data});
+      });
+    });
+  });
+  return entries;
+}
 function buildPrint(){
   var h = '<div class="p-head"><h1>MHS Trade-In Sheet</h1>'+
           '<span>Motor Home Specialist &middot; Alvarado, TX &middot; Stock # '+pv('stock')+'</span></div>';
@@ -1546,24 +1577,7 @@ function buildPrint(){
        '<div class="sigcell"><div class="sig">Sales Manager Signature &nbsp;&nbsp; Date: '+pv('salesDate')+'</div></div>'+
        '</div>';
   /* photos */
-  var entries = [];
-  Object.keys(PHOTO_LABELS).forEach(function(k){
-    if(photos[k]) entries.push({label:PHOTO_LABELS[k], data:photos[k].data});
-  });
-  groupKeys('wsGood').forEach(function(k,i){
-    entries.push({label:'Windshield Photo '+(i+1), data:photos[k].data});
-  });
-  Object.keys(photos).filter(function(k){ return k.indexOf('tire|')===0; }).sort().forEach(function(k){
-    var p = k.slice(5);
-    entries.push({label:'Tire — '+(TIRE_LABELS[p]||p)+' Photo', data:photos[k].data});
-  });
-  TYPE_NAMES.forEach(function(typeName){
-    VIEW_IDS.forEach(function(v){
-      groupKeys('dmg|'+typeName+'|'+v).forEach(function(k,i){
-        entries.push({label:typeName+' — '+VIEW_LABELS[v]+' Photo '+(i+1), data:photos[k].data});
-      });
-    });
-  });
+  var entries = photoEntries();
   if(entries.length){
     h += '<h2 style="break-before:page">Photos</h2><div class="p-photos">';
     entries.forEach(function(en){
@@ -1575,6 +1589,304 @@ function buildPrint(){
   $('printSheet').innerHTML = h;
 }
 $('printBtn').addEventListener('click', function(){ buildPrint(); window.print(); });
+
+/* ============================================================
+   SEND FORM — builds the trade sheet as a real PDF (jsPDF, same
+   library + Cloudflare Worker as the deal sheet) and emails it.
+   Always goes to ABBY@mhsrv.com; the tech can add one more.
+   ============================================================ */
+var SEND_ENDPOINT = 'https://mhs-deal-mailer.ebendele.workers.dev';
+var SEND_ALWAYS = 'ABBY@mhsrv.com';
+var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function ensureJsPdf(){
+  if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+  return new Promise(function(res, rej){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = function(){ res(); };
+    s.onerror = function(){ rej(new Error('could not load the PDF library — check the connection')); };
+    document.head.appendChild(s);
+  });
+}
+function loadImg(src){
+  return new Promise(function(res, rej){
+    var im = new Image();
+    im.onload = function(){ res(im); };
+    im.onerror = function(){ rej(new Error('image failed to load')); };
+    im.src = src;
+  });
+}
+/* draw onto a white canvas -> JPEG data url (kills transparency, shrinks big photos) */
+function whiteJpeg(dataUrl, maxDim, q){
+  return loadImg(dataUrl).then(function(im){
+    var k = Math.min(1, maxDim/Math.max(im.width, im.height));
+    var c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(im.width*k));
+    c.height = Math.max(1, Math.round(im.height*k));
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,c.width,c.height);
+    ctx.drawImage(im, 0, 0, c.width, c.height);
+    return {data: c.toDataURL('image/jpeg', q), w: c.width, h: c.height};
+  });
+}
+function fmtMDY(iso){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso||'').trim());
+  return m ? (m[2]+'/'+m[3]+'/'+m[1]) : String(iso||'').trim();
+}
+function tradeDesc(){
+  return [state.v.yr, state.v.make, state.v.model].map(function(x){ return (x||'').trim(); })
+    .filter(Boolean).join(' ');
+}
+
+/* render one damage view (webp art + markers) to a JPEG for the PDF */
+function diagJpeg(spec, marks){
+  var vbW = parseFloat(spec.vb.split(' ')[2]);
+  var href = /href="([^"]+)"/.exec(spec.art);
+  return loadImg(href[1]).then(function(im){
+    var S = 3, c = document.createElement('canvas');
+    c.width = Math.round(vbW*S); c.height = 180*S;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,c.width,c.height);
+    ctx.drawImage(im, 0, 0, c.width, c.height);
+    (marks||[]).forEach(function(m){
+      ctx.beginPath();
+      ctx.arc(m.x*S, m.y*S, spec.mr*S, 0, Math.PI*2);
+      ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.lineWidth = 2.5; ctx.strokeStyle = '#000'; ctx.stroke();
+      ctx.fillStyle = '#000';
+      ctx.font = '700 '+Math.round(spec.mr*0.95*S)+'px -apple-system,sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(m.c, m.x*S, m.y*S);
+    });
+    return {data: c.toDataURL('image/jpeg', 0.85), w: c.width, h: c.height};
+  });
+}
+
+async function buildTradePdf(){
+  var doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
+  var M = 0.45, PW = 8.5, PH = 11, GAP = 0.3;
+  var COLW = (PW - 2*M - GAP)/2;
+  var colX = [M, M + COLW + GAP];
+  var col = 0, pageTop = M + 0.55, y = pageTop;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(15);
+  doc.text('MHS TRADE-IN EVALUATION', M, M + 0.15);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  doc.text('Motor Home Specialist · Alvarado, TX      Inspection Date: '+fmtMDY(state.v.inspExp), PW - M, M + 0.15, {align:'right'});
+  doc.setLineWidth(0.02); doc.line(M, M + 0.24, PW - M, M + 0.24);
+
+  function ensure(h){
+    if(y + h <= PH - M) return;
+    if(col === 0){ col = 1; y = pageTop; }
+    else { doc.addPage(); col = 0; pageTop = M + 0.2; y = pageTop; }
+  }
+  function secHead(t){
+    ensure(0.34);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10);
+    doc.text(String(t).toUpperCase(), colX[col], y);
+    doc.setLineWidth(0.014); doc.line(colX[col], y + 0.04, colX[col] + COLW, y + 0.04);
+    y += 0.24;
+  }
+  function subHead(t){
+    ensure(0.26);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.7);
+    doc.text(String(t).toUpperCase(), colX[col], y);
+    y += 0.19;
+  }
+  function fieldLine(l, v){
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica','bold');
+    var lab = l + ':';
+    var lw = doc.getTextWidth(lab + '  ');
+    doc.setFont('helvetica','normal');
+    var lines = doc.splitTextToSize(String(v||'—'), Math.max(0.8, COLW - lw));
+    ensure(0.16 * Math.max(1, lines.length));
+    doc.setFont('helvetica','bold');
+    doc.text(lab, colX[col], y);
+    doc.setFont('helvetica','normal');
+    for(var i = 0; i < Math.max(1, lines.length); i++){
+      doc.text(lines[i] || '—', colX[col] + lw, y);
+      y += 0.155;
+    }
+  }
+
+  var tow = isTowable();
+  SECTIONS.forEach(function(sec){
+    var printed = false;
+    sec.groups.forEach(function(g){
+      if(g.mo && tow) return;
+      var rows = [];
+      g.fields.forEach(function(f){
+        if(f.mo && tow) return;
+        if(/Other$/.test(f.id) && state.v[f.id.replace(/Other$/,'')] !== 'Other') return;
+        var v;
+        if(f.t === 'multi') v = (state.m[f.id]||[]).join(', ');
+        else if(f.t === 'date') v = fmtMDY(state.v[f.id]);
+        else v = state.v[f.id] || '';
+        rows.push({l: f.l, v: String(v).trim()});
+      });
+      if(!rows.length) return;
+      if(!printed){ secHead(sec.title); printed = true; }
+      if(g.sub) subHead(g.sub);
+      rows.forEach(function(r){ fieldLine(r.l, r.v); });
+    });
+  });
+
+  secHead('Claim Info');
+  DMG_FIELDS.forEach(function(f){
+    fieldLine(f.l, f.t==='multi' ? (state.m[f.id]||[]).join(', ') : (state.v[f.id]||''));
+  });
+  if(!tow){
+    fieldLine('Windshield Good', state.v.wsGood || '');
+    fieldLine('Windshield Damage', (state.m.wsDmg||[]).join(', '));
+  }
+  secHead('Review');
+  REV_FIELDS.forEach(function(f){
+    var v = f.t==='date' ? fmtMDY(state.v[f.id]) : (state.v[f.id]||'');
+    fieldLine(f.l, v);
+  });
+  if(photos.techSig){
+    var sig = await whiteJpeg(photos.techSig.data, 600, 0.85);
+    var sw = 1.8, sh = sw * sig.h / sig.w;
+    ensure(sh + 0.3);
+    doc.addImage(sig.data, 'JPEG', colX[col], y - 0.08, sw, sh);
+    y += sh;
+    doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.text('Inspected By: ' + (state.v.inspectedBy||'') + ' — Technician Signature', colX[col], y);
+    y += 0.22;
+  }
+  ensure(0.3);
+  doc.setFontSize(8); doc.setFont('helvetica','bold');
+  doc.text('Sales Manager Signature: ____________________________    Date: ____________', colX[col], y);
+  y += 0.2;
+
+  /* damage diagrams */
+  var cls = state.dmgType;
+  var t = null;
+  TYPES.forEach(function(x){ if(x.n === cls) t = x; });
+  if(t){
+    doc.addPage();
+    doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.text('BODY DAMAGE — ' + cls.toUpperCase(), M, M + 0.1);
+    var codes = {};
+    VIEW_IDS.forEach(function(v){ (state.mk[cls][v]||[]).forEach(function(m){ codes[m.c] = 1; }); });
+    var legend = LEGEND.filter(function(x){ return codes[x.c]; })
+      .map(function(x){ return x.c + ' = ' + x.n; }).join('    ');
+    doc.setFont('helvetica','normal'); doc.setFontSize(8);
+    doc.text(legend || 'No damage marked.', M, M + 0.3);
+    var specs = viewsFor(t);
+    var dy = M + 0.5, dcol = 0, rowH = 0;
+    for(var si = 0; si < specs.length; si++){
+      var spec = specs[si];
+      var img = await diagJpeg(spec, state.mk[cls][spec.v]);
+      var roof = spec.v === 'roof';
+      var maxW = roof ? PW - 2*M : COLW, maxH = roof ? 1.9 : 2.3;
+      var dw = maxW, dh = dw * img.h / img.w;
+      if(dh > maxH){ dh = maxH; dw = dh * img.w / img.h; }
+      if(roof && dcol === 1){ dy += rowH; dcol = 0; rowH = 0; }
+      if(dy + dh + 0.35 > PH - M){ doc.addPage(); dy = M + 0.2; dcol = 0; rowH = 0; }
+      var dx = roof ? M + (PW - 2*M - dw)/2 : colX[dcol] + (COLW - dw)/2;
+      doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      doc.text(spec.l.toUpperCase(), roof ? PW/2 : colX[dcol] + COLW/2, dy, {align:'center'});
+      doc.addImage(img.data, 'JPEG', dx, dy + 0.08, dw, dh);
+      var cellH = dh + 0.42;
+      if(roof){ dy += cellH; dcol = 0; rowH = 0; }
+      else if(dcol === 0){ dcol = 1; rowH = cellH; }
+      else { dy += Math.max(rowH, cellH); dcol = 0; rowH = 0; }
+    }
+  }
+
+  /* photos */
+  var entries = photoEntries();
+  if(entries.length){
+    doc.addPage();
+    doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.text('PHOTOS', M, M + 0.1);
+    var py = M + 0.35, pcol = 0, prowH = 0;
+    for(var ei = 0; ei < entries.length; ei++){
+      var ph = await whiteJpeg(entries[ei].data, 1000, 0.72);
+      var pw2 = COLW, ph2 = pw2 * ph.h / ph.w;
+      if(ph2 > 2.9){ ph2 = 2.9; pw2 = ph2 * ph.w / ph.h; }
+      var cell = ph2 + 0.4;
+      if(py + cell > PH - M){
+        if(pcol === 0){ pcol = 1; }
+        else { doc.addPage(); pcol = 0; py = M + 0.2; }
+        if(pcol === 1 && py + cell > PH - M){ doc.addPage(); pcol = 0; py = M + 0.2; }
+      }
+      var useCol = pcol;
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+      doc.text(String(entries[ei].label).slice(0, 60), colX[useCol], py);
+      doc.addImage(ph.data, 'JPEG', colX[useCol] + (COLW - pw2)/2, py + 0.07, pw2, ph2);
+      if(pcol === 0){ pcol = 1; prowH = cell; }
+      else { py += Math.max(prowH, cell); pcol = 0; prowH = 0; }
+    }
+  }
+  return doc;
+}
+
+function blobToB64(blob){
+  return new Promise(function(res, rej){
+    var r = new FileReader();
+    r.onload = function(){ res(String(r.result).split(',')[1]); };
+    r.onerror = function(){ rej(new Error('could not encode the PDF')); };
+    r.readAsDataURL(blob);
+  });
+}
+function sendStatus(msg, isErr){
+  var el = $('sendStatus');
+  el.textContent = msg;
+  el.style.color = isErr ? 'var(--red)' : '';
+}
+$('sendBtn').addEventListener('click', function(){
+  var p = $('sendPanel');
+  p.hidden = !p.hidden;
+  sendStatus('', false);
+  if(!p.hidden) $('sendExtra').focus();
+});
+$('sendCancel').addEventListener('click', function(){ $('sendPanel').hidden = true; sendStatus('', false); });
+$('sendGo').addEventListener('click', async function(){
+  var extra = $('sendExtra').value.trim();
+  if(extra && !EMAIL_RE.test(extra)){
+    sendStatus('That additional email doesn\u2019t look right \u2014 fix it or leave it blank.', true);
+    return;
+  }
+  var to = [SEND_ALWAYS];
+  if(extra && extra.toLowerCase() !== SEND_ALWAYS.toLowerCase()) to.push(extra);
+  var btn = $('sendGo');
+  btn.disabled = true;
+  try{
+    sendStatus('Building the PDF\u2026', false);
+    await ensureJsPdf();
+    var doc = await buildTradePdf();
+    sendStatus('Sending to ' + to.join(', ') + '\u2026', false);
+    var res = await fetch(SEND_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        to: to,
+        subject: 'Trade-In Evaluation \u2014 ' + (tradeDesc() || 'Unit') +
+                 ((state.v.vin||'').trim() ? ' \u2014 VIN ' + state.v.vin.trim() : ''),
+        filename: 'Trade-Eval_' + ((state.v.vin || state.v.stock || 'unit').replace(/\W+/g,'') || 'unit') + '.pdf',
+        pdf: await blobToB64(doc.output('blob')),
+        summary: {
+          Unit: tradeDesc() || '\u2014',
+          VIN: (state.v.vin||'').trim() || '\u2014',
+          Class: (state.v.unitClass||'').trim() || '\u2014',
+          'Inspected By': (state.v.inspectedBy||'').trim() || '\u2014'
+        }
+      })
+    });
+    var out = await res.json().catch(function(){ return {}; });
+    if(!res.ok || !out.sent) throw new Error(out.error || ('send service returned ' + res.status));
+    sendStatus('\u2713 Sent to ' + to.join(', ') + ' with the PDF attached.', false);
+    $('sendExtra').value = '';
+  }catch(err){
+    sendStatus('Sending failed (' + (err.message || 'network error') + ') \u2014 nothing was sent. Try again, or use Print / Save PDF.', true);
+  }finally{
+    btn.disabled = false;
+  }
+});
 
 /* Technician finger-signature pad */
 (function(){
