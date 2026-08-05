@@ -101,7 +101,8 @@
   .tbody.tfirst{border-top:1px solid #BFC3C7;border-radius:44px 44px 0 0;min-height:130px}
   .tbody.tlast{border-bottom:1px solid #BFC3C7;border-radius:0 0 16px 16px}
   .tbody.tspacer{min-height:150px}
-  .tbody.tax{min-height:84px}
+  .tbody.tax{min-height:56px}
+  .tcell.taxc{padding:5px 0}
   .tfront{position:absolute;top:14px;left:0;right:0;text-align:center;
     font:700 10px 'Barlow',sans-serif;letter-spacing:.12em;color:var(--muted)}
   .tire{position:absolute;top:50%;transform:translateY(-50%);width:16px;height:36px;
@@ -1245,14 +1246,15 @@ function renderTireWidget(){
          '<div class="tbody tfirst tspacer"><span class="tfront">FRONT</span></div>'+
          '<div class="tcell tright"></div>';
   }
+  var cellCls = lay.towable ? ' taxc' : '';
   axles.forEach(function(ax, i){
     var bodyCls = 'tbody' + (lay.towable ? ' tax' : (i===0 ? ' tfirst' : '')) + (i===axles.length-1 ? ' tlast' : '');
-    h += '<div class="tcell tleft">' + ax.l.map(tireInputHTML).join('') + '</div>';
+    h += '<div class="tcell tleft'+cellCls+'">' + ax.l.map(tireInputHTML).join('') + '</div>';
     h += '<div class="'+bodyCls+'">' + (!lay.towable && i===0 ? '<span class="tfront">FRONT</span>' : '');
     ax.l.forEach(function(p, j){ h += tireMarkHTML(p, 'tl', j); });
     ax.r.forEach(function(p, j){ h += tireMarkHTML(p, 'tr', j); });
     h += '</div>';
-    h += '<div class="tcell tright">' + ax.r.map(tireInputHTML).join('') + '</div>';
+    h += '<div class="tcell tright'+cellCls+'">' + ax.r.map(tireInputHTML).join('') + '</div>';
   });
   h += '</div>';
   if(lay.towable){
