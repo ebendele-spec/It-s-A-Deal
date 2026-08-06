@@ -15,7 +15,7 @@
     --line:#181C21; --faint:rgba(24,28,33,.14); --muted:#5C6570;
     --navy:#1D2E48; --tab-bg:#1D2E48; --tab-ink:#FFFFFF;
     --sel-bg:#1D2E48; --sel-ink:#FFFFFF; --sel-lamp:#E9A100;
-    --amber:#E9A100; --acc:#B27A00;
+    --amber:#E9A100; --acc:#B27A00; --seln:#C0651B;
     --green:#1E8F5A; --red:#C93B2B;
     --grid:rgba(29,46,72,.05);
     --keyshadow:0 2px 0 rgba(24,28,33,.9);
@@ -28,7 +28,7 @@
       --line:#39424E; --faint:rgba(233,237,242,.14); --muted:#8C97A4;
       --navy:#1D2E48; --tab-bg:#E9A100; --tab-ink:#14181E;
       --sel-bg:#E9A100; --sel-ink:#14181E; --sel-lamp:#14181E;
-      --amber:#FFB525; --acc:#FFB525;
+      --amber:#FFB525; --acc:#FFB525; --seln:#DB8330;
       --green:#3DBE83; --red:#F26D5B;
       --grid:rgba(233,237,242,.04);
       --keyshadow:0 2px 0 rgba(0,0,0,.9);
@@ -39,7 +39,7 @@
     --line:#39424E; --faint:rgba(233,237,242,.14); --muted:#8C97A4;
     --navy:#1D2E48; --tab-bg:#E9A100; --tab-ink:#14181E;
     --sel-bg:#E9A100; --sel-ink:#14181E; --sel-lamp:#14181E;
-    --amber:#FFB525; --acc:#FFB525;
+    --amber:#FFB525; --acc:#FFB525; --seln:#DB8330;
     --green:#3DBE83; --red:#F26D5B;
     --grid:rgba(233,237,242,.04);
     --keyshadow:0 2px 0 rgba(0,0,0,.9);
@@ -198,7 +198,7 @@
     box-shadow:none;transform:translateY(2px)}
   .seg button.on::after{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);
     width:14px;height:3px;border-radius:2px;background:var(--sel-lamp)}
-  .seg button.on[data-o="N"]{background:var(--red);border-color:var(--red);color:#fff}
+  .seg button.on[data-o="N"]{background:var(--seln);border-color:var(--seln);color:#fff}
   .seg button.on[data-o="N"]::after{background:rgba(255,255,255,.75)}
   .hint{font-size:12px;color:var(--muted);margin-top:4px}
 
@@ -1756,7 +1756,8 @@ async function buildTradePdf(){
   /* Field Instrument palette (day theme) */
   var INK=[24,28,33], MUT=[92,101,112], NAVY=[29,46,72], AMBER=[233,161,0],
       ACC=[178,122,0], GREEN=[30,143,90], RED=[201,59,43], PAPER=[241,239,232],
-      GRID=[229,227,219], FAINT=[214,211,202], WHITE=[255,255,255], TINT=[247,244,236];
+      GRID=[229,227,219], FAINT=[214,211,202], WHITE=[255,255,255], TINT=[247,244,236],
+      ORANGE=[192,101,27];
   function F(c){ doc.setFillColor(c[0],c[1],c[2]); }
   function D(c){ doc.setDrawColor(c[0],c[1],c[2]); }
   function T(c){ doc.setTextColor(c[0],c[1],c[2]); }
@@ -1882,12 +1883,12 @@ async function buildTradePdf(){
     doc.circle(x, cy, 0.034, 'F');
   }
   function chipAt(cx, baseY, val, alert){
-    var warn = alert || String(val).trim()==='N';
+    var isN = String(val).trim()==='N';
     doc.setFont('helvetica','bold'); doc.setFontSize(8.2);
     var vw = doc.getTextWidth(val);
-    F(warn ? RED : NAVY);
+    F(alert ? RED : (isN ? ORANGE : NAVY));
     doc.roundedRect(cx, baseY-0.128, vw+0.15, 0.185, 0.055, 0.055, 'F');
-    F(warn ? WHITE : AMBER);
+    F(alert || isN ? WHITE : AMBER);
     doc.rect(cx+(vw+0.15)/2-0.055, baseY-0.118, 0.11, 0.02, 'F');
     T(WHITE); doc.text(val, cx+0.075, baseY+0.008);
     return vw+0.15;
