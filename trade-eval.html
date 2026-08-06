@@ -333,7 +333,7 @@
       </div>
       <div style="text-align:right">
         <h1>Trade-In <span>Evaluation</span></h1>
-        <small>Motor Home Specialist &middot; Alvarado, TX</small>
+        <small>Motor Home Specialist</small>
         <button type="button" class="signout" id="clearStart">&#8635; Clear &amp; Start Over</button>
         <button type="button" class="signout" id="signOut">Sign Out</button>
         <button type="button" class="signout" id="themeBtn">&#9790; Night</button>
@@ -417,6 +417,12 @@ var VIEW_LABELS = {front:'Front', driver:'Driver Side', passenger:'Passenger Sid
    t: text | seg | multi | area | icons     p:1 = photo button
    ============================================================ */
 var SECTIONS = [
+ { key:'store', title:'Store Location', groups:[
+   { fields:[
+     {id:'storeLoc', l:'Which store is this evaluation for?', t:'seg', w:1, req:1,
+      o:['Texas','Alabama','California']},
+   ]},
+ ]},
  { key:'unit', title:'Unit Info', groups:[
    { fields:[
      {id:'stock',    l:'Stock #',        t:'text', ph:'(Leave Blank)'},
@@ -701,19 +707,19 @@ SECTIONS.forEach(function(sec){ sec.groups.forEach(function(g){
 }); });
 
 var stepsEl = $('steps');
-var STEP_TITLES = ['Unit Info','Chassis & Systems','Exterior','Interior','Body Damage','Review & Print'];
+var STEP_TITLES = ['Store','Unit Info','Chassis & Systems','Exterior','Interior','Body Damage','Review & Print'];
 
 SECTIONS.forEach(function(sec,i){
   var d = document.createElement('section');
   d.className = 'step'; d.dataset.step = i;
-  d.innerHTML = '<h2 class="sec"><span class="secnum">0'+(i+1)+'</span>'+sec.title+'</h2>' + sec.groups.map(groupHTML).join('');
+  d.innerHTML = '<h2 class="sec"><span class="secnum">0'+i+'</span>'+sec.title+'</h2>' + sec.groups.map(groupHTML).join('');
   stepsEl.appendChild(d);
 });
 
 /* Step 4: body damage */
 (function(){
   var d = document.createElement('section');
-  d.className = 'step'; d.dataset.step = 4;
+  d.className = 'step'; d.dataset.step = 5;
   var h = '<h2 class="sec"><span class="secnum">05</span>Body Damage Notations</h2>';
   h += '<p class="hint" id="dmgTypeNote"></p>';
   h += '<p class="hint" style="margin-top:12px">Pick a damage type below, then tap the diagram where the damage is. Tap a marker to remove it.</p>';
@@ -731,7 +737,7 @@ SECTIONS.forEach(function(sec,i){
 /* Step 5: review */
 (function(){
   var d = document.createElement('section');
-  d.className = 'step'; d.dataset.step = 5;
+  d.className = 'step'; d.dataset.step = 6;
   var h = '<h2 class="sec"><span class="secnum">06</span>Review &amp; Print</h2>';
   h += '<div class="rev-note">Printing produces the full MHS Trade-In Sheet (all fields, the body-damage '+
        'diagrams, and every attached photo) for the deal jacket. Signature lines print blank for pen signatures.</div>';
@@ -745,7 +751,7 @@ SECTIONS.forEach(function(sec,i){
        '<button type="button" class="btn primary" id="sendBtn">&#9993; Send Form</button>'+
        '<button type="button" class="btn danger" id="clearAll">&#8635; Clear Form</button></div>';
   h += '<div id="sendPanel" hidden style="margin-top:14px;max-width:430px">'+
-       '<div class="hint" style="margin-bottom:6px">Sends the completed PDF to <b>ABBY@mhsrv.com</b>.</div>'+
+       '<div class="hint" id="sendHint" style="margin-bottom:6px"></div>'+
        '<input type="text" id="sendExtra" inputmode="email" autocomplete="email" autocapitalize="off" '+
          'placeholder="Additional email (optional)" '+
          'style="width:100%;padding:11px 12px;font:inherit;font-size:15px;background:var(--panel);color:var(--ink);border:1.5px solid var(--line);border-radius:9px">'+
@@ -761,14 +767,14 @@ SECTIONS.forEach(function(sec,i){
 var stepperEl = $('stepper');
 STEP_TITLES.forEach(function(t,i){
   var b = document.createElement('button');
-  b.type='button'; b.innerHTML = '<span class="n">'+(i+1)+'</span>'+t;
+  b.type='button'; b.innerHTML = '<span class="n">'+i+'</span>'+t;
   b.addEventListener('click', function(){ go(i); });
   stepperEl.appendChild(b);
 });
 
 var cur = 0;
 function go(i){
-  cur = Math.max(0, Math.min(5, i));
+  cur = Math.max(0, Math.min(6, i));
   Array.prototype.forEach.call(stepsEl.querySelectorAll('.step'), function(s,idx){ s.classList.toggle('on', idx===cur); });
   Array.prototype.forEach.call(stepperEl.children, function(c,idx){
     c.classList.toggle('active', idx===cur);
@@ -781,15 +787,15 @@ function go(i){
     try{ stepperEl.scrollTo({left:left, behavior:'smooth'}); }catch(e){ stepperEl.scrollLeft = left; }
   }
   $('backBtn').style.visibility = cur===0 ? 'hidden' : 'visible';
-  $('nextBtn').style.display = cur===5 ? 'none' : '';
-  if(cur===2) renderTireWidget();
-  if(cur===4) renderDiagrams();
-  if(cur===5) updateMissing();
+  $('nextBtn').style.display = cur===6 ? 'none' : '';
+  if(cur===3) renderTireWidget();
+  if(cur===5) renderDiagrams();
+  if(cur===6) updateMissing();
   window.scrollTo({top:0});
 }
 /* Unit Info required fields (*) — flag on Next, clear as they're filled.
    preq fields also need their photo attached to count as complete. */
-var UNIT_FIELDS = SECTIONS[0].groups[0].fields;
+var UNIT_FIELDS = SECTIONS[1].groups[0].fields;
 function unitFieldComplete(f){
   if(f.mo && isTowable()) return true;
   if(f.req && !(state.v[f.id]||'').trim()) return false;
@@ -1052,7 +1058,7 @@ function vinAutoFill(vin){
 }
 $('backBtn').addEventListener('click', function(){ go(cur-1); });
 $('nextBtn').addEventListener('click', function(){
-  if(cur===0 && flagUnitMissing()){
+  if(cur===1 && flagUnitMissing()){
     var first = document.querySelector('.field.missreq');
     if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
     return;
@@ -1569,7 +1575,8 @@ $('clearMarks').addEventListener('click', function(){
    ============================================================ */
 function updateMissing(){
   var miss = [];
-  SECTIONS[0].groups[0].fields.forEach(function(f){
+  if(!(state.v.storeLoc||'').trim()) miss.push('Store Location');
+  SECTIONS[1].groups[0].fields.forEach(function(f){
     if(f.mo && isTowable()) return;
     if(f.req && !(state.v[f.id]||'').trim()) miss.push(f.l);
     if(f.preq && !photos[f.id]) miss.push(f.l+' photo');
@@ -1581,7 +1588,7 @@ function updateMissing(){
   });
   $('missingBox').textContent = miss.length ? 'Still blank: '+miss.join(', ') : '';
 }
-document.addEventListener('input', function(){ if(cur===5) updateMissing(); });
+document.addEventListener('input', function(){ if(cur===6) updateMissing(); });
 
 /* ============================================================
    Print sheet
@@ -1617,7 +1624,7 @@ function photoEntries(){
 }
 function buildPrint(){
   var h = '<div class="p-head"><h1>MHS Trade-In Sheet</h1>'+
-          '<span>Motor Home Specialist &middot; Alvarado, TX &middot; Stock # '+pv('stock')+'</span></div>';
+          '<span>Motor Home Specialist'+((state.v.storeLoc||'').trim() ? ' &middot; '+esc(state.v.storeLoc.trim()) : '')+' &middot; Stock # '+pv('stock')+'</span></div>';
   SECTIONS.forEach(function(sec){
     h += '<h2>'+sec.title+'</h2><div class="cols">';
     sec.groups.forEach(function(g){
@@ -1670,7 +1677,12 @@ $('printBtn').addEventListener('click', function(){ buildPrint(); window.print()
    Always goes to ABBY@mhsrv.com; the tech can add one more.
    ============================================================ */
 var SEND_ENDPOINT = 'https://mhs-deal-mailer.ebendele.workers.dev';
-var SEND_ALWAYS = 'ABBY@mhsrv.com';
+var STORE_SEND = {
+  'Texas':      'ABBY@mhsrv.com',
+  'Alabama':    'Michael.Reardon@mhsrv.com',
+  'California': 'Michael.Steynberg@BlueCompassRV.Com'
+};
+var SEND_ALWAYS = 'elisha@mhsrv.com';
 var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function ensureJsPdf(){
@@ -1820,7 +1832,8 @@ async function buildTradePdf(){
       T(WHITE);
       doc.text('MOTOR HOME SPECIALIST', PW/2, SY+0.665, {align:'center'});
       doc.setFontSize(8); T(AMBER);
-      doc.text('INSPECTION DATE  '+fmtMDY(state.v.inspExp), PW/2, SY+0.85, {align:'center'});
+      doc.text(((state.v.storeLoc||'').trim() ? state.v.storeLoc.trim().toUpperCase()+'  ·  ' : '')+
+               'INSPECTION DATE  '+fmtMDY(state.v.inspExp), PW/2, SY+0.85, {align:'center'});
     }
     doc.setFont('courier','bold'); doc.setFontSize(5.5); T(MUT);
     doc.text('MHS TRADE-IN EVALUATION · MHSRV.APP', PW-SX-0.12, PH-SX-0.09, {align:'right'});
@@ -2056,7 +2069,8 @@ async function buildTradePdf(){
   chrome(true);
   y = SY+1.15;
   var uf = [];
-  SECTIONS[0].groups[0].fields.forEach(function(f){
+  if((state.v.storeLoc||'').trim()) uf.push({l:'Store', v:state.v.storeLoc.trim(), chip:true});
+  SECTIONS[1].groups[0].fields.forEach(function(f){
     if(f.mo && tow) return;
     var v = f.t==='date' ? fmtMDY(state.v[f.id]) : (state.v[f.id]||'');
     uf.push({l:f.l, v:String(v).trim(), chip:(f.t==='seg'||f.t==='icons')});
@@ -2129,7 +2143,7 @@ async function buildTradePdf(){
 
   /* ---------- sections 02-04 in two columns ---------- */
   secN = 1;
-  SECTIONS.slice(1).forEach(function(sec){
+  SECTIONS.slice(2).forEach(function(sec){
     var printed = false;
     sec.groups.forEach(function(g){
       if(g.mo && tow) return;
@@ -2294,11 +2308,22 @@ function sendStatus(msg, isErr){
   el.textContent = msg;
   el.style.color = isErr ? 'var(--red)' : '';
 }
+function sendRecipients(){
+  var primary = STORE_SEND[(state.v.storeLoc||'').trim()];
+  if(!primary) return null;
+  return [primary, SEND_ALWAYS];
+}
 $('sendBtn').addEventListener('click', function(){
   var p = $('sendPanel');
   p.hidden = !p.hidden;
   sendStatus('', false);
-  if(!p.hidden) $('sendExtra').focus();
+  if(!p.hidden){
+    var to = sendRecipients();
+    $('sendHint').innerHTML = to
+      ? 'Sends the completed PDF to <b>'+to.join('</b> and <b>')+'</b>.'
+      : 'Pick the <b>Store Location</b> on Step 0 first &mdash; it decides who receives the form.';
+    $('sendExtra').focus();
+  }
 });
 $('sendCancel').addEventListener('click', function(){ $('sendPanel').hidden = true; sendStatus('', false); });
 $('sendGo').addEventListener('click', async function(){
@@ -2307,8 +2332,12 @@ $('sendGo').addEventListener('click', async function(){
     sendStatus('That additional email doesn\u2019t look right \u2014 fix it or leave it blank.', true);
     return;
   }
-  var to = [SEND_ALWAYS];
-  if(extra && extra.toLowerCase() !== SEND_ALWAYS.toLowerCase()) to.push(extra);
+  var to = sendRecipients();
+  if(!to){
+    sendStatus('Pick the Store Location on Step 0 first \u2014 it decides who receives the form.', true);
+    return;
+  }
+  if(extra && to.map(function(e){ return e.toLowerCase(); }).indexOf(extra.toLowerCase()) < 0) to.push(extra);
   var btn = $('sendGo');
   btn.disabled = true;
   try{
