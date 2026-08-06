@@ -1816,11 +1816,11 @@ async function buildTradePdf(){
       var tx=(PW-w1-w2)/2;
       T(AMBER); doc.text(t1, tx, SY+0.47);
       T(WHITE); doc.text(t2, tx+w1, SY+0.47);
-      doc.setFont('courier','bold'); doc.setFontSize(7.5);
-      T([184,196,212]);
-      doc.text('MOTOR HOME SPECIALIST · ALVARADO, TX', PW/2, SY+0.67, {align:'center', charSpace:0.02});
-      T(AMBER);
-      doc.text('INSPECTION DATE  '+fmtMDY(state.v.inspExp), PW/2, SY+0.85, {align:'center', charSpace:0.02});
+      doc.setFont('courier','bold'); doc.setFontSize(10);
+      T(WHITE);
+      doc.text('MOTOR HOME SPECIALIST', PW/2, SY+0.665, {align:'center'});
+      doc.setFontSize(8); T(AMBER);
+      doc.text('INSPECTION DATE  '+fmtMDY(state.v.inspExp), PW/2, SY+0.85, {align:'center'});
     }
     doc.setFont('courier','bold'); doc.setFontSize(5.5); T(MUT);
     doc.text('MHS TRADE-IN EVALUATION · MHSRV.APP', PW-SX-0.12, PH-SX-0.09, {align:'right'});
@@ -1919,65 +1919,137 @@ async function buildTradePdf(){
     y += 0.02;
   }
 
-  /* top-down tire schematic, matching the app widget */
-  function drawTireWidget(){
+  /* tire widget rendered to canvas so it matches the site exactly */
+  function tireWidgetImg(){
     var lay = tireLayout();
-    if(!lay){ fieldLine('Age of Tires', state.v.tireAge||'', false, false); return; }
+    if(!lay) return null;
     var axles = tireAxles(lay);
-    var capH = lay.towable ? 0.5 : 0.34, rowH = 0.4, tailH = 0.14;
-    var bodyH = capH + axles.length*rowH + tailH;
-    var widgetH = 0.26 + bodyH + 0.18;
-    ensure(widgetH);
+    var INKC='#181C21', GREENC='#1E8F5A', REDC='#C93B2B', MUTC='#5C6570', FAINTC='#B9BDB3';
+    function rr(ctx,x,yy,w,h,rt,rb){
+      ctx.beginPath();
+      ctx.moveTo(x+rt,yy);
+      ctx.lineTo(x+w-rt,yy); ctx.arcTo(x+w,yy,x+w,yy+rt,rt);
+      ctx.lineTo(x+w,yy+h-rb); ctx.arcTo(x+w,yy+h,x+w-rb,yy+h,rb);
+      ctx.lineTo(x+rb,yy+h); ctx.arcTo(x,yy+h,x,yy+h-rb,rb);
+      ctx.lineTo(x,yy+rt); ctx.arcTo(x,yy,x+rt,yy,rt);
+      ctx.closePath();
+    }
+    var CELLW=210, BODYW=108, GAPX=26, CELLH=124;
+    var W = CELLW*2 + BODYW + GAPX*2;
+    var rowHs = [];
+    axles.forEach(function(ax){ rowHs.push(Math.max(ax.l.length, ax.r.length)*CELLH + 10); });
+    var capH = lay.towable ? 150 : 88, tailH = 40;
+    var bodyH = capH + tailH;
+    rowHs.forEach(function(h){ bodyH += h; });
+    var H = bodyH + 16;
+    var R = 2.4;
+    var c = document.createElement('canvas');
+    c.width = Math.round(W*R); c.height = Math.round(H*R);
+    var x2 = c.getContext('2d');
+    x2.scale(R, R);
+    x2.fillStyle = '#FFFFFF'; x2.fillRect(0, 0, W, H);
+    var bx = CELLW+GAPX, by = 8;
+    /* capsule body */
+    x2.lineWidth = 2.2; x2.strokeStyle = INKC;
+    rr(x2, bx, by, BODYW, bodyH, 52, 20); x2.stroke();
+    try{ x2.letterSpacing = '3px'; }catch(e){}
+    x2.font = '700 12px ui-monospace, Menlo, monospace';
+    x2.fillStyle = MUTC; x2.textAlign = 'center'; x2.textBaseline = 'middle';
+    x2.fillText('FRONT', bx+BODYW/2, by+26);
+    try{ x2.letterSpacing = '0px'; }catch(e){}
+    function keyRect(kx, ky, kw, kh, fill, stroke, pressed){
+      if(!pressed){
+        x2.fillStyle = 'rgba(24,28,33,0.9)';
+        rr(x2, kx, ky+2.5, kw, kh, 9, 9); x2.fill();
+      }
+      x2.fillStyle = fill;
+      rr(x2, kx, ky+(pressed?2:0), kw, kh, 9, 9); x2.fill();
+      if(stroke){ x2.lineWidth = 1.8; x2.strokeStyle = stroke; rr(x2, kx, ky+(pressed?2:0), kw, kh, 9, 9); x2.stroke(); }
+      return ky+(pressed?2:0)+kh/2;
+    }
+    function drawCell(p, cx, cy, alignRight){
+      /* cx = cell left edge; content centered within CELLW */
+      var code = tireCode(p), gb = state.v['tireGB_'+p], ph = !!photos['tire|'+p];
+      var midX = cx + CELLW/2;
+      x2.textAlign = 'center';
+      try{ x2.letterSpacing = '2px'; }catch(e){}
+      x2.font = '700 12px ui-monospace, Menlo, monospace';
+      x2.fillStyle = INKC;
+      x2.fillText(tireShortLabel(p).toUpperCase(), midX, cy+12);
+      try{ x2.letterSpacing = '0px'; }catch(e){}
+      /* date-code box */
+      var bw = 96, bh = 38, bxx = midX-bw/2, byy = cy+24;
+      x2.fillStyle = '#FFFFFF';
+      rr(x2, bxx, byy, bw, bh, 9, 9); x2.fill();
+      x2.lineWidth = 2; x2.strokeStyle = INKC;
+      rr(x2, bxx, byy, bw, bh, 9, 9); x2.stroke();
+      x2.font = '600 17px ui-monospace, Menlo, monospace';
+      x2.fillStyle = code ? INKC : FAINTC;
+      x2.fillText(code || 'WWYY', midX, byy+bh/2+1);
+      /* GOOD / BAD keys (+ photo check) */
+      var gw = 62, bw2 = 52, kh = 32, gap = 8;
+      var total = gw+gap+bw2 + (ph ? gap+34 : 0);
+      var kx = midX - total/2, ky = byy+bh+10;
+      var tcy = keyRect(kx, ky, gw, kh, gb==='G' ? GREENC : '#FFFFFF', gb==='G' ? null : INKC, gb==='G');
+      x2.font = '700 11px ui-monospace, Menlo, monospace';
+      x2.fillStyle = gb==='G' ? '#FFFFFF' : INKC;
+      x2.fillText('GOOD', kx+gw/2, tcy);
+      var tcy2 = keyRect(kx+gw+gap, ky, bw2, kh, gb==='B' ? REDC : '#FFFFFF', gb==='B' ? null : INKC, gb==='B');
+      x2.fillStyle = gb==='B' ? '#FFFFFF' : INKC;
+      x2.fillText('BAD', kx+gw+gap+bw2/2, tcy2);
+      if(ph){
+        var pxx = kx+gw+gap+bw2+gap;
+        x2.fillStyle = '#FFFFFF';
+        rr(x2, pxx, ky, 34, kh, 9, 9); x2.fill();
+        x2.lineWidth = 1.8; x2.strokeStyle = GREENC;
+        rr(x2, pxx, ky, 34, kh, 9, 9); x2.stroke();
+        x2.font = '700 15px sans-serif'; x2.fillStyle = GREENC;
+        x2.fillText('✓', pxx+17, ky+kh/2);
+      }
+    }
+    function drawTire(px, py2, p, isInner){
+      var code = tireCode(p), gb = state.v['tireGB_'+p];
+      var tw = 17, th = 40;
+      x2.save();
+      if(gb==='B'){ x2.fillStyle = REDC; x2.shadowColor = 'rgba(201,59,43,0.55)'; x2.shadowBlur = 10; }
+      else if(code || gb==='G'){ x2.fillStyle = GREENC; x2.shadowColor = 'rgba(30,143,90,0.55)'; x2.shadowBlur = 10; }
+      else { x2.fillStyle = '#FFFFFF'; }
+      rr(x2, px, py2-th/2, tw, th, 6, 6); x2.fill();
+      x2.restore();
+      if(!(gb==='B' || code || gb==='G')){
+        x2.lineWidth = 1.8; x2.strokeStyle = INKC;
+        rr(x2, px, py2-th/2, tw, th, 6, 6); x2.stroke();
+      }
+    }
+    var yCur = by + capH;
+    axles.forEach(function(ax, i){
+      var rh = rowHs[i];
+      var rowMid = yCur + rh/2;
+      /* tires: outer overhangs the body edge, inner sits just inside */
+      ax.l.forEach(function(p, j){ drawTire(j===0 ? bx-9 : bx+13, rowMid, p, j===1); });
+      ax.r.forEach(function(p, j){
+        var inner = ax.r.length>1 && j===0;
+        drawTire(inner ? bx+BODYW-30 : bx+BODYW-8, rowMid, p, inner);
+      });
+      /* cells */
+      ax.l.forEach(function(p, j){ drawCell(p, 0, yCur + j*CELLH + (rh - ax.l.length*CELLH)/2, true); });
+      ax.r.forEach(function(p, j){ drawCell(p, CELLW+GAPX*2+BODYW, yCur + j*CELLH + (rh - ax.r.length*CELLH)/2, false); });
+      yCur += rh;
+    });
+    return {data: c.toDataURL('image/jpeg', 0.92), w: c.width, h: c.height};
+  }
+  function drawTireWidget(){
+    var img = tireWidgetImg();
+    if(!img){ fieldLine('Age of Tires', state.v.tireAge||'', false, false); return; }
+    var dw = COLW, dh = dw*img.h/img.w;
+    ensure(0.2 + dh + 0.14);
     var lx = colX[col]+0.1;
     lampAt(colX[col]+0.038, y-0.026, true, false);
     doc.setFont('courier','bold'); doc.setFontSize(7.4); T(INK);
     doc.text('AGE OF TIRES / CONDITION', lx, y);
-    y += 0.14;
-    var cx = colX[col]+COLW/2, bodyW = 0.72;
-    var bx = cx-bodyW/2, top = y;
-    F(WHITE); D(INK); doc.setLineWidth(0.016);
-    doc.roundedRect(bx, top, bodyW, bodyH, 0.22, 0.22, 'FD');
-    doc.setFont('courier','bold'); doc.setFontSize(6.2); T(MUT);
-    doc.text('FRONT', cx, top+0.17, {align:'center', charSpace:0.03});
-    axles.forEach(function(ax, i){
-      var ty = top + capH + i*rowH + rowH/2;
-      function tireRect(px, p){
-        var code = tireCode(p), gb = state.v['tireGB_'+p];
-        if(gb==='B'){ F(RED); D(RED); }
-        else if(code || gb==='G'){ F(GREEN); D(GREEN); }
-        else { F(FAINT); D(INK); }
-        doc.setLineWidth(0.012);
-        doc.roundedRect(px, ty-0.11, 0.075, 0.22, 0.025, 0.025, 'FD');
-      }
-      function lblText(p){
-        var code = tireCode(p), gb = state.v['tireGB_'+p];
-        var s = p;
-        if(code) s += ' '+code;
-        if(gb==='G') s += ' GOOD';
-        if(gb==='B') s += ' BAD';
-        return {s:s, bad:gb==='B'};
-      }
-      /* left side */
-      ax.l.forEach(function(p, j){ tireRect(j===0 ? bx-0.035 : bx+0.06, p); });
-      var lt = ax.l.map(lblText);
-      doc.setFont('courier','bold'); doc.setFontSize(6.8);
-      lt.forEach(function(o, j){
-        T(o.bad ? RED : INK);
-        doc.text(o.s, bx-0.12, ty + (lt.length>1 ? (j===0 ? -0.035 : 0.095) : 0.02), {align:'right'});
-      });
-      /* right side */
-      ax.r.forEach(function(p, j){
-        var inner = ax.r.length>1 && j===0;
-        tireRect(inner ? bx+bodyW-0.135 : bx+bodyW-0.04, p);
-      });
-      var rt = ax.r.map(lblText);
-      rt.forEach(function(o, j){
-        T(o.bad ? RED : INK);
-        doc.text(o.s, bx+bodyW+0.12, ty + (rt.length>1 ? (j===0 ? -0.035 : 0.095) : 0.02));
-      });
-    });
-    T(INK);
-    y = top + bodyH + 0.2;
+    y += 0.08;
+    doc.addImage(img.data, 'JPEG', colX[col]+(COLW-dw)/2, y, dw, dh);
+    y += dh + 0.14;
   }
 
   /* ---------- page 1: masthead + unit card + alerts ---------- */
