@@ -198,6 +198,8 @@
     box-shadow:none;transform:translateY(2px)}
   .seg button.on::after{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);
     width:14px;height:3px;border-radius:2px;background:var(--sel-lamp)}
+  .seg button.on[data-o="N"]{background:var(--red);border-color:var(--red);color:#fff}
+  .seg button.on[data-o="N"]::after{background:rgba(255,255,255,.75)}
   .hint{font-size:12px;color:var(--muted);margin-top:4px}
 
   /* ---------- Vehicle-type icon grid ---------- */
@@ -1828,10 +1830,10 @@ async function buildTradePdf(){
       var tx=(PW-w1-w2)/2;
       T(AMBER); doc.text(t1, tx, SY+0.47);
       T(WHITE); doc.text(t2, tx+w1, SY+0.47);
-      doc.setFont('courier','bold'); doc.setFontSize(10);
+      doc.setFont('courier','bold'); doc.setFontSize(11.5);
       T(WHITE);
-      doc.text('MOTOR HOME SPECIALIST', PW/2, SY+0.665, {align:'center'});
-      doc.setFontSize(8); T(AMBER);
+      doc.text('MOTOR HOME SPECIALIST', PW/2, SY+0.67, {align:'center'});
+      doc.setFontSize(7); T(AMBER);
       doc.text(((state.v.storeLoc||'').trim() ? state.v.storeLoc.trim().toUpperCase()+'  ·  ' : '')+
                'INSPECTION DATE  '+fmtMDY(state.v.inspExp), PW/2, SY+0.85, {align:'center'});
     }
@@ -1880,11 +1882,12 @@ async function buildTradePdf(){
     doc.circle(x, cy, 0.034, 'F');
   }
   function chipAt(cx, baseY, val, alert){
+    var warn = alert || String(val).trim()==='N';
     doc.setFont('helvetica','bold'); doc.setFontSize(8.2);
     var vw = doc.getTextWidth(val);
-    F(alert ? RED : NAVY);
+    F(warn ? RED : NAVY);
     doc.roundedRect(cx, baseY-0.128, vw+0.15, 0.185, 0.055, 0.055, 'F');
-    F(alert ? WHITE : AMBER);
+    F(warn ? WHITE : AMBER);
     doc.rect(cx+(vw+0.15)/2-0.055, baseY-0.118, 0.11, 0.02, 'F');
     T(WHITE); doc.text(val, cx+0.075, baseY+0.008);
     return vw+0.15;
