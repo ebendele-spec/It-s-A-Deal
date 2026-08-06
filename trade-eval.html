@@ -1741,17 +1741,63 @@ async function buildTradePdf(){
   var doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'in', format:'letter'});
   /* Field Instrument palette (day theme) */
   var INK=[24,28,33], MUT=[92,101,112], NAVY=[29,46,72], AMBER=[233,161,0],
-      ACC=[178,122,0], GREEN=[30,143,90], PAPER=[241,239,232],
-      GRID=[229,227,219], FAINT=[214,211,202], WHITE=[255,255,255];
+      ACC=[178,122,0], GREEN=[30,143,90], RED=[201,59,43], PAPER=[241,239,232],
+      GRID=[229,227,219], FAINT=[214,211,202], WHITE=[255,255,255], TINT=[247,244,236];
   function F(c){ doc.setFillColor(c[0],c[1],c[2]); }
   function D(c){ doc.setDrawColor(c[0],c[1],c[2]); }
   function T(c){ doc.setTextColor(c[0],c[1],c[2]); }
 
   var PW=8.5, PH=11;
-  var SX=0.3, SW=PW-0.6, SY=0.3, SH=PH-0.6;      /* white sheet panel */
+  var SX=0.3, SW=PW-0.6, SY=0.3, SH=PH-0.6;
   var M=0.55, GAP=0.3, COLW=(PW-2*M-GAP)/2;
   var colX=[M, M+COLW+GAP], BOT=PH-0.62;
   var col=0, pageTop, y, secN=0;
+  var tow = isTowable();
+  var cls = state.dmgType;
+
+  /* things a sales manager must not miss */
+  function alertFor(id, val){
+    val = String(val||'').trim();
+    if(!val) return false;
+    switch(id){
+      case 'dashAc': return val==='Bad';
+      case 'genRuns': case 'genLoads': return val==='N';
+      case 'tireDryRot': case 'smoker': case 'pets': return val==='Y';
+      case 'extCond': case 'intCond': return val==='Fair' || val==='Bad';
+      case 'extRepairs': case 'intRepairs': return true;
+      case 'claimMark': return val==='Yes';
+    }
+    return false;
+  }
+  function dmgMarkCount(){
+    var n = 0;
+    VIEW_IDS.forEach(function(v){ n += (state.mk[cls] && state.mk[cls][v] ? state.mk[cls][v].length : 0); });
+    return n;
+  }
+  function badTires(){
+    var lay = tireLayout(), out = [];
+    if(lay) lay.pos.forEach(function(p){ if(state.v['tireGB_'+p]==='B') out.push(p); });
+    return out;
+  }
+  function buildAlerts(){
+    var a = [];
+    if(!tow && state.v.dashAc==='Bad') a.push('DASH A/C: BAD');
+    if(state.v.genRuns==='N') a.push('GENERATOR RUNS: N');
+    if(state.v.genLoads==='N') a.push('GENERATOR LOADS: N');
+    if(state.v.tireDryRot==='Y') a.push('TIRES: DRY ROT / CRACK: Y');
+    var bt = badTires();
+    if(bt.length) a.push(bt.length+' TIRE'+(bt.length>1?'S':'')+' MARKED BAD ('+bt.join(', ')+')');
+    if(state.v.extCond==='Fair'||state.v.extCond==='Bad') a.push('EXTERIOR CONDITION: '+state.v.extCond.toUpperCase());
+    if((state.v.extRepairs||'').trim()) a.push('EXTERIOR REPAIRS NEEDED — SEE 03');
+    if(state.v.smoker==='Y') a.push('SIGNS OF SMOKING: Y');
+    if(state.v.pets==='Y') a.push('PETS: Y');
+    if(state.v.intCond==='Fair'||state.v.intCond==='Bad') a.push('INTERIOR CONDITION: '+state.v.intCond.toUpperCase());
+    if((state.v.intRepairs||'').trim()) a.push('INTERIOR REPAIRS NEEDED — SEE 04');
+    var mk = dmgMarkCount();
+    if(mk) a.push('BODY DAMAGE: '+mk+' MARK'+(mk>1?'S':'')+' — SEE 05');
+    if(state.v.claimMark==='Yes') a.push('INSURANCE CLAIM: YES — SEE 05');
+    return a;
+  }
 
   function chrome(first){
     F(PAPER); doc.rect(0,0,PW,PH,'F');
@@ -1764,17 +1810,17 @@ async function buildTradePdf(){
       F(NAVY);
       doc.roundedRect(SX,SY,SW,0.95,0.14,0.14,'F');
       doc.rect(SX,SY+0.55,SW,0.4,'F');
-      doc.setFont('helvetica','bold'); doc.setFontSize(17);
+      doc.setFont('helvetica','bold'); doc.setFontSize(18);
       var t1='TRADE-IN ', t2='EVALUATION';
       var w1=doc.getTextWidth(t1), w2=doc.getTextWidth(t2);
       var tx=(PW-w1-w2)/2;
       T(AMBER); doc.text(t1, tx, SY+0.47);
       T(WHITE); doc.text(t2, tx+w1, SY+0.47);
-      doc.setFont('courier','bold'); doc.setFontSize(7);
+      doc.setFont('courier','bold'); doc.setFontSize(7.5);
       T([184,196,212]);
-      doc.text('MOTOR HOME SPECIALIST · ALVARADO, TX', PW/2, SY+0.66, {align:'center', charSpace:0.02});
+      doc.text('MOTOR HOME SPECIALIST · ALVARADO, TX', PW/2, SY+0.67, {align:'center', charSpace:0.02});
       T(AMBER);
-      doc.text('INSPECTION DATE  '+fmtMDY(state.v.inspExp), PW/2, SY+0.84, {align:'center', charSpace:0.02});
+      doc.text('INSPECTION DATE  '+fmtMDY(state.v.inspExp), PW/2, SY+0.85, {align:'center', charSpace:0.02});
     }
     doc.setFont('courier','bold'); doc.setFontSize(5.5); T(MUT);
     doc.text('MHS TRADE-IN EVALUATION · MHSRV.APP', PW-SX-0.12, PH-SX-0.09, {align:'right'});
@@ -1785,79 +1831,233 @@ async function buildTradePdf(){
     if(col===0){ col=1; y=pageTop; }
     else newPage();
   }
+  function fullBar(t, num, alertChip){
+    F(NAVY); doc.roundedRect(M, y, PW-2*M, 0.3, 0.05, 0.05, 'F');
+    doc.setFont('courier','bold'); doc.setFontSize(10.5);
+    if(num){ T([160,175,196]); doc.text(num, M+0.1, y+0.2); }
+    T(WHITE); doc.text(String(t).toUpperCase(), M+(num?0.4:0.12), y+0.2, {charSpace:0.01});
+    if(alertChip){
+      doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      var aw = doc.getTextWidth(alertChip)+0.16;
+      F(RED); doc.roundedRect(PW-M-aw-0.08, y+0.05, aw, 0.2, 0.05, 0.05, 'F');
+      T(WHITE); doc.text(alertChip, PW-M-aw/2-0.08, y+0.19, {align:'center'});
+    }
+    y += 0.42;
+  }
   function secBar(t){
     secN++;
-    ensure(0.4);
+    ensure(0.46);
     F(NAVY);
-    doc.roundedRect(colX[col], y-0.05, COLW, 0.26, 0.05, 0.05, 'F');
-    doc.setFont('courier','bold'); doc.setFontSize(9);
-    T([160,175,196]); doc.text('0'+secN, colX[col]+0.09, y+0.13);
-    T(WHITE); doc.text(String(t).toUpperCase(), colX[col]+0.32, y+0.13, {charSpace:0.01});
-    y += 0.4;
+    doc.roundedRect(colX[col], y-0.05, COLW, 0.28, 0.05, 0.05, 'F');
+    doc.setFont('courier','bold'); doc.setFontSize(10);
+    T([160,175,196]); doc.text('0'+secN, colX[col]+0.09, y+0.14);
+    T(WHITE); doc.text(String(t).toUpperCase(), colX[col]+0.35, y+0.14, {charSpace:0.01});
+    y += 0.44;
   }
   function subHead(t){
-    ensure(0.3);
-    doc.setFont('courier','bold'); doc.setFontSize(7.5);
+    ensure(0.34);
+    doc.setFont('courier','bold'); doc.setFontSize(8.4);
     T(ACC); doc.text(String(t).toUpperCase(), colX[col], y, {charSpace:0.015});
     D(FAINT); doc.setLineWidth(0.01);
-    doc.line(colX[col], y+0.04, colX[col]+COLW, y+0.04);
-    y += 0.22;
+    doc.line(colX[col], y+0.045, colX[col]+COLW, y+0.045);
+    y += 0.25;
   }
-  function lamp(on){
-    F(on ? GREEN : FAINT);
-    doc.circle(colX[col]+0.035, y-0.025, 0.032, 'F');
+  function lampAt(x, cy, on, alert){
+    F(alert ? RED : (on ? GREEN : FAINT));
+    doc.circle(x, cy, 0.034, 'F');
   }
-  function fieldLine(l, v, chip){
+  function chipAt(cx, baseY, val, alert){
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.2);
+    var vw = doc.getTextWidth(val);
+    F(alert ? RED : NAVY);
+    doc.roundedRect(cx, baseY-0.128, vw+0.15, 0.185, 0.055, 0.055, 'F');
+    F(alert ? WHITE : AMBER);
+    doc.rect(cx+(vw+0.15)/2-0.055, baseY-0.118, 0.11, 0.02, 'F');
+    T(WHITE); doc.text(val, cx+0.075, baseY+0.008);
+    return vw+0.15;
+  }
+  function fieldLine(l, v, chip, alert){
     var val = String(v||'').trim();
-    doc.setFont('courier','bold'); doc.setFontSize(6.7);
+    doc.setFont('courier','bold'); doc.setFontSize(7.4);
     var lab = String(l).toUpperCase();
     var labW = doc.getTextWidth(lab);
-    var sameLine = labW < COLW*0.60;
+    var sameLine = labW < COLW*0.58;
     if(!val){
-      ensure(0.17);
-      var lx = colX[col]+0.09;
-      lamp(false);
+      ensure(0.19);
+      var lx = colX[col]+0.1;
+      lampAt(colX[col]+0.038, y-0.026, false, false);
       T(INK); doc.text(lab, lx, y);
-      T(MUT); doc.setFont('helvetica','normal'); doc.setFontSize(8);
-      doc.text('—', lx+labW+0.08, y);
-      y += 0.17;
+      T(MUT); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      doc.text('—', lx+labW+0.09, y);
+      y += 0.19;
       return;
     }
     if(chip && val.length<=18 && sameLine){
-      ensure(0.21);
-      var lx2 = colX[col]+0.09;
-      lamp(true);
-      T(INK); doc.text(lab, lx2, y);
-      doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
-      var vw = doc.getTextWidth(val);
-      var cx = lx2+labW+0.09;
-      F(NAVY); doc.roundedRect(cx, y-0.115, vw+0.13, 0.165, 0.05, 0.05, 'F');
-      F(AMBER); doc.rect(cx+(vw+0.13)/2-0.05, y-0.105, 0.1, 0.018, 'F');
-      T(WHITE); doc.text(val, cx+0.065, y+0.005);
-      y += 0.21;
+      ensure(0.235);
+      var lx2 = colX[col]+0.1;
+      lampAt(colX[col]+0.038, y-0.026, true, alert);
+      T(alert ? RED : INK); doc.setFont('courier','bold'); doc.setFontSize(7.4);
+      doc.text(lab, lx2, y);
+      chipAt(lx2+labW+0.1, y, val, alert);
+      y += 0.235;
       return;
     }
-    /* text value, possibly wrapped / label on its own line */
-    doc.setFont('helvetica','normal'); doc.setFontSize(8);
-    var avail = sameLine ? COLW-labW-0.2 : COLW-0.12;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    var avail = sameLine ? COLW-labW-0.24 : COLW-0.14;
     var lines = doc.splitTextToSize(val, Math.max(0.9, avail));
-    ensure(0.17*(sameLine ? Math.max(1,lines.length) : lines.length+1));
-    var lx3 = colX[col]+0.09;
-    lamp(true);
-    doc.setFont('courier','bold'); doc.setFontSize(6.7);
-    T(INK); doc.text(lab, lx3, y);
-    doc.setFont('helvetica','normal'); doc.setFontSize(8);
-    var vx = sameLine ? lx3+labW+0.08 : lx3+0.03;
-    if(!sameLine) y += 0.15;
-    for(var i=0;i<lines.length;i++){ doc.text(lines[i], vx, y); y += 0.155; }
+    ensure(0.19*(sameLine ? Math.max(1,lines.length) : lines.length+1));
+    var lx3 = colX[col]+0.1;
+    lampAt(colX[col]+0.038, y-0.026, true, alert);
+    doc.setFont('courier','bold'); doc.setFontSize(7.4);
+    T(alert ? RED : INK); doc.text(lab, lx3, y);
+    doc.setFont('helvetica', alert?'bold':'normal'); doc.setFontSize(9);
+    T(alert ? RED : INK);
+    var vx = sameLine ? lx3+labW+0.09 : lx3+0.04;
+    if(!sameLine) y += 0.17;
+    for(var i=0;i<lines.length;i++){ doc.text(lines[i], vx, y); y += 0.175; }
+    T(INK);
     y += 0.02;
   }
 
-  chrome(true);
-  pageTop = SY+1.15; y = pageTop;
+  /* top-down tire schematic, matching the app widget */
+  function drawTireWidget(){
+    var lay = tireLayout();
+    if(!lay){ fieldLine('Age of Tires', state.v.tireAge||'', false, false); return; }
+    var axles = tireAxles(lay);
+    var capH = lay.towable ? 0.5 : 0.34, rowH = 0.4, tailH = 0.14;
+    var bodyH = capH + axles.length*rowH + tailH;
+    var widgetH = 0.26 + bodyH + 0.18;
+    ensure(widgetH);
+    var lx = colX[col]+0.1;
+    lampAt(colX[col]+0.038, y-0.026, true, false);
+    doc.setFont('courier','bold'); doc.setFontSize(7.4); T(INK);
+    doc.text('AGE OF TIRES / CONDITION', lx, y);
+    y += 0.14;
+    var cx = colX[col]+COLW/2, bodyW = 0.72;
+    var bx = cx-bodyW/2, top = y;
+    F(WHITE); D(INK); doc.setLineWidth(0.016);
+    doc.roundedRect(bx, top, bodyW, bodyH, 0.22, 0.22, 'FD');
+    doc.setFont('courier','bold'); doc.setFontSize(6.2); T(MUT);
+    doc.text('FRONT', cx, top+0.17, {align:'center', charSpace:0.03});
+    axles.forEach(function(ax, i){
+      var ty = top + capH + i*rowH + rowH/2;
+      function tireRect(px, p){
+        var code = tireCode(p), gb = state.v['tireGB_'+p];
+        if(gb==='B'){ F(RED); D(RED); }
+        else if(code || gb==='G'){ F(GREEN); D(GREEN); }
+        else { F(FAINT); D(INK); }
+        doc.setLineWidth(0.012);
+        doc.roundedRect(px, ty-0.11, 0.075, 0.22, 0.025, 0.025, 'FD');
+      }
+      function lblText(p){
+        var code = tireCode(p), gb = state.v['tireGB_'+p];
+        var s = p;
+        if(code) s += ' '+code;
+        if(gb==='G') s += ' GOOD';
+        if(gb==='B') s += ' BAD';
+        return {s:s, bad:gb==='B'};
+      }
+      /* left side */
+      ax.l.forEach(function(p, j){ tireRect(j===0 ? bx-0.035 : bx+0.06, p); });
+      var lt = ax.l.map(lblText);
+      doc.setFont('courier','bold'); doc.setFontSize(6.8);
+      lt.forEach(function(o, j){
+        T(o.bad ? RED : INK);
+        doc.text(o.s, bx-0.12, ty + (lt.length>1 ? (j===0 ? -0.035 : 0.095) : 0.02), {align:'right'});
+      });
+      /* right side */
+      ax.r.forEach(function(p, j){
+        var inner = ax.r.length>1 && j===0;
+        tireRect(inner ? bx+bodyW-0.135 : bx+bodyW-0.04, p);
+      });
+      var rt = ax.r.map(lblText);
+      rt.forEach(function(o, j){
+        T(o.bad ? RED : INK);
+        doc.text(o.s, bx+bodyW+0.12, ty + (rt.length>1 ? (j===0 ? -0.035 : 0.095) : 0.02));
+      });
+    });
+    T(INK);
+    y = top + bodyH + 0.2;
+  }
 
-  var tow = isTowable();
-  SECTIONS.forEach(function(sec){
+  /* ---------- page 1: masthead + unit card + alerts ---------- */
+  chrome(true);
+  y = SY+1.15;
+  var uf = [];
+  SECTIONS[0].groups[0].fields.forEach(function(f){
+    if(f.mo && tow) return;
+    var v = f.t==='date' ? fmtMDY(state.v[f.id]) : (state.v[f.id]||'');
+    uf.push({l:f.l, v:String(v).trim(), chip:(f.t==='seg'||f.t==='icons')});
+  });
+  var uRows = Math.ceil(uf.length/2), uRowH = 0.27;
+  var cardH = 0.36 + uRows*uRowH + 0.1;
+  F(TINT); D(INK); doc.setLineWidth(0.016);
+  doc.roundedRect(M, y, PW-2*M, cardH, 0.08, 0.08, 'FD');
+  F(NAVY); doc.roundedRect(M, y, PW-2*M, 0.3, 0.08, 0.08, 'F');
+  doc.rect(M, y+0.15, PW-2*M, 0.15, 'F');
+  doc.setFont('courier','bold'); doc.setFontSize(10.5);
+  T([160,175,196]); doc.text('01', M+0.1, y+0.2);
+  T(WHITE); doc.text('UNIT INFO', M+0.4, y+0.2, {charSpace:0.01});
+  var uy0 = y+0.36+0.18;
+  var uColX = [M+0.16, M+(PW-2*M)/2+0.1];
+  uf.forEach(function(f, i){
+    var c = i < uRows ? 0 : 1;
+    var yy = uy0 + (i%uRows===i && c===0 ? i : (c===0 ? i : i-uRows))*uRowH;
+    yy = uy0 + (c===0 ? i : i-uRows)*uRowH;
+    doc.setFont('courier','bold'); doc.setFontSize(8);
+    var lab = f.l.toUpperCase();
+    var labW = doc.getTextWidth(lab);
+    lampAt(uColX[c]-0.07, yy-0.028, !!f.v, false);
+    T(INK); doc.text(lab, uColX[c], yy);
+    if(!f.v){
+      T(MUT); doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+      doc.text('—', uColX[c]+labW+0.1, yy);
+    } else if(f.chip){
+      chipAt(uColX[c]+labW+0.11, yy, f.v, false);
+    } else {
+      doc.setFont('helvetica','bold');
+      var fs = 9.5; doc.setFontSize(fs);
+      var availW = (c===0 ? uColX[1]-0.3 : PW-M-0.2) - (uColX[c]+labW+0.1);
+      while(fs > 6.5 && doc.getTextWidth(f.v) > availW){ fs -= 0.5; doc.setFontSize(fs); }
+      var vv = f.v;
+      while(vv.length > 4 && doc.getTextWidth(vv+'…') > availW) vv = vv.slice(0,-2);
+      if(vv !== f.v) vv += '…';
+      T(INK); doc.text(vv, uColX[c]+labW+0.1, yy);
+    }
+  });
+  y += cardH + 0.18;
+
+  var alerts = buildAlerts();
+  if(alerts.length){
+    var aRows = Math.ceil(alerts.length/2);
+    var aH = 0.34 + aRows*0.21 + 0.08;
+    F([250,238,235]); D(RED); doc.setLineWidth(0.02);
+    doc.roundedRect(M, y, PW-2*M, aH, 0.08, 0.08, 'FD');
+    F(RED); doc.roundedRect(M, y, PW-2*M, 0.28, 0.08, 0.08, 'F');
+    doc.rect(M, y+0.14, PW-2*M, 0.14, 'F');
+    doc.setFont('courier','bold'); doc.setFontSize(9.5); T(WHITE);
+    doc.text('! ATTENTION — REVIEW BEFORE APPRAISAL', M+0.12, y+0.19, {charSpace:0.02});
+    var ay0 = y+0.34+0.14;
+    var aColX = [M+0.3, M+(PW-2*M)/2+0.16];
+    doc.setFont('courier','bold'); doc.setFontSize(7.8);
+    alerts.forEach(function(a, i){
+      var c = i < aRows ? 0 : 1;
+      var yy = ay0 + (c===0 ? i : i-aRows)*0.21;
+      F(RED); doc.circle(aColX[c]-0.12, yy-0.026, 0.034, 'F');
+      T(RED); doc.text(a, aColX[c], yy);
+    });
+    T(INK);
+    y += aH + 0.18;
+  }
+  pageTop = SY+0.28;
+  col = 0;
+  var streamTop = y;
+  pageTop = streamTop; /* columns on page 1 start under the cards */
+  y = pageTop;
+
+  /* ---------- sections 02-04 in two columns ---------- */
+  secN = 1;
+  SECTIONS.slice(1).forEach(function(sec){
     var printed = false;
     sec.groups.forEach(function(g){
       if(g.mo && tow) return;
@@ -1870,46 +2070,47 @@ async function buildTradePdf(){
         if(f.t === 'multi') v = (state.m[f.id]||[]).join(', ');
         else if(f.t === 'date') v = fmtMDY(state.v[f.id]);
         else v = state.v[f.id] || '';
-        rows.push({l:f.l, v:String(v).trim(), chip:(f.t==='seg'||f.t==='icons'||f.t==='multi')});
+        rows.push({id:f.id, l:f.l, v:String(v).trim(), chip:(f.t==='seg'||f.t==='icons'||f.t==='multi'), tires:f.t==='tires'});
       });
       if(!rows.length) return;
       if(!printed){ secBar(sec.title); printed = true; }
       if(g.sub) subHead(g.sub);
-      rows.forEach(function(r){ fieldLine(r.l, r.v, r.chip); });
+      rows.forEach(function(r){
+        if(r.tires){ drawTireWidget(); return; }
+        fieldLine(r.l, r.v, r.chip, alertFor(r.id, r.v));
+      });
     });
   });
 
-  /* ---- 05 · body damage page ---- */
-  var cls = state.dmgType;
-  var t = null;
-  TYPES.forEach(function(x){ if(x.n === cls) t = x; });
+  /* after page-1 columns, later pages use the full column height */
+  /* ---------- 05: body damage page ---------- */
   doc.addPage(); chrome(false);
-  secN = 4;
-  F(NAVY); doc.roundedRect(M, SY+0.25, PW-2*M, 0.28, 0.05, 0.05, 'F');
-  doc.setFont('courier','bold'); doc.setFontSize(9.5);
-  T([160,175,196]); doc.text('05', M+0.1, SY+0.44);
-  T(WHITE); doc.text('BODY DAMAGE — '+cls.toUpperCase(), M+0.36, SY+0.44, {charSpace:0.01});
+  pageTop = SY+0.28; col = 0; y = pageTop;
+  var mkN = dmgMarkCount();
+  fullBar('BODY DAMAGE — '+cls, '05', mkN ? mkN+' MARK'+(mkN>1?'S':'') : null);
   var codes = {};
   VIEW_IDS.forEach(function(v){ (state.mk[cls][v]||[]).forEach(function(m){ codes[m.c] = 1; }); });
-  var lx2 = M+0.02, ly = SY+0.75;
-  doc.setFontSize(7);
+  var lx2 = M+0.02, ly = y+0.05;
+  doc.setFontSize(7.5);
   var used = LEGEND.filter(function(x){ return codes[x.c]; });
   if(!used.length){
     doc.setFont('courier','bold'); T(MUT);
     doc.text('NO DAMAGE MARKED', lx2, ly);
   } else {
     used.forEach(function(x){
-      doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
-      var cw = Math.max(0.14, doc.getTextWidth(x.c)+0.07);
+      doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      var cw = Math.max(0.15, doc.getTextWidth(x.c)+0.08);
       F(AMBER); D(NAVY); doc.setLineWidth(0.012);
-      doc.roundedRect(lx2, ly-0.1, cw, 0.14, 0.05, 0.05, 'FD');
+      doc.roundedRect(lx2, ly-0.105, cw, 0.15, 0.05, 0.05, 'FD');
       T(NAVY); doc.text(x.c, lx2+cw/2, ly, {align:'center'});
-      doc.setFont('courier','bold'); doc.setFontSize(7); T(INK);
-      doc.text(x.n.toUpperCase(), lx2+cw+0.05, ly);
-      lx2 += cw+0.05+doc.getTextWidth(x.n.toUpperCase())+0.18;
+      doc.setFont('courier','bold'); doc.setFontSize(7.5); T(INK);
+      doc.text(x.n.toUpperCase(), lx2+cw+0.06, ly);
+      lx2 += cw+0.06+doc.getTextWidth(x.n.toUpperCase())+0.2;
     });
   }
-  var dy = SY+0.95, dcol = 0, rowH = 0;
+  var dy = ly+0.2, dcol = 0, rowH2 = 0;
+  var t = null;
+  TYPES.forEach(function(x){ if(x.n === cls) t = x; });
   if(t){
     var specs = viewsFor(t);
     for(var si = 0; si < specs.length; si++){
@@ -1919,85 +2120,90 @@ async function buildTradePdf(){
       var maxW = roof ? PW-2*M : COLW, maxH = roof ? 1.75 : 2.15;
       var dw = maxW, dh = dw*img.h/img.w;
       if(dh > maxH){ dh = maxH; dw = dh*img.w/img.h; }
-      if(roof && dcol === 1){ dy += rowH; dcol = 0; rowH = 0; }
-      if(dy + dh + 0.45 > BOT){ newPage(); dy = pageTop; dcol = 0; rowH = 0; }
+      if(roof && dcol === 1){ dy += rowH2; dcol = 0; rowH2 = 0; }
+      if(dy + dh + 0.5 > BOT){ newPage(); dy = pageTop; dcol = 0; rowH2 = 0; }
       var cellW = roof ? PW-2*M : COLW;
       var cellX = roof ? M : colX[dcol];
-      F(NAVY); doc.roundedRect(cellX, dy, cellW, 0.2, 0.04, 0.04, 'F');
-      doc.setFont('courier','bold'); doc.setFontSize(7); T(WHITE);
-      doc.text(spec.l.toUpperCase(), cellX+cellW/2, dy+0.135, {align:'center', charSpace:0.02});
-      doc.addImage(img.data, 'JPEG', cellX+(cellW-dw)/2, dy+0.26, dw, dh);
-      var cellH = dh + 0.44;
-      if(roof){ dy += cellH; dcol = 0; rowH = 0; }
-      else if(dcol === 0){ dcol = 1; rowH = cellH; }
-      else { dy += Math.max(rowH, cellH); dcol = 0; rowH = 0; }
+      F(NAVY); doc.roundedRect(cellX, dy, cellW, 0.22, 0.04, 0.04, 'F');
+      doc.setFont('courier','bold'); doc.setFontSize(7.5); T(WHITE);
+      doc.text(spec.l.toUpperCase(), cellX+cellW/2, dy+0.15, {align:'center', charSpace:0.02});
+      doc.addImage(img.data, 'JPEG', cellX+(cellW-dw)/2, dy+0.28, dw, dh);
+      var cellH = dh + 0.48;
+      if(roof){ dy += cellH; dcol = 0; rowH2 = 0; }
+      else if(dcol === 0){ dcol = 1; rowH2 = cellH; }
+      else { dy += Math.max(rowH2, cellH); dcol = 0; rowH2 = 0; }
     }
-    if(dcol === 1){ dy += rowH; }
+    if(dcol === 1){ dy += rowH2; }
   }
 
-  /* claim + review continue in columns below the diagrams */
   pageTop = Math.min(dy+0.2, BOT); col = 0; y = pageTop;
-  if(y >= BOT-0.5) newPage();
+  if(y >= BOT-0.6) newPage();
   subHead('Insurance Claim Info');
   DMG_FIELDS.forEach(function(f){
     if(SHOW_IF[f.id] && !SHOW_IF[f.id]()) return;
-    fieldLine(f.l, f.t==='multi' ? (state.m[f.id]||[]).join(', ') : (state.v[f.id]||''), f.t==='seg');
+    var v = f.t==='multi' ? (state.m[f.id]||[]).join(', ') : (state.v[f.id]||'');
+    fieldLine(f.l, v, f.t==='seg', alertFor(f.id, v));
   });
   if(!tow){
-    fieldLine('Windshield Good', state.v.wsGood || '', true);
-    fieldLine('Windshield Damage', (state.m.wsDmg||[]).join(', '), true);
+    fieldLine('Windshield Good', state.v.wsGood || '', true, state.v.wsGood==='N');
+    fieldLine('Windshield Damage', (state.m.wsDmg||[]).join(', '), true, !!(state.m.wsDmg||[]).length);
   }
   secN = 5;
-  ensure(1.8);   /* keep the review + signature block in one column */
+  ensure(1.9);
   secBar('Review & Signatures');
   REV_FIELDS.forEach(function(f){
     var v = f.t==='date' ? fmtMDY(state.v[f.id]) : (state.v[f.id]||'');
-    fieldLine(f.l, v, false);
+    fieldLine(f.l, v, false, false);
   });
   if(photos.techSig){
     var sig = await whiteJpeg(photos.techSig.data, 600, 0.85);
     var sw2 = 1.7, sh2 = sw2*sig.h/sig.w;
-    ensure(sh2 + 0.35);
-    D(FAINT); doc.setLineWidth(0.01);
+    ensure(sh2 + 0.4);
     doc.addImage(sig.data, 'JPEG', colX[col]+0.05, y-0.06, sw2, sh2);
-    y += sh2+0.04;
-    doc.setFont('courier','bold'); doc.setFontSize(6.7); T(INK);
+    y += sh2+0.05;
+    doc.setFont('courier','bold'); doc.setFontSize(7.4); T(INK);
     doc.text(('INSPECTED BY: '+(state.v.inspectedBy||'')+' — TECHNICIAN SIGNATURE').toUpperCase(), colX[col], y);
-    y += 0.24;
+    y += 0.26;
   }
-  ensure(0.32);
-  doc.setFont('courier','bold'); doc.setFontSize(6.7); T(INK);
+  ensure(0.35);
+  doc.setFont('courier','bold'); doc.setFontSize(7.4); T(INK);
   D(INK); doc.setLineWidth(0.012);
   doc.line(colX[col], y, colX[col]+2.1, y);
   doc.line(colX[col]+2.35, y, colX[col]+3.35, y);
-  y += 0.11;
+  y += 0.12;
   doc.text('SALES MANAGER SIGNATURE', colX[col], y);
   doc.text('DATE', colX[col]+2.35, y);
   y += 0.2;
 
-  /* ---- photos ---- */
+  /* ---------- photos ---------- */
   var entries = photoEntries();
   if(entries.length){
     doc.addPage(); chrome(false);
-    F(NAVY); doc.roundedRect(M, SY+0.25, PW-2*M, 0.28, 0.05, 0.05, 'F');
-    doc.setFont('courier','bold'); doc.setFontSize(9.5); T(WHITE);
-    doc.text('PHOTOS', M+0.1, SY+0.44, {charSpace:0.02});
-    var py = SY+0.7, pcol = 0, prowH = 0;
+    pageTop = SY+0.28; col = 0; y = pageTop;
+    fullBar('Photos', null, null);
+    var py = y, pcol = 0, prowH = 0;
     for(var ei = 0; ei < entries.length; ei++){
-      var ph = await whiteJpeg(entries[ei].data, 1000, 0.72);
-      var pw2 = COLW, ph2 = pw2*ph.h/ph.w;
-      if(ph2 > 2.7){ ph2 = 2.7; pw2 = ph2*ph.w/ph.h; }
-      var cell = ph2 + 0.52;
+      var big = /^(Windshield|Tire )/.test(entries[ei].label);
+      var ph = await whiteJpeg(entries[ei].data, big ? 1500 : 1000, 0.74);
+      var maxPW = big ? PW-2*M : COLW;
+      var pw2 = maxPW, ph2 = pw2*ph.h/ph.w;
+      var capH2 = big ? 5.6 : 2.7;
+      if(ph2 > capH2){ ph2 = capH2; pw2 = ph2*ph.w/ph.h; }
+      var cell = ph2 + 0.54;
+      if(big && pcol === 1){ py += prowH; pcol = 0; prowH = 0; }
       if(py + cell > BOT){
         doc.addPage(); chrome(false); py = SY+0.35; pcol = 0; prowH = 0;
       }
-      F(NAVY); doc.roundedRect(colX[pcol], py, COLW, 0.18, 0.04, 0.04, 'F');
-      doc.setFont('courier','bold'); doc.setFontSize(6.2); T(WHITE);
-      doc.text(String(entries[ei].label).toUpperCase().slice(0,54), colX[pcol]+0.07, py+0.125);
+      var cw2 = big ? PW-2*M : COLW;
+      var cx2 = big ? M : colX[pcol];
+      F(NAVY); doc.roundedRect(cx2, py, cw2, 0.2, 0.04, 0.04, 'F');
+      doc.setFont('courier','bold'); doc.setFontSize(6.8); T(WHITE);
+      doc.text(String(entries[ei].label).toUpperCase().slice(0,64), cx2+0.08, py+0.14);
       D(INK); doc.setLineWidth(0.012);
-      doc.addImage(ph.data, 'JPEG', colX[pcol]+(COLW-pw2)/2, py+0.24, pw2, ph2);
-      doc.rect(colX[pcol]+(COLW-pw2)/2, py+0.24, pw2, ph2, 'D');
-      if(pcol === 0){ pcol = 1; prowH = cell; }
+      doc.addImage(ph.data, 'JPEG', cx2+(cw2-pw2)/2, py+0.26, pw2, ph2);
+      doc.rect(cx2+(cw2-pw2)/2, py+0.26, pw2, ph2, 'D');
+      if(big){ py += cell; pcol = 0; prowH = 0; }
+      else if(pcol === 0){ pcol = 1; prowH = cell; }
       else { py += Math.max(prowH, cell); pcol = 0; prowH = 0; }
     }
   }
