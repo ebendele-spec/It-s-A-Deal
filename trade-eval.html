@@ -153,7 +153,18 @@
   .tleft .tin{align-items:flex-end}
   .tright .tin{align-items:flex-start}
   .tcap{font:700 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
-  .tinrow{display:flex;gap:6px;align-items:center}
+  .tinrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .tleft .tinrow{justify-content:flex-end}
+  .tright .tinrow{justify-content:flex-start}
+  .tgb{display:flex;gap:4px}
+  .tgb button{min-height:36px;padding:8px 8px;cursor:pointer;background:var(--panel);
+    border:1.5px solid var(--line);border-radius:8px;box-shadow:var(--keyshadow);
+    font:700 10px var(--mono);letter-spacing:.04em;color:var(--ink);transition:transform .08s ease}
+  .tgb button:active{transform:translateY(2px);box-shadow:none}
+  .tgb button.on{box-shadow:none;transform:translateY(2px);color:#fff}
+  .tgb button.on.g{background:var(--green);border-color:var(--green)}
+  .tgb button.on.b{background:var(--red);border-color:var(--red)}
+  .tire.bad{background:var(--red);border-color:var(--red);box-shadow:0 0 7px var(--red)}
   .tgraph .tinrow input{width:76px;padding:8px 9px;font:15px var(--mono);background:var(--panel);
     color:var(--ink);border:1.5px solid var(--line);border-radius:8px}
   .tgraph .tinrow input:focus{outline:3px solid var(--amber);outline-offset:1px;border-color:var(--amber)}
@@ -413,7 +424,7 @@ var SECTIONS = [
      {id:'vin',      l:'VIN',            t:'text', w:1, p:1, preq:1, req:1, fmt:'vin', ph:'17 characters'},
      {id:'yr',       l:'Year',           t:'text', im:'numeric', req:1},
      {id:'make',     l:'Manufacturer & Brand', t:'text', w:1, req:1, ph:'e.g. ENTEGRA ODYSSEY', suggest:1},
-     {id:'model',    l:'Model',          t:'text', req:1, ph:'e.g. 31F'},
+     {id:'model',    l:'Model',          t:'text', req:1, ph:'e.g. 31F', fmt:'upper'},
      {id:'length',   l:'Length (in feet)', t:'text', req:1, ph:'e.g. 31 feet', im:'numeric', fmt:'digits'},
      {id:'unitClass',l:'Class',          t:'icons', w:1, req:1},
      {id:'mileage',  l:'Mileage',        t:'text', im:'numeric', p:1, preq:1, req:1, fmt:'commas', mo:1},
@@ -436,13 +447,13 @@ var SECTIONS = [
      {id:'dashAc',     l:'Dash A/C',      t:'seg', o:['Good','Bad']},
    ]},
    { sub:'Coach Systems', fields:[
-     {id:'levelMfg',   l:'Leveling Manufacturer',  t:'text'},
      {id:'levelType',  l:'Leveling Type', t:'seg', o:['Air','Hydraulic','4pt. Stabilizers']},
+     {id:'levelMfg',   l:'Leveling Manufacturer',  t:'text'},
      {id:'slides',     l:'Slides',        t:'seg', o:['0','1','2','3','4','5']},
-     {id:'cameras',    l:'Cameras',       t:'seg', o:['N/A','1','2','3','4']},
+     {id:'cameras',    l:'Cameras',       t:'seg', o:['None','1','2','3','4']},
      {id:'acUnits',    l:'A/C Units',     t:'seg', o:['1','2','3','4']},
      {id:'acDucted',   l:'A/C Ducted',    t:'seg', o:YN},
-     {id:'heatPump',   l:'Heat Pump',     t:'seg', o:['N/A','1','2','3','4']},
+     {id:'heatPump',   l:'Heat Pumps',    t:'seg', o:['None','1','2','3','4']},
      {id:'genType',    l:'Generator',     t:'seg', o:['Gas','Diesel','LP']},
      {id:'genRuns',    l:'Generator Runs',t:'seg', o:YN},
      {id:'genLoads',   l:'Generator Loads',t:'seg', o:YN},
@@ -460,7 +471,6 @@ var SECTIONS = [
      {id:'driverDoor', l:'Driver Door',     t:'seg', o:YN},
      {id:'pwrVisor',   l:'Power Visor',     t:'seg', o:YN},
      {id:'mobileEye',  l:'Mobile Eye',      t:'seg', o:YN},
-     {id:'tripTek',    l:'Trip Tek',        t:'seg', o:YN},
      {id:'gps',        l:'GPS',             t:'seg', o:YN},
      {id:'keyless',    l:'Keyless Entry',   t:'seg', o:YN},
      {id:'pwrWindows', l:'Power Windows',   t:'seg', o:YN},
@@ -524,7 +534,7 @@ var SECTIONS = [
      {id:'dualPane',   l:'Windows Dual Pane',t:'seg', o:YN},
      {id:'fireplace',  l:'Fireplace',        t:'seg', o:YN},
      {id:'multiplex',  l:'Multi-Plex',       t:'seg', o:YN},
-     {id:'hardwoodCab',l:'Hardwood Cab',     t:'seg', o:YN},
+     {id:'hardwoodCab',l:'Hardwood Cabinetry', t:'seg', o:YN},
      {id:'shades',     l:'Shades',           t:'multi', o:['Manual','Power','Solar','Black-Out']},
      {id:'blinds',     l:'Blinds',           t:'multi', o:['Day','Night']},
      {id:'theaterSeats',l:'Theater Seats',   t:'seg', o:YN},
@@ -532,7 +542,7 @@ var SECTIONS = [
    { sub:'Kitchen', fields:[
      {id:'dishwasher', l:'Dishwasher',       t:'seg', o:YN},
      {id:'microwave',  l:'Microwave',        t:'seg', o:YN},
-     {id:'microConv',  l:'Microwave Convection', t:'seg', o:YN},
+     {id:'microConv',  l:'Convection Microwave', t:'seg', o:YN},
      {id:'fridgeRes',  l:'Fridge Residential', t:'seg', o:YN},
      {id:'iceMaker',   l:'Ice Maker',        t:'seg', o:YN},
      {id:'range',      l:'Range',            t:'seg', o:['Electric','Gas']},
@@ -542,18 +552,17 @@ var SECTIONS = [
    ]},
    { sub:'Bath & Bedroom', fields:[
      {id:'bkTile',     l:'Bathroom/Kitchen Tile Floors', t:'seg', o:YN},
-     {id:'showerDoor', l:'Shower Door',      t:'seg', o:YN},
-     {id:'tileAccents',l:'Tile Accents',     t:'seg', o:['Glass','Curtain']},
+     {id:'showerDoor', l:'Shower Door',      t:'seg', o:['Glass','Curtain','Retractable']},
      {id:'bath',       l:'# of Bathrooms',             t:'seg', o:['1/2','1','1-1/2','2 Full']},
-     {id:'bedSize',    l:'Bed Size',         t:'text'},
-     {id:'bedType',    l:'Bed Type',         t:'seg', o:['Sleep Number','Pillow Top','Memory Foam','N/A']},
+     {id:'bedSize',    l:'Bed Size',         t:'seg', o:['King','Queen','Full','Other']},
+     {id:'bedType',    l:'Bed Type',         t:'seg', o:['Sleep Number','Pillow Top','Memory Foam','Other']},
      {id:'bunkBeds',   l:'Bunk Beds',        t:'seg', o:YN},
-     {id:'bunkTv',     l:'Bunk TV',          t:'text'},
+     {id:'bunkTv',     l:'Bunk TV',          t:'seg', o:YN},
      {id:'cabOver',    l:'Cab Over Bunk',    t:'seg', o:YN, mo:1},
      {id:'cabOverPwr', l:'Cab Over Bunk Power', t:'seg', o:YN, mo:1},
    ]},
    { sub:'TVs', fields:[
-     {id:'lrTvNum',    l:'Livingroom TV #',  t:'text', im:'numeric'},
+     {id:'lrTvNum',    l:'Livingroom TV #',  t:'seg', o:['1','2','3']},
      {id:'lrTvType',   l:'Livingroom TV Type', t:'seg', o:['Box','Flat Panel']},
      {id:'brTv',       l:'Bedroom TV',       t:'seg', o:['N/A','Box','Flat Panel']},
    ]},
@@ -567,8 +576,8 @@ var SECTIONS = [
 ];
 
 var DMG_FIELDS = [
+  {id:'claimMark',  l:'Insurance Claim', t:'seg', o:['Yes','No']},
   {id:'dmgDate',    l:'Date',            t:'text', ph:'MM/DD/YY'},
-  {id:'claimMark',  l:'Claim Mark',      t:'seg', o:['Yes','No']},
   {id:'insClaim',   l:'Insurance Claim To Place', t:'text'},
   {id:'deductible', l:'Deductible Amount', t:'text', ph:'$'},
   {id:'dmgNotes',   l:'Notes',           t:'area', w:1},
@@ -714,7 +723,7 @@ SECTIONS.forEach(function(sec,i){
   h += '<div class="diag-grid" id="diagGrid"></div>';
   h += '<div class="dmg-tools"><button type="button" id="undoMark">&#8630; Undo Last Mark</button>'+
        '<button type="button" id="clearMarks">Clear All Marks</button></div>';
-  h += '<h3 class="sub">Claim Info</h3><div class="fgrid">'+DMG_FIELDS.map(fieldHTML).join('')+'</div>';
+  h += '<h3 class="sub" style="margin-top:34px">Insurance Claim Info</h3><div class="fgrid">'+DMG_FIELDS.map(fieldHTML).join('')+'</div>';
   d.innerHTML = h;
   stepsEl.appendChild(d);
 })();
@@ -765,6 +774,12 @@ function go(i){
     c.classList.toggle('active', idx===cur);
     c.classList.toggle('done', idx<cur);
   });
+  var act = stepperEl.children[cur];
+  if(act && stepperEl.scrollWidth > stepperEl.clientWidth + 4){
+    var left = act.getBoundingClientRect().left - stepperEl.getBoundingClientRect().left +
+               stepperEl.scrollLeft - (stepperEl.clientWidth - act.offsetWidth)/2;
+    try{ stepperEl.scrollTo({left:left, behavior:'smooth'}); }catch(e){ stepperEl.scrollLeft = left; }
+  }
   $('backBtn').style.visibility = cur===0 ? 'hidden' : 'visible';
   $('nextBtn').style.display = cur===5 ? 'none' : '';
   if(cur===2) renderTireWidget();
@@ -1009,7 +1024,10 @@ function applyVpic(res){
     }
   }
   if(filled.length || wiped){
-    save(); restoreInputs();
+    save(); [['cameras','N/A','None'],['heatPump','N/A','None'],['bedType','N/A','Other']].forEach(function(m){
+  if(state.v[m[0]]===m[1]){ state.v[m[0]] = m[2]; }
+});
+restoreInputs();
     filled.forEach(markAuto);
     refreshUnitMissing();
     var vinEl = document.querySelector('[data-f="vin"]');
@@ -1045,8 +1063,22 @@ $('nextBtn').addEventListener('click', function(){
 /* ============================================================
    Wire inputs to state
    ============================================================ */
-var TOWABLES = {'Travel Trailer':1, '5th Wheel':1, 'Toy Hauler':1};
+var TOWABLES = {'Travel Trailer':1, '5th Wheel':1};
 function isTowable(){ return !!TOWABLES[(state.v.unitClass||'').trim()]; }
+/* per-field visibility rules beyond the towable pass */
+var SHOW_IF = {
+  engineHp:   function(){ var c=state.v.unitClass; return c==='Diesel Pusher' || c==='Super C'; },
+  levelMfg:   function(){ return state.v.levelType==='Air' || state.v.levelType==='Hydraulic'; },
+  wdType:     function(){ return state.v.washerDryer==='Y'; },
+  microConv:  function(){ return state.v.microwave==='Y'; },
+  solarNum:   function(){ return state.v.solar==='Y'; },
+  bunkTv:     function(){ return state.v.cabOver==='Y'; },
+  cabOverPwr: function(){ return state.v.cabOver==='Y'; },
+  dmgDate:    function(){ return state.v.claimMark==='Yes'; },
+  insClaim:   function(){ return state.v.claimMark==='Yes'; },
+  deductible: function(){ return state.v.claimMark==='Yes'; },
+  dmgNotes:   function(){ return state.v.claimMark==='Yes'; }
+};
 function updateConditionals(){
   var el = document.querySelector('[data-fw="wsDmg"]');
   if(el) el.style.display = state.v.wsGood==='N' ? '' : 'none';
@@ -1060,6 +1092,10 @@ function updateConditionals(){
   Array.prototype.forEach.call(document.querySelectorAll('[data-mo]'), function(m){
     m.style.display = tow ? 'none' : (m.style.display==='none' && m.dataset.fw &&
       /Other$/.test(m.dataset.fw) ? m.style.display : '');
+  });
+  Object.keys(SHOW_IF).forEach(function(id){
+    var el = document.querySelector('[data-fw="'+id+'"]');
+    if(el && !(tow && el.dataset.mo)) el.style.display = SHOW_IF[id]() ? '' : 'none';
   });
 }
 function restoreInputs(){
@@ -1102,6 +1138,9 @@ document.addEventListener('input', function(e){
     else setFieldNote(e.target, v.length ? v.length+' / 17' : '', false);
     maybeAutoClass(v);
     vinAutoFill(v);
+  }else if(fmt==='upper'){
+    var u = e.target.value.toUpperCase();
+    if(u!==e.target.value) e.target.value = u;
   }else if(fmt==='digits'){
     var n = e.target.value.replace(/\D/g,'');
     if(n!==e.target.value) e.target.value = n;
@@ -1287,9 +1326,17 @@ function tireLayout(){
   return {cls:cls, towable:false, pos:p2};
 }
 function tireCode(pos){ return (state.v['tireDC_'+pos]||'').trim(); }
+var INNER_TIRE = {LRI:1, RRI:1};
 function tireSummary(lay){
   var parts = [];
-  lay.pos.forEach(function(p){ if(tireCode(p)) parts.push(p+' '+tireCode(p)); });
+  lay.pos.forEach(function(p){
+    var bits = [];
+    if(tireCode(p)) bits.push(tireCode(p));
+    var gb = state.v['tireGB_'+p];
+    if(gb==='G') bits.push('GOOD');
+    if(gb==='B') bits.push('BAD');
+    if(bits.length) parts.push(p+' '+bits.join(' '));
+  });
   return parts.join(' · ');
 }
 function tireAxles(lay){
@@ -1308,16 +1355,25 @@ function tireShortLabel(p){
 }
 function tireInputHTML(p){
   var ph = !!photos['tire|'+p];
-  return '<div class="tin">'+
+  var gb = state.v['tireGB_'+p]||'';
+  var h = '<div class="tin">'+
     '<span class="tcap">'+tireShortLabel(p)+'</span>'+
     '<div class="tinrow">'+
     '<input type="text" inputmode="numeric" data-tire="'+p+'" placeholder="WWYY" maxlength="4" value="'+tireCode(p).replace(/"/g,'&quot;')+'" autocomplete="off" aria-label="'+TIRE_LABELS[p]+' date code">'+
-    '<button type="button" class="photo-btn'+(ph?' has-photo':'')+'" data-photo="tire|'+p+'" title="'+TIRE_LABELS[p]+' photo">'+(ph?'&#10003;':'&#128247;')+'</button>'+
+    '<span class="tgb">'+
+    '<button type="button" data-tgb="'+p+'" data-v="G" class="'+(gb==='G'?'on g':'')+'" aria-label="'+TIRE_LABELS[p]+' good">GOOD</button>'+
+    '<button type="button" data-tgb="'+p+'" data-v="B" class="'+(gb==='B'?'on b':'')+'" aria-label="'+TIRE_LABELS[p]+' bad">BAD</button>'+
+    '</span>'+
+    (gb==='B' && !INNER_TIRE[p]
+      ? '<button type="button" class="photo-btn'+(ph?' has-photo':'')+'" data-photo="tire|'+p+'" title="'+TIRE_LABELS[p]+' photo">'+
+        (ph ? '&#10003;' : '&#128247; <span class="req">*</span>')+'</button>'
+      : '')+
     '</div></div>';
+  return h;
 }
 function tireMarkHTML(p, side, idx){
-  var code = tireCode(p), ph = !!photos['tire|'+p];
-  return '<span class="tire '+side+(idx===1?' inner':'')+(code?' has':'')+(ph?' ph':'')+'" id="tw_'+p+'"></span>';
+  var code = tireCode(p), ph = !!photos['tire|'+p], bad = state.v['tireGB_'+p]==='B';
+  return '<span class="tire '+side+(idx===1?' inner':'')+(bad?' bad':(code?' has':''))+(ph?' ph':'')+'" id="tw_'+p+'"></span>';
 }
 function renderTireWidget(){
   var el = $('tireWidget');
@@ -1378,6 +1434,8 @@ function tireRefresh(){
 function tireMove(from, to){
   state.v['tireDC_'+to] = state.v['tireDC_'+from] || '';
   delete state.v['tireDC_'+from];
+  state.v['tireGB_'+to] = state.v['tireGB_'+from] || '';
+  delete state.v['tireGB_'+from];
   if(photos['tire|'+from]){ photos['tire|'+to] = photos['tire|'+from]; delete photos['tire|'+from]; }
   else delete photos['tire|'+to];
 }
@@ -1392,11 +1450,22 @@ function towAxleChange(d){
   } else if(d<0 && n>1){
     for(i=2;i<=n;i++){ tireMove('A'+i+'L','A'+(i-1)+'L'); tireMove('A'+i+'R','A'+(i-1)+'R'); }
     delete state.v['tireDC_A'+n+'L']; delete state.v['tireDC_A'+n+'R'];
+    delete state.v['tireGB_A'+n+'L']; delete state.v['tireGB_A'+n+'R'];
     delete photos['tire|A'+n+'L']; delete photos['tire|A'+n+'R'];
     state.v.tireAxleCt = n-1;
   } else return;
   tireRefresh();
 }
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-tgb]');
+  if(!b) return;
+  var p = b.dataset.tgb, v = b.dataset.v;
+  state.v['tireGB_'+p] = state.v['tireGB_'+p]===v ? '' : v;
+  var lay = tireLayout();
+  if(lay) state.v.tireAge = tireSummary(lay);
+  save();
+  renderTireWidget();
+});
 document.addEventListener('input', function(e){
   var pos = e.target.dataset && e.target.dataset.tire;
   if(!pos) return;
@@ -1504,6 +1573,11 @@ function updateMissing(){
     if(f.mo && isTowable()) return;
     if(f.req && !(state.v[f.id]||'').trim()) miss.push(f.l);
     if(f.preq && !photos[f.id]) miss.push(f.l+' photo');
+  });
+  var lay = tireLayout();
+  if(lay) lay.pos.forEach(function(p){
+    if(state.v['tireGB_'+p]==='B' && !INNER_TIRE[p] && !photos['tire|'+p])
+      miss.push('Tire '+(TIRE_LABELS[p]||p)+' photo');
   });
   $('missingBox').textContent = miss.length ? 'Still blank: '+miss.join(', ') : '';
 }
@@ -1720,6 +1794,7 @@ async function buildTradePdf(){
       g.fields.forEach(function(f){
         if(f.mo && tow) return;
         if(/Other$/.test(f.id) && state.v[f.id.replace(/Other$/,'')] !== 'Other') return;
+        if(SHOW_IF[f.id] && !SHOW_IF[f.id]()) return;
         var v;
         if(f.t === 'multi') v = (state.m[f.id]||[]).join(', ');
         else if(f.t === 'date') v = fmtMDY(state.v[f.id]);
@@ -1733,8 +1808,9 @@ async function buildTradePdf(){
     });
   });
 
-  secHead('Claim Info');
+  secHead('Insurance Claim Info');
   DMG_FIELDS.forEach(function(f){
+    if(SHOW_IF[f.id] && !SHOW_IF[f.id]()) return;
     fieldLine(f.l, f.t==='multi' ? (state.m[f.id]||[]).join(', ') : (state.v[f.id]||''));
   });
   if(!tow){
@@ -2073,6 +2149,20 @@ if((state.v.vin||'').trim().length===17) vinAutoFill(state.v.vin.trim());
     label();
   });
 })();
+
+/* iOS zooms in on focused inputs; snap back out once focus leaves them */
+document.addEventListener('focusout', function(){
+  setTimeout(function(){
+    var a = document.activeElement;
+    if(a && (a.tagName==='INPUT' || a.tagName==='TEXTAREA')) return;
+    var vp = document.querySelector('meta[name="viewport"]');
+    if(!vp) return;
+    var c = vp.getAttribute('content');
+    if(!c || c.indexOf('maximum-scale')>-1) return;
+    vp.setAttribute('content', c + ', maximum-scale=1.0');
+    setTimeout(function(){ vp.setAttribute('content', c); }, 80);
+  }, 80);
+});
 
 refreshDone();
 go(0);
